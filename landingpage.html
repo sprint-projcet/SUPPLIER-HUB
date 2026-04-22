@@ -1,240 +1,266 @@
 <!DOCTYPE html>
-<html lang="id" class="scroll-smooth">
+<html lang="id">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SupplierHub | Solusi Rantai Pasok Modern</title>
+  <title>Supplier Hub - Koneksi Bisnis Modern</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+    :root {
+      scroll-behavior: smooth;
+    }
+
     body {
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-family: 'Inter', sans-serif;
       overflow-x: hidden;
     }
 
-    .glass-nav {
-      background: rgba(255, 255, 255, 0.7);
-      backdrop-filter: blur(15px);
-      -webkit-backdrop-filter: blur(15px);
+    .glass-effect {
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
     }
 
-    .gradient-text {
-      background: linear-gradient(135deg, #059669 0%, #10b981 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-    }
-
-    .hero-pattern {
-      background-image: radial-gradient(#10b981 0.5px, transparent 0.5px);
-      background-size: 24px 24px;
-      opacity: 0.15;
-    }
-
-    .card-hover {
-      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .card-hover:hover {
-      transform: translateY(-10px);
-      box-shadow: 0 25px 50px -12px rgba(16, 185, 129, 0.15);
-    }
-
+    /* Animasi Melayang untuk Karakter */
     @keyframes float {
-      0%, 100% { transform: translateY(0) rotate(0deg); }
-      50% { transform: translateY(-15px) rotate(1deg); }
+      0% {
+        transform: translateY(0px) rotate(0deg);
+      }
+
+      50% {
+        transform: translateY(-20px) rotate(2deg);
+      }
+
+      100% {
+        transform: translateY(0px) rotate(0deg);
+      }
     }
 
     .animate-float {
-      animation: float 5s ease-in-out infinite;
+      animation: float 4s ease-in-out infinite;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f1f1;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #10b981;
+      border-radius: 10px;
     }
 
     #toast {
       visibility: hidden;
-      min-width: 300px;
-      background: #1e293b;
+      min-width: 280px;
+      background-color: #065f46;
       color: white;
       text-align: center;
-      border-radius: 16px;
-      padding: 16px;
+      border-radius: 1rem;
+      padding: 1rem;
       position: fixed;
-      z-index: 1000;
+      z-index: 100;
       left: 50%;
       transform: translateX(-50%);
-      bottom: -100px;
-      transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      bottom: 30px;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
     #toast.show {
       visibility: visible;
-      bottom: 30px;
+      animation: slideUp 0.5s, slideDown 0.5s 2.5s;
     }
 
-    .mobile-menu-enter {
-      animation: slideInDown 0.4s ease-out forwards;
+    @keyframes slideUp {
+      from {
+        bottom: 0;
+        opacity: 0;
+      }
+
+      to {
+        bottom: 30px;
+        opacity: 1;
+      }
     }
 
-    @keyframes slideInDown {
-      from { opacity: 0; transform: translateY(-20px); }
-      to { opacity: 1; transform: translateY(0); }
+    @keyframes slideDown {
+      from {
+        bottom: 30px;
+        opacity: 1;
+      }
+
+      to {
+        bottom: 0;
+        opacity: 0;
+      }
+    }
+
+    .mobile-menu-active {
+      display: block !important;
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
   </style>
 </head>
 
-<body class="bg-slate-50 text-slate-900 selection:bg-green-100 selection:text-green-800">
+<body class="bg-slate-50 text-slate-800">
 
-  <div id="toast" class="flex items-center gap-3">
-    <i class="fas fa-info-circle text-green-400"></i>
-    <span id="toast-message">Notifikasi</span>
-  </div>
+  <div id="toast">Notifikasi</div>
 
   <!-- Navigation -->
-  <nav id="main-nav" class="fixed top-0 w-full z-[100] transition-all duration-500 py-4">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex justify-between items-center bg-white/80 md:bg-transparent backdrop-blur-md md:backdrop-blur-0 rounded-2xl p-2 md:p-0">
+  <nav id="main-nav" class="fixed top-0 w-full z-[60] transition-all duration-300 border-b border-transparent">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between h-16 md:h-20 items-center">
         <!-- Logo -->
-        <a href="#" class="flex items-center gap-3 group">
-          <div class="w-12 h-12 bg-green-600 rounded-2xl flex items-center justify-center shadow-lg shadow-green-200 group-hover:rotate-6 transition-transform">
-            <i class="fas fa-cubes text-white text-xl"></i>
+        <div class="flex items-center gap-2 flex-shrink-0 cursor-pointer" onclick="window.scrollTo(0,0)">
+          <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-green-200">
+            <i class="fas fa-handshake text-white text-xl"></i>
           </div>
-          <div class="flex flex-col">
-            <span class="text-xl font-extrabold text-slate-900 tracking-tight leading-none">SupplierHub</span>
-            <span class="text-[10px] font-bold text-green-600 tracking-widest uppercase">Network</span>
-          </div>
-        </a>
+          <span class="text-xl md:text-2xl font-bold text-green-800 tracking-tight">SupplierHub</span>
+        </div>
 
-        <!-- Desktop Navigation -->
-        <div class="hidden lg:flex items-center bg-white shadow-sm border border-slate-100 px-8 py-2.5 rounded-2xl gap-8 font-semibold text-slate-600">
-          <a href="#" class="hover:text-green-600 transition-colors">Beranda</a>
-          <a href="#suppliers" class="hover:text-green-600 transition-colors">Supplier</a>
-          <a href="#features" class="hover:text-green-600 transition-colors">Fitur</a>
-          <a href="#contact" class="hover:text-green-600 transition-colors">Bantuan</a>
+        <!-- Desktop Menu -->
+        <div class="hidden lg:flex space-x-8 font-semibold text-slate-600">
+          <a href="#" class="hover:text-green-600 transition-colors py-2">Beranda</a>
+          <a href="#suppliers" class="hover:text-green-600 transition-colors py-2">Cari Supplier</a>
+          <a href="#" class="hover:text-green-600 transition-colors py-2">Kategori</a>
+          <a href="#" class="hover:text-green-600 transition-colors py-2">Bantuan</a>
         </div>
 
         <!-- Auth Buttons -->
-        <div class="hidden lg:flex items-center gap-3">
-          <button onclick="showToast('Menuju halaman Login...')" class="text-slate-700 font-bold hover:bg-slate-100 px-5 py-2.5 rounded-xl transition-all">
-            Masuk
-          </button>
-          <button onclick="showToast('Menuju halaman Pendaftaran...')" class="bg-slate-900 hover:bg-green-600 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-xl hover:shadow-green-100 active:scale-95">
-            Daftar Gratis
+        <div class="hidden lg:flex items-center gap-4">
+          <button class="text-green-700 font-bold hover:text-green-800 px-4 py-2">Masuk</button>
+          <button
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-green-100 hover:scale-105 active:scale-95">
+            Gabung Sekarang
           </button>
         </div>
 
-        <!-- Mobile Menu Toggle -->
-        <button id="menu-btn" class="lg:hidden w-12 h-12 flex items-center justify-center text-slate-600 hover:bg-slate-100 rounded-xl transition-colors">
-          <i class="fas fa-bars-staggered text-2xl" id="menu-icon"></i>
+        <!-- Mobile Menu Button -->
+        <button id="menu-btn" class="lg:hidden p-2 text-slate-600 focus:outline-none">
+          <i class="fas fa-bars text-2xl" id="menu-icon"></i>
         </button>
       </div>
     </div>
 
-    <!-- Mobile Menu -->
-    <div id="mobile-menu" class="hidden lg:hidden absolute top-full left-0 w-full px-6 py-4">
-      <div class="bg-white rounded-3xl shadow-2xl border border-slate-100 p-6 flex flex-col gap-4 mobile-menu-enter">
-        <a href="#" class="flex items-center gap-3 text-slate-700 font-bold p-3 hover:bg-green-50 rounded-xl transition-all">
-          <i class="fas fa-home text-green-600 w-5"></i> Beranda
-        </a>
-        <a href="#suppliers" class="flex items-center gap-3 text-slate-700 font-bold p-3 hover:bg-green-50 rounded-xl transition-all">
-          <i class="fas fa-search text-green-600 w-5"></i> Cari Supplier
-        </a>
-        <a href="#features" class="flex items-center gap-3 text-slate-700 font-bold p-3 hover:bg-green-50 rounded-xl transition-all">
-          <i class="fas fa-star text-green-600 w-5"></i> Fitur Unggulan
-        </a>
-        <hr class="border-slate-100">
-        <div class="grid grid-cols-2 gap-3">
-          <button class="py-3 px-4 text-slate-700 font-bold border border-slate-200 rounded-xl active:bg-slate-50">Masuk</button>
-          <button class="py-3 px-4 bg-green-600 text-white font-bold rounded-xl shadow-lg active:scale-95">Daftar</button>
+    <!-- Mobile Menu Dropdown -->
+    <div id="mobile-menu" class="hidden lg:hidden glass-effect border-b border-green-100 px-4 pt-2 pb-6 shadow-xl">
+      <div class="flex flex-col space-y-4">
+        <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Beranda</a>
+        <a href="#suppliers" class="text-slate-700 font-medium py-2 border-b border-slate-100">Cari Supplier</a>
+        <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Kategori</a>
+        <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Tentang Kami</a>
+        <div class="flex flex-col gap-3 pt-2">
+          <button class="w-full text-green-700 font-bold py-3 border border-green-200 rounded-xl">Masuk</button>
+          <button class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100">Daftar
+            Gratis</button>
         </div>
       </div>
     </div>
   </nav>
 
   <!-- Hero Section -->
-  <header class="relative pt-32 pb-20 md:pt-52 md:pb-32 overflow-hidden">
-    <div class="absolute inset-0 hero-pattern -z-10"></div>
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex flex-col lg:flex-row items-center gap-16">
-        <!-- Text -->
-        <div class="w-full lg:w-3/5 text-center lg:text-left">
-          <div class="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-emerald-50 border border-emerald-100 text-emerald-700 text-sm font-bold mb-6">
-            <span class="flex h-2 w-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            Terpercaya oleh 10.000+ UMKM Indonesia
+  <header class="relative pt-24 md:pt-40 pb-16 md:pb-32 overflow-hidden bg-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex flex-col lg:flex-row items-center gap-12 lg:gap-8">
+
+        <!-- Left Content -->
+        <div class="w-full lg:w-1/2 text-center lg:text-left z-10">
+          <div
+            class="inline-flex items-center gap-2 py-2 px-4 rounded-full bg-green-50 text-green-700 text-sm font-bold mb-8 animate-bounce-slow">
+            <span class="relative flex h-2 w-2">
+              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span class="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            Sistem Rantai Pasok Terpintar
           </div>
-          <h1 class="text-5xl md:text-7xl font-extrabold text-slate-900 leading-[1.1] mb-8">
-            Scale-Up Bisnis Anda Dengan <span class="gradient-text">Supplier Terbaik</span>
+          <h1 class="text-4xl md:text-5xl lg:text-7xl font-black text-slate-900 leading-[1.1] mb-6">
+            Belanja Stok Jadi <span class="text-green-600 italic">Lebih Cepat</span>
           </h1>
-          <p class="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-medium">
-            Akses langsung ke ribuan manufaktur tangan pertama. Transaksi aman dengan sistem rekber pintar dan pengiriman yang terlacak real-time.
+          <p class="text-lg md:text-xl text-slate-500 mb-10 max-w-2xl mx-auto lg:mx-0 leading-relaxed">
+            Hubungkan bisnis Anda dengan ribuan manufaktur tangan pertama. Transaksi aman, pengiriman terpantau, dan
+            harga grosir termurah.
           </p>
 
-          <!-- Search -->
-          <div class="relative group max-w-2xl mx-auto lg:mx-0">
-            <div class="absolute -inset-1 bg-gradient-to-r from-green-400 to-emerald-600 rounded-[2.5rem] blur opacity-25 group-hover:opacity-40 transition duration-1000"></div>
-            <div class="relative bg-white p-2 rounded-[2.2rem] shadow-2xl flex flex-col md:flex-row items-center gap-2">
-              <div class="flex-1 flex items-center px-6 gap-4 w-full">
-                <i class="fas fa-magnifying-glass text-slate-400"></i>
-                <input id="search-input" type="text" placeholder="Cari bahan baku, elektronik, atau tekstil..." 
-                       class="w-full py-4 focus:outline-none text-slate-700 font-semibold bg-transparent">
-              </div>
-              <button onclick="handleSearch()" class="w-full md:w-auto bg-green-600 hover:bg-slate-900 text-white px-10 py-4 rounded-[1.8rem] font-bold transition-all shadow-lg active:scale-95 whitespace-nowrap">
-                Mulai Mencari
-              </button>
+          <!-- Search Bar Mobile-Ready -->
+          <div
+            class="bg-white p-3 rounded-2xl md:rounded-[2rem] shadow-2xl border border-slate-100 flex flex-col md:flex-row gap-3 max-w-3xl mx-auto lg:ml-0">
+            <div class="flex-1 flex items-center px-4 gap-3 bg-slate-50 rounded-xl md:bg-transparent">
+              <i class="fas fa-search text-green-600"></i>
+              <input id="search-input" type="text" placeholder="Cari Supplier..."
+                class="w-full py-3 md:py-4 focus:outline-none text-slate-700 bg-transparent font-medium">
             </div>
+            <button onclick="handleSearch()"
+              class="bg-green-600 hover:bg-green-700 text-white px-8 py-4 rounded-xl md:rounded-2xl font-bold transition-all shadow-lg shadow-green-200 active:scale-95 text-lg">
+              Cari Sekarang
+            </button>
+          </div>
+
+          <div class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-slate-400 font-medium">
+            <span>Populer:</span>
+            <a href="#" class="hover:text-green-600 underline">Tekstil</a>
+            <a href="#" class="hover:text-green-600 underline">Elektronik</a>
+            <a href="#" class="hover:text-green-600 underline">Bahan Makanan</a>
           </div>
         </div>
 
-        <!-- Visual -->
-        <div class="w-full lg:w-2/5 flex justify-center relative">
-          <div class="relative w-full max-w-md">
-            <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-green-100/50 rounded-full blur-[80px] -z-10"></div>
-            
-            <!-- Custom SVG Character -->
-            <svg viewBox="0 0 400 400" xmlns="http://www.w3.org/2000/svg" class="w-full h-auto animate-float">
-              <!-- Background Shape -->
-              <circle cx="200" cy="200" r="160" fill="#ecfdf5" />
-              <!-- Character Body -->
-              <rect x="120" y="140" width="160" height="140" rx="40" fill="#059669" />
-              <rect x="150" y="170" width="100" height="70" rx="20" fill="#064e3b" />
-              <!-- Head -->
-              <rect x="140" y="80" width="120" height="100" rx="30" fill="white" stroke="#e2e8f0" stroke-width="4" />
+        <!-- Right Content: Animated Character -->
+        <div class="w-full lg:w-1/2 flex justify-center relative">
+          <div class="relative w-72 h-72 md:w-96 md:h-96">
+            <!-- Background Circle Decoration -->
+            <div class="absolute inset-0 bg-green-100 rounded-full blur-3xl opacity-60"></div>
+
+            <!-- SVG Mascot Character -->
+            <svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg"
+              class="relative z-10 w-full h-full animate-float">
+              <!-- Body -->
+              <rect x="60" y="70" width="80" height="70" rx="20" fill="#10b981" />
+              <rect x="75" y="85" width="50" height="35" rx="10" fill="#065f46" />
+              <!-- Head/Screen -->
+              <rect x="70" y="40" width="60" height="45" rx="15" fill="#f8fafc" stroke="#e2e8f0" stroke-width="4" />
               <!-- Eyes -->
-              <circle cx="170" cy="130" r="8" fill="#064e3b">
-                <animate attributeName="r" values="8;6;8" dur="3s" repeatCount="indefinite" />
-              </circle>
-              <circle cx="230" cy="130" r="8" fill="#064e3b">
-                <animate attributeName="r" values="8;6;8" dur="3s" repeatCount="indefinite" />
-              </circle>
-              <!-- Smile -->
-              <path d="M185 155 Q200 165 215 155" fill="none" stroke="#064e3b" stroke-width="3" stroke-linecap="round" />
-              <!-- Hands with packages -->
-              <rect x="80" y="180" width="60" height="25" rx="12" fill="#10b981" />
-              <rect x="260" y="180" width="60" height="25" rx="12" fill="#10b981" />
-              <!-- Package Floating -->
-              <rect x="175" y="240" width="50" height="40" rx="6" fill="#f59e0b" />
-              <rect x="175" y="255" width="50" height="8" fill="#d97706" />
+              <circle cx="85" cy="62" r="4" fill="#065f46" class="animate-pulse" />
+              <circle cx="115" cy="62" r="4" fill="#065f46" class="animate-pulse" />
+              <!-- Antenna -->
+              <line x1="100" y1="40" x2="100" y2="20" stroke="#10b981" stroke-width="4" />
+              <circle cx="100" cy="15" r="5" fill="#10b981" />
+              <!-- Hands holding a package -->
+              <rect x="40" y="90" width="30" height="15" rx="7" fill="#10b981" />
+              <rect x="130" y="90" width="30" height="15" rx="7" fill="#10b981" />
+              <rect x="80" y="110" width="40" height="30" rx="4" fill="#d97706" />
+              <rect x="80" y="120" width="40" height="4" fill="#92400e" />
             </svg>
 
-            <!-- Floating Info Badges -->
-            <div class="absolute -top-4 -left-4 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-50 animate-bounce-slow">
-              <div class="w-10 h-10 bg-amber-100 rounded-full flex items-center justify-center text-amber-600">
-                <i class="fas fa-shield-check"></i>
-              </div>
-              <div class="text-left">
-                <p class="text-xs text-slate-400 font-bold">Keamanan</p>
-                <p class="text-sm font-extrabold">Terverifikasi</p>
-              </div>
+            <!-- Floating Items -->
+            <div
+              class="absolute top-10 left-0 bg-white p-3 rounded-xl shadow-lg flex items-center gap-2 animate-bounce-slow">
+              <i class="fas fa-check-circle text-green-500"></i>
+              <span class="text-xs font-bold">Terverifikasi</span>
             </div>
-
-            <div class="absolute bottom-10 -right-4 bg-white p-4 rounded-2xl shadow-xl flex items-center gap-3 border border-slate-50 animate-bounce-slow" style="animation-delay: 1.5s">
-              <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
-                <i class="fas fa-truck-fast"></i>
-              </div>
-              <div class="text-left">
-                <p class="text-xs text-slate-400 font-bold">Logistik</p>
-                <p class="text-sm font-extrabold">Instant Delivery</p>
-              </div>
+            <div
+              class="absolute bottom-10 right-0 bg-white p-3 rounded-xl shadow-lg flex items-center gap-2 animate-bounce-slow"
+              style="animation-delay: 1s">
+              <i class="fas fa-truck text-amber-500"></i>
+              <span class="text-xs font-bold">Cepat Kirim</span>
             </div>
           </div>
         </div>
@@ -242,373 +268,322 @@
     </div>
   </header>
 
-  <!-- Stats Grid -->
-  <section class="py-12 bg-slate-900 mx-6 rounded-[3rem] shadow-2xl relative z-10">
-    <div class="max-w-7xl mx-auto px-10">
-      <div class="grid grid-cols-2 lg:grid-cols-4 gap-12">
-        <div class="text-center">
-          <h3 class="text-3xl md:text-5xl font-black text-white mb-2 counter" data-target="15000">0</h3>
-          <p class="text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">Partner Supplier</p>
+  <!-- Stats Section -->
+  <section class="py-12 bg-slate-900 overflow-hidden">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-8 md:gap-12">
+        <div class="text-center group">
+          <div class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 counter" data-target="15000">0</div>
+          <div class="text-green-400 text-xs md:text-sm font-bold uppercase tracking-widest">Supplier Aktif</div>
         </div>
-        <div class="text-center">
-          <h3 class="text-3xl md:text-5xl font-black text-white mb-2 counter" data-target="250000">0</h3>
-          <p class="text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">SKU Produk</p>
+        <div class="text-center group">
+          <div class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 counter" data-target="200000">0</div>
+          <div class="text-green-400 text-xs md:text-sm font-bold uppercase tracking-widest">Produk Unggulan</div>
         </div>
-        <div class="text-center">
-          <h3 class="text-3xl md:text-5xl font-black text-white mb-2 counter" data-target="98">0</h3>
-          <p class="text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">SLA Kecepatan %</p>
+        <div class="text-center group">
+          <div class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2 counter" data-target="50">0</div>
+          <div class="text-green-400 text-xs md:text-sm font-bold uppercase tracking-widest">Kategori Industri</div>
         </div>
-        <div class="text-center">
-          <h3 class="text-3xl md:text-5xl font-black text-white mb-2">24h</h3>
-          <p class="text-emerald-400 font-bold text-xs uppercase tracking-[0.2em]">AI Support</p>
+        <div class="text-center group">
+          <div class="text-3xl md:text-4xl lg:text-5xl font-black text-white mb-2">24/7</div>
+          <div class="text-green-400 text-xs md:text-sm font-bold uppercase tracking-widest">Smart Support</div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Main Showcase -->
-  <section id="suppliers" class="py-24 md:py-40">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-16">
+  <!-- Featured Suppliers -->
+  <section id="suppliers" class="py-20 md:py-32">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="flex flex-col md:flex-row md:justify-between md:items-end gap-6 mb-16">
         <div class="max-w-2xl">
-          <span class="text-green-600 font-black text-sm uppercase tracking-widest block mb-4">Discover Partners</span>
-          <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">Supplier Unggulan <br>Bulan Ini</h2>
+          <h2 class="text-3xl md:text-4xl font-black text-slate-900 mb-4 tracking-tight">Katalog Supplier Pilihan</h2>
+          <p class="text-slate-500 text-lg leading-relaxed">Telah diaudit secara ketat oleh tim kami untuk menjamin
+            kualitas dan legalitas usaha.</p>
         </div>
-        <div class="flex gap-4">
-          <button class="p-4 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-200 transition-all">
-            <i class="fas fa-chevron-left"></i>
-          </button>
-          <button class="p-4 rounded-2xl bg-white border border-slate-200 text-slate-400 hover:text-green-600 hover:border-green-200 transition-all">
-            <i class="fas fa-chevron-right"></i>
-          </button>
+        <div class="flex items-center gap-2 text-green-600 font-bold hover:gap-4 transition-all cursor-pointer group">
+          <span>Lihat Selengkapnya</span>
+          <i class="fas fa-arrow-right"></i>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+      <div id="supplier-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
         <!-- Card 1 -->
-        <div class="card-hover bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-green-50 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
-          
-          <div class="flex justify-between items-start mb-8 relative">
-            <div class="w-16 h-16 bg-green-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl shadow-green-100">
+        <div
+          class="supplier-card bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group"
+          data-name="PT. Tekstil Maju Bersama">
+          <div class="flex justify-between items-start mb-6">
+            <div
+              class="w-14 h-14 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 text-2xl group-hover:scale-110 transition-transform">
               <i class="fas fa-industry"></i>
             </div>
-            <div class="bg-green-100 text-green-700 px-4 py-1.5 rounded-full text-xs font-black tracking-wider uppercase">
-              Official
-            </div>
+            <span
+              class="flex items-center gap-1.5 py-1 px-3 rounded-full bg-green-100 text-green-700 text-xs font-black">
+              <i class="fas fa-check-circle"></i> VERIFIED
+            </span>
           </div>
-          
-          <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Nusantara Tekstilindo</h3>
-          <p class="text-slate-400 font-medium text-sm flex items-center gap-2 mb-6">
-            <i class="fas fa-location-dot text-green-500"></i> Solo, Jawa Tengah
-          </p>
-
-          <div class="flex flex-wrap gap-2 mb-10">
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">Premium Cotton</span>
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">Grosir</span>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">PT. Tekstil Maju Bersama</h3>
+          <p class="text-slate-400 text-sm mb-6 flex items-center gap-2"><i class="fas fa-location-dot"></i> Bandung,
+            Jawa Barat</p>
+          <div class="flex flex-wrap gap-2 mb-8">
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Tekstil</span>
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Ekspor</span>
           </div>
-
-          <div class="flex items-center justify-between pt-8 border-t border-slate-50">
-            <div class="flex flex-col">
-              <div class="flex items-center gap-1 text-amber-500 font-black">
-                <i class="fas fa-star"></i> 4.9
-              </div>
-              <span class="text-xs text-slate-400 font-bold">2.4k Transaksi</span>
+          <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+            <div>
+              <span class="text-yellow-500 font-bold"><i class="fas fa-star"></i> 4.9</span>
+              <span class="text-slate-300 text-xs ml-1">(1.2k)</span>
             </div>
-            <button onclick="showToast('Menghubungkan ke Nusantara Tekstilindo...')" class="bg-slate-900 hover:bg-green-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg">
-              Detail
-            </button>
+            <button onclick="showToast('Hubungi PT. Tekstil via Chat')"
+              class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-600 transition-colors">Hubungi</button>
           </div>
         </div>
 
         <!-- Card 2 -->
-        <div class="card-hover bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-blue-50 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
-          
-          <div class="flex justify-between items-start mb-8 relative">
-            <div class="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl shadow-blue-100">
-              <i class="fas fa-microchip"></i>
+        <div
+          class="supplier-card bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group"
+          data-name="Elektronik Jaya">
+          <div class="flex justify-between items-start mb-6">
+            <div
+              class="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 text-2xl group-hover:scale-110 transition-transform">
+              <i class="fas fa-laptop-code"></i>
             </div>
-            <div class="bg-blue-100 text-blue-700 px-4 py-1.5 rounded-full text-xs font-black tracking-wider uppercase">
-              Trusted
-            </div>
+            <span class="flex items-center gap-1.5 py-1 px-3 rounded-full bg-blue-100 text-blue-700 text-xs font-black">
+              <i class="fas fa-award"></i> TOP SELLER
+            </span>
           </div>
-          
-          <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Mega Elektronika</h3>
-          <p class="text-slate-400 font-medium text-sm flex items-center gap-2 mb-6">
-            <i class="fas fa-location-dot text-blue-500"></i> Jakarta Barat
-          </p>
-
-          <div class="flex flex-wrap gap-2 mb-10">
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">IoT Device</span>
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">Reseller Ready</span>
+          <h3 class="text-xl font-bold text-slate-900 mb-2">Elektronik Jaya Abadi</h3>
+          <p class="text-slate-400 text-sm mb-6 flex items-center gap-2"><i class="fas fa-location-dot"></i> Jakarta
+            Pusat</p>
+          <div class="flex flex-wrap gap-2 mb-8">
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Gadget</span>
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Grosir</span>
           </div>
-
-          <div class="flex items-center justify-between pt-8 border-t border-slate-50">
-            <div class="flex flex-col">
-              <div class="flex items-center gap-1 text-amber-500 font-black">
-                <i class="fas fa-star"></i> 4.8
-              </div>
-              <span class="text-xs text-slate-400 font-bold">1.8k Transaksi</span>
+          <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+            <div>
+              <span class="text-yellow-500 font-bold"><i class="fas fa-star"></i> 4.8</span>
+              <span class="text-slate-300 text-xs ml-1">(942)</span>
             </div>
-            <button onclick="showToast('Menghubungkan ke Mega Elektronika...')" class="bg-slate-900 hover:bg-blue-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg">
-              Detail
-            </button>
+            <button onclick="showToast('Hubungi Elektronik Jaya via Chat')"
+              class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-600 transition-colors">Hubungi</button>
           </div>
         </div>
 
         <!-- Card 3 -->
-        <div class="card-hover bg-white rounded-[2.5rem] p-8 border border-slate-100 shadow-sm relative overflow-hidden group">
-          <div class="absolute top-0 right-0 w-32 h-32 bg-amber-50 rounded-full -mr-16 -mt-16 group-hover:scale-150 transition-transform duration-700"></div>
-          
-          <div class="flex justify-between items-start mb-8 relative">
-            <div class="w-16 h-16 bg-amber-600 rounded-2xl flex items-center justify-center text-white text-2xl shadow-xl shadow-amber-100">
-              <i class="fas fa-leaf"></i>
+        <div
+          class="supplier-card bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 group"
+          data-name="Packindo Creative">
+          <div class="flex justify-between items-start mb-6">
+            <div
+              class="w-14 h-14 bg-amber-50 rounded-2xl flex items-center justify-center text-amber-600 text-2xl group-hover:scale-110 transition-transform">
+              <i class="fas fa-box"></i>
             </div>
-            <div class="bg-amber-100 text-amber-700 px-4 py-1.5 rounded-full text-xs font-black tracking-wider uppercase">
-              Sustainable
-            </div>
+            <span
+              class="flex items-center gap-1.5 py-1 px-3 rounded-full bg-amber-100 text-amber-700 text-xs font-black">
+              <i class="fas fa-crown"></i> PREMIUM
+            </span>
           </div>
-          
-          <h3 class="text-2xl font-extrabold text-slate-900 mb-2">Eco Packaging Co.</h3>
-          <p class="text-slate-400 font-medium text-sm flex items-center gap-2 mb-6">
-            <i class="fas fa-location-dot text-amber-500"></i> Surabaya, Jatim
+          <h3 class="text-xl font-bold text-slate-900 mb-2">CV. Packindo Creative</h3>
+          <p class="text-slate-400 text-sm mb-6 flex items-center gap-2"><i class="fas fa-location-dot"></i> Surabaya,
+            Jawa Timur</p>
+          <div class="flex flex-wrap gap-2 mb-8">
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Packaging</span>
+            <span class="px-3 py-1 bg-slate-50 rounded-lg text-xs font-semibold text-slate-600">Eco-Friendly</span>
+          </div>
+          <div class="flex items-center justify-between pt-6 border-t border-slate-50">
+            <div>
+              <span class="text-yellow-500 font-bold"><i class="fas fa-star"></i> 5.0</span>
+              <span class="text-slate-300 text-xs ml-1">(156)</span>
+            </div>
+            <button onclick="showToast('Hubungi Packindo via Chat')"
+              class="bg-slate-900 text-white px-6 py-2.5 rounded-xl font-bold text-sm hover:bg-green-600 transition-colors">Hubungi</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Section with Hover Animation -->
+  <section class="py-24 bg-green-50/50">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">Satu Platform, Sejuta Solusi</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">Kami mengintegrasikan teknologi terkini untuk mempermudah operasional
+          bisnis Anda.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div
+          class="p-8 bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 border border-transparent hover:border-green-100">
+          <div
+            class="w-16 h-16 bg-green-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-green-100 mb-8">
+            <i class="fas fa-shield-halved"></i>
+          </div>
+          <h4 class="text-xl font-bold mb-4">Escrow Pintar</h4>
+          <p class="text-slate-500 leading-relaxed">Dana Anda hanya akan dicairkan ke supplier setelah barang sampai dan
+            dikonfirmasi dengan aman.</p>
+        </div>
+        <div
+          class="p-8 bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 border border-transparent hover:border-green-100">
+          <div
+            class="w-16 h-16 bg-green-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-green-100 mb-8">
+            <i class="fas fa-bolt-lightning"></i>
+          </div>
+          <h4 class="text-xl font-bold mb-4">RFQ Express</h4>
+          <p class="text-slate-500 leading-relaxed">Kirim permintaan harga ke banyak supplier sekaligus hanya dalam satu
+            klik saja.</p>
+        </div>
+        <div
+          class="p-8 bg-white rounded-3xl shadow-sm hover:shadow-xl transition-all duration-500 border border-transparent hover:border-green-100">
+          <div
+            class="w-16 h-16 bg-green-600 text-white rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-green-100 mb-8">
+            <i class="fas fa-chart-area"></i>
+          </div>
+          <h4 class="text-xl font-bold mb-4">Dashboard Analitik</h4>
+          <p class="text-slate-500 leading-relaxed">Pantau tren harga pasar dan pengeluaran stok Anda secara real-time
+            dengan grafik cerdas.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  
+  <!-- Footer Navy -->
+  <footer class="bg-[#0f172a] text-white pt-16 pb-8">
+    <div class="max-w-7xl mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-10 mb-12">
+        <div class="col-span-1 md:col-span-1">
+          <div class="flex items-center gap-2 mb-4">
+            <div class="w-8 h-8 bg-green-600 rounded flex items-center justify-center text-white font-bold">S</div>
+            <span class="text-xl font-bold">SupplierHub</span>
+          </div>
+          <p class="text-slate-400 text-sm leading-relaxed">
+            Platform B2B terpercaya untuk UMKM dan Korporasi di seluruh Indonesia.
           </p>
-
-          <div class="flex flex-wrap gap-2 mb-10">
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">Biodegradable</span>
-            <span class="bg-slate-50 px-4 py-1.5 rounded-lg text-xs font-bold text-slate-600">Custom Design</span>
-          </div>
-
-          <div class="flex items-center justify-between pt-8 border-t border-slate-50">
-            <div class="flex flex-col">
-              <div class="flex items-center gap-1 text-amber-500 font-black">
-                <i class="fas fa-star"></i> 5.0
-              </div>
-              <span class="text-xs text-slate-400 font-bold">500+ Project</span>
-            </div>
-            <button onclick="showToast('Menghubungkan ke Eco Packaging...')" class="bg-slate-900 hover:bg-amber-600 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg">
-              Detail
-            </button>
-          </div>
         </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Features Section -->
-  <section id="features" class="py-24 bg-white relative">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-        <div class="order-2 lg:order-1">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div class="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-green-600 transition-all duration-500">
-              <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-green-600 text-xl shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                <i class="fas fa-vault"></i>
-              </div>
-              <h4 class="text-xl font-extrabold mb-3 group-hover:text-white transition-colors">Rekber Pintar</h4>
-              <p class="text-slate-500 text-sm leading-relaxed group-hover:text-green-100 transition-colors">Dana aman terjaga hingga barang sampai ke tangan Anda dengan sistem verifikasi berlapis.</p>
-            </div>
-            <div class="p-8 bg-slate-50 rounded-[2rem] border border-slate-100 group hover:bg-green-600 transition-all duration-500 mt-6 md:mt-12">
-              <div class="w-14 h-14 bg-white rounded-2xl flex items-center justify-center text-green-600 text-xl shadow-sm mb-6 group-hover:scale-110 transition-transform">
-                <i class="fas fa-paper-plane"></i>
-              </div>
-              <h4 class="text-xl font-extrabold mb-3 group-hover:text-white transition-colors">RFQ Express</h4>
-              <p class="text-slate-500 text-sm leading-relaxed group-hover:text-green-100 transition-colors">Kirim permintaan penawaran ke ratusan supplier sekaligus dengan hitungan detik.</p>
-            </div>
-          </div>
-        </div>
-        <div class="order-1 lg:order-2">
-          <span class="text-green-600 font-black text-sm uppercase tracking-widest block mb-4">Kenapa Kami?</span>
-          <h2 class="text-4xl md:text-5xl font-extrabold text-slate-900 leading-tight mb-8">Ecosystem Bisnis Paling Komplit di Kelasnya</h2>
-          <p class="text-slate-500 text-lg mb-10 leading-relaxed font-medium">Kami bukan sekadar direktori. Kami adalah infrastruktur pertumbuhan bagi bisnis Anda di era digital.</p>
-          <ul class="space-y-6">
-            <li class="flex items-center gap-4 font-bold text-slate-700">
-              <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">
-                <i class="fas fa-check"></i>
-              </div>
-              Verifikasi Lapangan Supplier
-            </li>
-            <li class="flex items-center gap-4 font-bold text-slate-700">
-              <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">
-                <i class="fas fa-check"></i>
-              </div>
-              Bantuan Hukum & Kontrak Digital
-            </li>
-            <li class="flex items-center gap-4 font-bold text-slate-700">
-              <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center text-green-600 text-xs">
-                <i class="fas fa-check"></i>
-              </div>
-              Konsolidasi Pengiriman Logistik
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- CTA Section -->
-  <section class="py-24 px-6">
-    <div class="max-w-7xl mx-auto bg-green-600 rounded-[3.5rem] p-12 md:p-24 text-center relative overflow-hidden">
-      <div class="absolute top-0 right-0 w-96 h-96 bg-green-500 rounded-full -mr-32 -mt-32 opacity-50"></div>
-      <div class="absolute bottom-0 left-0 w-64 h-64 bg-green-400 rounded-full -ml-32 -mb-32 opacity-30"></div>
-      
-      <div class="relative z-10">
-        <h2 class="text-4xl md:text-6xl font-black text-white mb-8 leading-tight">Siap Untuk Melejitkan <br>Omzet Bisnis Anda?</h2>
-        <p class="text-green-100 text-lg md:text-xl mb-12 max-w-2xl mx-auto font-medium">Gabung sekarang dan nikmati gratis akses direktori premium selama 30 hari pertama.</p>
-        <div class="flex flex-col sm:flex-row justify-center gap-6">
-          <button class="bg-white text-green-700 px-12 py-5 rounded-2xl font-black text-lg shadow-2xl hover:scale-105 transition-all">Daftar Sekarang</button>
-          <button class="bg-green-700 text-white px-12 py-5 rounded-2xl font-black text-lg hover:bg-slate-900 transition-all border border-green-500">Konsultasi Gratis</button>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Footer -->
-  <footer id="contact" class="bg-slate-50 pt-24 pb-12">
-    <div class="max-w-7xl mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-16 mb-20">
+        
         <div>
-          <a href="#" class="flex items-center gap-3 mb-8">
-            <div class="w-10 h-10 bg-green-600 rounded-xl flex items-center justify-center text-white">
-              <i class="fas fa-cubes"></i>
-            </div>
-            <span class="text-2xl font-black text-slate-900">SupplierHub</span>
-          </a>
-          <p class="text-slate-400 text-sm leading-loose mb-8">Jembatan terpercaya antara UMKM dan Manufaktur Global untuk masa depan industri Indonesia.</p>
-          <div class="flex gap-4">
-            <a href="#" class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 transition-colors shadow-sm">
-              <i class="fab fa-instagram"></i>
-            </a>
-            <a href="#" class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 transition-colors shadow-sm">
-              <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="#" class="w-10 h-10 rounded-xl bg-white border border-slate-100 flex items-center justify-center text-slate-400 hover:text-green-600 transition-colors shadow-sm">
-              <i class="fab fa-x-twitter"></i>
-            </a>
-          </div>
-        </div>
-
-        <div>
-          <h5 class="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Ecosystem</h5>
-          <ul class="space-y-4">
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Marketplace</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Pusat Verifikasi</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Logistik Hub</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">API for Developers</a></li>
+          <h5 class="font-bold mb-4 text-slate-200">Layanan</h5>
+          <ul class="space-y-2 text-slate-400 text-sm">
+            <li><a href="#" class="hover:text-green-400">Verifikasi Supplier</a></li>
+            <li><a href="#" class="hover:text-green-400">Pengiriman Aman</a></li>
+            <li><a href="#" class="hover:text-green-400">Pusat Bantuan</a></li>
           </ul>
         </div>
 
         <div>
-          <h5 class="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Informasi</h5>
-          <ul class="space-y-4">
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Tentang Kami</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Karier</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Syarat & Ketentuan</a></li>
-            <li><a href="#" class="text-slate-500 text-sm font-semibold hover:text-green-600 transition-colors">Kebijakan Privasi</a></li>
+          <h5 class="font-bold mb-4 text-slate-200">Perusahaan</h5>
+          <ul class="space-y-2 text-slate-400 text-sm">
+            <li><a href="#" class="hover:text-green-400">Tentang Kami</a></li>
+            <li><a href="#" class="hover:text-green-400">Karir</a></li>
+            <li><a href="#" class="hover:text-green-400">Blog Bisnis</a></li>
           </ul>
         </div>
 
         <div>
-          <h5 class="font-bold text-slate-900 mb-8 uppercase tracking-widest text-xs">Newsletter</h5>
-          <p class="text-slate-400 text-sm mb-6 font-medium">Dapatkan update tren pasar dan supplier baru setiap minggu.</p>
+          <h5 class="font-bold mb-4 text-slate-200">Newsletter</h5>
           <div class="flex gap-2">
-            <input type="email" placeholder="Email Anda" class="w-full bg-white border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-green-500 outline-none">
-            <button class="bg-slate-900 text-white px-4 rounded-xl hover:bg-green-600 transition-colors">
-              <i class="fas fa-paper-plane"></i>
-            </button>
+            <input type="email" placeholder="Email Anda" class="bg-slate-800 border-none rounded-lg px-3 py-2 text-xs flex-1 focus:ring-1 focus:ring-green-500">
+            <button class="bg-green-600 hover:bg-green-700 px-3 py-2 rounded-lg"><i class="fas fa-paper-plane text-xs"></i></button>
           </div>
         </div>
       </div>
-
-      <div class="pt-12 border-t border-slate-200 flex flex-col md:flex-row justify-between items-center gap-6">
-        <p class="text-slate-400 text-xs font-bold tracking-wider uppercase">© 2024 SupplierHub Modern Business Network.</p>
-        <div class="flex items-center gap-6">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Visa_Inc._logo.svg/2560px-Visa_Inc._logo.svg.png" class="h-4 opacity-30 grayscale" alt="Visa">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/2a/Mastercard-logo.svg/1280px-Mastercard-logo.svg.png" class="h-6 opacity-30 grayscale" alt="Mastercard">
-          <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/PayPal.svg/1200px-PayPal.svg.png" class="h-5 opacity-30 grayscale" alt="Paypal">
-        </div>
+      
+      <div class="pt-8 border-t border-slate-800 text-center text-slate-500 text-[10px]">
+        <p>© 2024 SupplierHub Modern Business. Navy Design Edition.</p>
       </div>
     </div>
   </footer>
 
   <script>
-    // Navigation Scroll Logic
-    const nav = document.getElementById('main-nav');
-    window.addEventListener('scroll', () => {
-      if (window.scrollY > 100) {
-        nav.classList.add('glass-nav', 'py-2');
-        nav.classList.remove('py-4');
-      } else {
-        nav.classList.remove('glass-nav', 'py-2');
-        nav.classList.add('py-4');
-      }
-    });
-
-    // Mobile Menu Logic
+    // Toggle Mobile Menu
     const menuBtn = document.getElementById('menu-btn');
     const mobileMenu = document.getElementById('mobile-menu');
     const menuIcon = document.getElementById('menu-icon');
 
     menuBtn.addEventListener('click', () => {
-      mobileMenu.classList.toggle('hidden');
-      menuIcon.classList.toggle('fa-bars-staggered');
-      menuIcon.classList.toggle('fa-xmark');
+      mobileMenu.classList.toggle('mobile-menu-active');
+      menuIcon.classList.toggle('fa-bars');
+      menuIcon.classList.toggle('fa-times');
     });
 
-    // Counter Animation Logic
-    const animateCounters = () => {
-      const counters = document.querySelectorAll('.counter');
-      counters.forEach(counter => {
-        const target = parseInt(counter.getAttribute('data-target'));
-        const duration = 2000;
-        let start = 0;
-        const increment = target / (duration / 16);
+    // Navbar Scroll Effect
+    window.addEventListener('scroll', () => {
+      const nav = document.getElementById('main-nav');
+      if (window.scrollY > 40) {
+        nav.classList.add('glass-effect', 'nav-scrolled', 'border-green-100');
+      } else {
+        nav.classList.remove('glass-effect', 'nav-scrolled', 'border-green-100');
+      }
+    });
 
-        const update = () => {
-          start += increment;
-          if (start < target) {
-            counter.innerText = Math.floor(start).toLocaleString();
-            requestAnimationFrame(update);
+    // Counter Animation (Fixed to Stop at Target)
+    const counters = document.querySelectorAll('.counter');
+
+    const startCounters = () => {
+      counters.forEach(counter => {
+        const target = +counter.getAttribute('data-target');
+        const duration = 2000; // 2 detik total animasi
+        let startTime = null;
+
+        const animate = (timestamp) => {
+          if (!startTime) startTime = timestamp;
+          const progress = timestamp - startTime;
+          const percentage = Math.min(progress / duration, 1);
+
+          // Hitung nilai saat ini berdasarkan persentase waktu
+          const currentVal = Math.floor(target * percentage);
+
+          // Format tampilan
+          if (target >= 1000) {
+            counter.innerText = (currentVal / 1000).toFixed(currentVal % 1000 === 0 ? 0 : 1) + 'K+';
           } else {
-            counter.innerText = target.toLocaleString() + (target > 100 ? '+' : '');
+            counter.innerText = currentVal + '+';
+          }
+
+          if (percentage < 1) {
+            requestAnimationFrame(animate);
+          } else {
+            // Pastikan angka terakhir tepat sesuai target
+            counter.innerText = target >= 1000 ? (target / 1000) + 'K+' : target + '+';
           }
         };
-        update();
-      });
-    };
 
-    // Intersection Observer for Counters
+        requestAnimationFrame(animate);
+      });
+    }
+
+    // Observer untuk menjalankan animasi satu kali saat terlihat
+    const observerOptions = { threshold: 0.5 };
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
-          animateCounters();
-          observer.unobserve(entry.target);
+          startCounters();
+          observer.unobserve(entry.target); // Berhenti mengamati setelah jalan sekali
         }
       });
-    }, { threshold: 0.5 });
+    }, observerOptions);
 
-    observer.observe(document.querySelector('.counter').parentElement.parentElement);
+    // Mengamati area statistik
+    const statsSection = document.querySelector('.counter').parentElement.parentElement;
+    observer.observe(statsSection);
 
-    // Toast System
+    // Toast Notification
     function showToast(message) {
-      const toast = document.getElementById('toast');
-      const msg = document.getElementById('toast-message');
-      msg.innerText = message;
-      toast.classList.add('show');
-      setTimeout(() => {
-        toast.classList.remove('show');
-      }, 3500);
+      const toast = document.getElementById("toast");
+      toast.innerText = message;
+      toast.classList.add("show");
+      setTimeout(() => { toast.classList.remove("show"); }, 3000);
     }
 
-    // Search Action
+    // Search Mockup
     function handleSearch() {
-      const query = document.getElementById('search-input').value;
-      if (query.trim() !== "") {
-        showToast(`Mencari data untuk "${query}"...`);
+      const val = document.getElementById('search-input').value;
+      if (val) {
+        showToast("Mencari supplier untuk: " + val);
         document.getElementById('suppliers').scrollIntoView({ behavior: 'smooth' });
       } else {
-        showToast("Mohon ketikkan sesuatu untuk mencari!");
+        showToast("Silakan masukkan kata kunci!");
       }
     }
   </script>
