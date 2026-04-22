@@ -8,6 +8,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../auth.js"></script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
@@ -289,27 +290,24 @@
         document.getElementById('login-form').addEventListener('submit', (e) => {
             e.preventDefault();
             const pass = document.getElementById('login-pass').value;
+            const email = document.getElementById('login-email').value;
             const errorBox = document.getElementById('login-error');
             const submitBtn = document.getElementById('login-submit');
 
             submitBtn.innerText = 'Memproses...';
             submitBtn.disabled = true;
 
-            setTimeout(() => {
-                if (pass.length < 6) {
-                    errorBox.classList.remove('hidden');
-                    document.getElementById('login-error-msg').innerText = 'Kredensial tidak valid (min. 6 karakter).';
-                    submitBtn.innerText = 'Masuk (Login)';
-                    submitBtn.disabled = false;
-                } else {
-                    localStorage.setItem('hub_token', 'mock_jwt_' + Math.random());
-                    localStorage.setItem('hub_role', currentRole);
-                    renderDashboard(currentRole);
-                    showView('dashboard');
-                    submitBtn.innerText = 'Masuk (Login)';
-                    submitBtn.disabled = false;
-                }
-            }, 1000);
+            loginUser(email, pass, currentRole).then((userSession) => {
+                let dashUrl = 'umkm.html';
+                if (userSession.role === 'admin') dashUrl = 'admin.html';
+                if (userSession.role === 'supplier') dashUrl = 'supplier.html';
+                window.location.href = '../dashboard/' + dashUrl;
+            }).catch((err) => {
+                errorBox.classList.remove('hidden');
+                document.getElementById('login-error-msg').innerText = err;
+                submitBtn.innerText = 'Masuk (Login)';
+                submitBtn.disabled = false;
+            });
         });
 
         document.getElementById('form-reg-umkm').addEventListener('submit', (e) => {
@@ -341,52 +339,17 @@
             showView('login');
         }
 
-        function renderDashboard(role) {
-            document.getElementById('dash-title').innerText = `Dashboard ${role}`;
-            document.getElementById('dash-status').innerText = `Masuk sebagai ${role} | Token Aktif`;
 
-            const container = document.getElementById('dash-cards');
-            container.innerHTML = '';
-
-            const menus = {
-                'UMKM': [
-                    { t: 'Cari Bahan', d: 'Katalog supplier terpercaya', i: 'search' },
-                    { t: 'Pesanan', d: 'Lacak pengiriman bahan baku', i: 'shopping-bag' },
-                    { t: 'Profil Toko', d: 'Atur identitas bisnis Anda', i: 'user-cog' }
-                ],
-                'Supplier': [
-                    { t: 'Manajemen Produk', d: 'Update stok & kategori bahan', i: 'box' },
-                    { t: 'Order Masuk', d: 'Lihat permintaan dari UMKM', i: 'clipboard-list' },
-                    { t: 'Legalitas', d: 'Status verifikasi dokumen', i: 'file-check' }
-                ],
-                'Admin': [
-                    { t: 'Validasi Supplier', d: 'Cek pendaftaran mitra baru', i: 'shield-alert' },
-                    { t: 'Log Transaksi', d: 'Monitor arus barang sistem', i: 'activity' },
-                    { t: 'Settings', d: 'Konfigurasi sistem utama', i: 'settings' }
-                ]
-            };
-
-            menus[role].forEach(item => {
-                container.innerHTML += `
-                    <div class="p-6 rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-all cursor-pointer group">
-                        <div class="flex justify-between items-center mb-4">
-                            <i data-lucide="${item.i}" class="w-6 h-6 text-[#02C39A]"></i>
-                            <i data-lucide="chevron-right" class="w-4 h-4 text-gray-300 group-hover:translate-x-1 transition-transform"></i>
-                        </div>
-                        <h4 class="font-semibold text-gray-900 mb-1">${item.t}</h4>
-                        <p class="text-xs text-gray-500">${item.d}</p>
-                    </div>
-                `;
-            });
-            initIcons();
-        }
 
         window.onload = () => {
-            const savedRole = localStorage.getItem('hub_role');
-            if (savedRole) {
-                renderDashboard(savedRole);
-                showView('dashboard');
+            const userSession = checkAuth();
+            if (userSession) {
+                let dashUrl = 'umkm.html';
+                if (userSession.role === 'admin') dashUrl = 'admin.html';
+                if (userSession.role === 'supplier') dashUrl = 'supplier.html';
+                window.location.href = '../dashboard/' + dashUrl;
             } else {
+                localStorage.clear();
                 showView('login');
             }
         };

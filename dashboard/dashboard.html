@@ -10,6 +10,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <!-- Lucide Icons (via CDN) -->
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../auth.js"></script>
     <style>
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
@@ -112,7 +113,7 @@
 
             <!-- Bottom Section: User & Logout -->
             <div class="px-6 pb-8">
-                <button onclick="handleLogout()" class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:text-red-400 transition-colors group">
+                <button onclick="logoutUser('../Login/login.html')" class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:text-red-400 transition-colors group">
                     <div class="flex items-center gap-3">
                         <i data-lucide="log-out" size="20"></i>
                         <span class="font-semibold text-sm">Keluar Sistem</span>
@@ -259,128 +260,7 @@
     </div>
 
     <script>
-        // Konfigurasi Dashboard per Role
-        const roleConfig = {
-            admin: {
-                title: 'Admin Command Center',
-                stats: [
-                    { label: 'Total Supplier', value: '128', icon: 'users', change: '+12%', positive: true },
-                    { label: 'Total Transaksi', value: 'Rp 2.4M', icon: 'shopping-cart', change: '+18%', positive: true },
-                    { label: 'Pesanan Aktif', value: '45', icon: 'package', change: '-4%', positive: false },
-                    { label: 'Revenue Growth', value: '24%', icon: 'bar-chart-3', change: '+2%', positive: true },
-                ],
-                nav: [
-                    { name: 'Overview', icon: 'layout-dashboard' },
-                    { name: 'Daftar Supplier', icon: 'users' },
-                    { name: 'Kontrol Stok', icon: 'package' },
-                    { name: 'Keuangan', icon: 'bar-chart-3' },
-                    { name: 'Pengaturan', icon: 'settings' }
-                ],
-                tableTitle: 'Monitoring Transaksi Global',
-                quickBtn: 'Supplier'
-            },
-            supplier: {
-                title: 'Supplier Portal',
-                stats: [
-                    { label: 'Stok Barang', value: '1,240', icon: 'package', change: '+5%', positive: true },
-                    { label: 'Pesanan Baru', value: '12', icon: 'bell', change: 'Baru', positive: true },
-                    { label: 'Pendapatan', value: 'Rp 450jt', icon: 'bar-chart-3', change: '+10%', positive: true },
-                    { label: 'Rating Toko', value: '4.8/5', icon: 'check-circle-2', change: 'Stabil', positive: true },
-                ],
-                nav: [
-                    { name: 'Dashboard', icon: 'layout-dashboard' },
-                    { name: 'Produk Saya', icon: 'package' },
-                    { name: 'Daftar Pesanan', icon: 'shopping-cart' },
-                    { name: 'Analitik Toko', icon: 'bar-chart-3' },
-                    { name: 'Toko Saya', icon: 'settings' }
-                ],
-                tableTitle: 'Pesanan Masuk Terbaru',
-                quickBtn: 'Produk'
-            },
-            user: {
-                title: 'Marketplace Buyer',
-                stats: [
-                    { label: 'Total Pesanan', value: '24', icon: 'shopping-cart', change: 'Bulan ini', positive: true },
-                    { label: 'Sedang Dikirim', value: '3', icon: 'truck', change: 'Aktif', positive: true },
-                    { label: 'Voucher', value: '5', icon: 'tag', change: 'Tersedia', positive: true },
-                    { label: 'Poin Hub', value: '12,500', icon: 'zap', change: '+500', positive: true },
-                ],
-                nav: [
-                    { name: 'Belanja', icon: 'layout-dashboard' },
-                    { name: 'Pesanan Saya', icon: 'shopping-cart' },
-                    { name: 'Lacak Paket', icon: 'truck' },
-                    { name: 'Wishlist', icon: 'heart' },
-                    { name: 'Bantuan', icon: 'help-circle' }
-                ],
-                tableTitle: 'Riwayat Pembelian Saya',
-                quickBtn: 'Order'
-            }
-        };
-
-        const logs = [
-            { time: '2m ago', title: 'Peringatan Stok', desc: 'Item sisa sedikit', icon: 'clock', color: 'text-orange-500 bg-orange-50' },
-            { time: '1h ago', title: 'Pembayaran', desc: 'Transaksi Berhasil', icon: 'check-circle-2', color: 'text-emerald-500 bg-emerald-50' }
-        ];
-
-        let currentUser = null;
-        let currentTab = '';
-
-        // 1. Fungsi Cek Sesi Autentikasi
-        function checkAuth() {
-            const sessionData = localStorage.getItem('user_session');
-            const loginOverlay = document.getElementById('login-overlay');
-            const appContent = document.getElementById('app-content');
-            
-            if (!sessionData || sessionData === "undefined" || sessionData === "null") {
-                // Tampilkan overlay login jika tidak ada sesi
-                if (loginOverlay) loginOverlay.classList.remove('hidden');
-                if (appContent) appContent.classList.add('invisible');
-                lucide.createIcons();
-            } else {
-                try {
-                    currentUser = JSON.parse(sessionData);
-                    if (currentUser && currentUser.role && roleConfig[currentUser.role]) {
-                        // Sembunyikan overlay login dan tampilkan konten
-                        if (loginOverlay) loginOverlay.classList.add('hidden');
-                        if (appContent) appContent.classList.remove('invisible');
-                        
-                        currentTab = roleConfig[currentUser.role].nav[0].name;
-                        renderDashboard();
-                        document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                    } else {
-                        throw new Error("Role tidak valid");
-                    }
-                } catch (e) {
-                    console.error("Data sesi korup:", e);
-                    localStorage.removeItem('user_session');
-                    if (loginOverlay) loginOverlay.classList.remove('hidden');
-                }
-            }
-        }
-
-        // 2. Fungsi Eksekusi Login
-        function performLogin(name, role) {
-            const userSession = {
-                name: name,
-                role: role,
-                email: `${role}@hubsupplier.com`,
-                lastLogin: new Date().toISOString()
-            };
-            
-            // Simpan ke localStorage
-            localStorage.setItem('user_session', JSON.stringify(userSession));
-            
-            // Re-render dashboard
-            checkAuth();
-        }
-
-        // 3. Fungsi Logout
-        function handleLogout() {
-            localStorage.removeItem('user_session');
-            currentUser = null;
-            // Langsung panggil checkAuth untuk menampilkan modal login
-            checkAuth();
-        }
+        // Backend config is now provided by auth.js
 
         // 4. Render Komponen Dashboard (Sama seperti sebelumnya)
         function renderDashboard() {
@@ -515,7 +395,19 @@
         }
 
         // Jalankan pengecekan saat halaman dimuat
-        window.addEventListener('DOMContentLoaded', checkAuth);
+        window.addEventListener('DOMContentLoaded', () => {
+            currentUser = checkAuth('../Login/login.html');
+            if (currentUser) {
+                const config = getRoleConfig(currentUser.role);
+                currentTab = config.nav[0].name;
+                renderDashboard();
+                document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                
+                // Hapus kelas invisible karena sudah diautentikasi
+                const appContent = document.getElementById('app-content');
+                if (appContent) appContent.classList.remove('invisible');
+            }
+        });
     </script>
 </body>
 </html>
