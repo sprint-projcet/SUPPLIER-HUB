@@ -142,8 +142,8 @@
         <div class="hidden lg:flex space-x-8 font-semibold text-slate-600">
           <a href="#" class="hover:text-green-600 transition-colors py-2">Beranda</a>
           <a href="#suppliers" class="hover:text-green-600 transition-colors py-2">Cari Supplier</a>
-          <a href="#" class="hover:text-green-600 transition-colors py-2">Kategori</a>
-          <a href="#" class="hover:text-green-600 transition-colors py-2">Bantuan</a>
+          <a href="#kategori" class="hover:text-green-600 transition-colors py-2">Kategori</a>
+          <a href="#bantuan" class="hover:text-green-600 transition-colors py-2">Bantuan</a>
         </div>
 
         <!-- Auth Buttons -->
@@ -167,8 +167,8 @@
       <div class="flex flex-col space-y-4">
         <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Beranda</a>
         <a href="#suppliers" class="text-slate-700 font-medium py-2 border-b border-slate-100">Cari Supplier</a>
-        <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Kategori</a>
-        <a href="#" class="text-slate-700 font-medium py-2 border-b border-slate-100">Tentang Kami</a>
+        <a href="#kategori" class="text-slate-700 font-medium py-2 border-b border-slate-100">Kategori</a>
+        <a href="#bantuan" class="text-slate-700 font-medium py-2 border-b border-slate-100">Bantuan</a>
         <div class="flex flex-col gap-3 pt-2">
           <button onclick="window.location.href='Login/login.html'" class="w-full text-green-700 font-bold py-3 border border-green-200 rounded-xl">Masuk</button>
           <button onclick="window.location.href='Login/login.html'" class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100">Daftar
@@ -448,6 +448,72 @@
   </section>
 
   
+  <!-- Categories Section -->
+  <section id="kategori" class="py-24 bg-white">
+    <div class="max-w-7xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">Kategori Bahan Baku Utama</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">Temukan suplai terbaik untuk berbagai lini bisnis Anda.</p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <div class="group cursor-pointer">
+          <div class="bg-green-50 rounded-3xl p-6 text-center border border-transparent hover:border-green-200 hover:bg-green-100 transition-all duration-300">
+            <i class="fas fa-tshirt text-3xl text-green-600 mb-4 group-hover:scale-110 transition-transform"></i>
+            <h4 class="font-bold text-slate-800">Tekstil & Pakaian</h4>
+          </div>
+        </div>
+        <div class="group cursor-pointer">
+          <div class="bg-blue-50 rounded-3xl p-6 text-center border border-transparent hover:border-blue-200 hover:bg-blue-100 transition-all duration-300">
+            <i class="fas fa-microchip text-3xl text-blue-600 mb-4 group-hover:scale-110 transition-transform"></i>
+            <h4 class="font-bold text-slate-800">Elektronik</h4>
+          </div>
+        </div>
+        <div class="group cursor-pointer">
+          <div class="bg-amber-50 rounded-3xl p-6 text-center border border-transparent hover:border-amber-200 hover:bg-amber-100 transition-all duration-300">
+            <i class="fas fa-seedling text-3xl text-amber-600 mb-4 group-hover:scale-110 transition-transform"></i>
+            <h4 class="font-bold text-slate-800">Bahan Makanan</h4>
+          </div>
+        </div>
+        <div class="group cursor-pointer">
+          <div class="bg-rose-50 rounded-3xl p-6 text-center border border-transparent hover:border-rose-200 hover:bg-rose-100 transition-all duration-300">
+            <i class="fas fa-box text-3xl text-rose-600 mb-4 group-hover:scale-110 transition-transform"></i>
+            <h4 class="font-bold text-slate-800">Kemasan</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Help / FAQ Section -->
+  <section id="bantuan" class="py-24 bg-slate-50">
+    <div class="max-w-4xl mx-auto px-4">
+      <div class="text-center mb-16">
+        <h2 class="text-3xl md:text-5xl font-black text-slate-900 mb-4">Pusat Bantuan (FAQ)</h2>
+        <p class="text-slate-500 max-w-xl mx-auto">Pertanyaan yang sering ditanyakan seputar SupplierHub.</p>
+      </div>
+      <div class="space-y-4">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <h4 class="text-lg font-bold text-slate-900 mb-2">Bagaimana cara mendaftar sebagai Supplier?</h4>
+          <p class="text-slate-500">Klik tombol "Gabung Sekarang" di pojok kanan atas, pilih opsi "Daftar sebagai Supplier", dan lengkapi dokumen perusahaan Anda (SIUP/NIB). Tim kami akan memverifikasi dalam waktu 1x24 jam.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <h4 class="text-lg font-bold text-slate-900 mb-2">Apakah ada biaya layanan untuk UMKM?</h4>
+          <p class="text-slate-500">Tidak ada. Pendaftaran dan pencarian supplier untuk UMKM 100% gratis. Biaya layanan hanya dikenakan kepada pihak Supplier ketika transaksi berhasil.</p>
+        </div>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <h4 class="text-lg font-bold text-slate-900 mb-2">Bagaimana sistem pembayarannya?</h4>
+          <p class="text-slate-500">Kami menggunakan sistem Escrow (Rekening Bersama). Dana UMKM akan ditahan oleh sistem dan baru diteruskan ke Supplier setelah barang diterima dengan aman oleh pembeli.</p>
+        </div>
+      </div>
+      <div class="mt-12 text-center">
+        <p class="text-slate-600 mb-4">Butuh bantuan lebih lanjut?</p>
+        <button onclick="showToast('Menghubungkan ke Customer Service...')" class="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-xl font-bold transition-all shadow-lg shadow-green-200">
+          Hubungi Customer Service
+        </button>
+      </div>
+    </div>
+  </section>
+
   <!-- Footer Navy -->
   <footer class="bg-[#0f172a] text-white pt-16 pb-8">
     <div class="max-w-7xl mx-auto px-6">
