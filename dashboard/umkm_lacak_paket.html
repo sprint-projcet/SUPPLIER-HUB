@@ -1,0 +1,275 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supplier Hub - UMKM Dashboard</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="../auth.js"></script>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 20px; }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 overflow-hidden">
+    
+    <div id="app-content" class="min-h-screen flex invisible">
+        <!-- Sidebar - UMKM Theme (Navy) -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transition-all duration-300 transform lg:relative lg:translate-x-0 border-r border-slate-800 flex flex-col">
+            <div class="p-8 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                        <i data-lucide="package" class="group-hover:text-emerald-400"></i>
+                    </div>
+                    <span class="text-xl font-bold tracking-tight">HUB<span class="text-emerald-400">SUPPLIER</span></span>
+                </div>
+                <button onclick="toggleSidebar()" class="lg:hidden text-slate-400"><i data-lucide="x"></i></button>
+            </div>
+
+            <nav class="mt-4 px-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
+                <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">UMKM MENU</p>
+                <a href="umkm.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="layout-dashboard" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Dashboard</span>
+                </a>
+                <a href="umkm_pesanan_saya.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="shopping-cart" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Pesanan Saya</span>
+                </a>
+                <a href="umkm_lacak_paket.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
+                    <i data-lucide="truck" class="text-white"></i> <span class="font-semibold text-sm">Lacak Paket</span>
+                </a>
+                <a href="umkm_wishlist.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="heart" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Wishlist</span>
+                </a>
+                <a href="umkm_bantuan.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="help-circle" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Bantuan</span>
+                </a>
+            </nav>
+
+            <div class="px-6 pb-8">
+                <button onclick="logoutUser('../Login/login.html')" class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:text-red-400 transition-colors group">
+                    <div class="flex items-center gap-3">
+                        <i data-lucide="log-out" size="20"></i> <span class="font-semibold text-sm">Keluar Sistem</span>
+                    </div>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 flex flex-col h-screen overflow-hidden">
+            <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
+                <div class="flex items-center gap-4">
+                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><i data-lucide="menu"></i></button>
+                    <div>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Lacak Paket</h1>
+                        <p class="text-xs text-slate-500 hidden md:block">Belanja stok kebutuhan usaha Anda.</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-6">
+                    <div class="hidden md:flex items-center bg-slate-50 rounded-xl px-4 py-2.5 w-72 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all">
+                        <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
+                        <input type="text" placeholder="Cari Supplier..." class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700" />
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-3 pl-2">
+                            <div class="text-right hidden sm:block">
+                                <p id="user-display-name" class="text-sm font-bold text-slate-900 leading-none">UMKM</p>
+                                <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-1.5">Role: UMKM</p>
+                            </div>
+                            <div class="w-11 h-11 rounded-xl bg-emerald-50 border-2 border-white shadow-sm overflow-hidden ring-1 ring-slate-200 flex py-1 justify-center">
+                                <i data-lucide="store" class="text-emerald-600 w-7 h-7 mt-1.5"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </header>
+
+            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+<section id="page-tracking" >
+                    <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <div
+                            class="bg-white px-5 py-3 rounded-2xl border border-slate-200 flex items-center gap-4 shadow-sm inline-flex">
+                            <span
+                                class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded">No.
+                                Resi</span>
+                            <span
+                                class="font-mono font-bold text-emerald-600 text-xl tracking-wider">LK-9921004412</span>
+                            <div class="h-6 w-px bg-slate-200"></div>
+                            <button class="text-slate-400 hover:text-slate-700 transition-colors p-1"><i
+                                    data-lucide="copy" class="w-5 h-5"></i></button>
+                        </div>
+                        <button
+                            class="px-5 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
+                            <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
+                        </button>
+                    </div>
+
+                    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
+                        <!-- Timeline Status -->
+                        <div class="xl:col-span-2 space-y-6">
+
+                            <!-- Status Terkini (Highlight) -->
+                            <div
+                                class="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group">
+                                <div
+                                    class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-100 relative z-10">
+                                    <i data-lucide="truck" class="w-8 h-8 animate-pulse"></i>
+                                </div>
+                                <div class="relative z-10">
+                                    <p
+                                        class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                                        <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span> Status
+                                        Terkini
+                                    </p>
+                                    <h4 class="text-xl font-black text-slate-900 tracking-tight">Kurir sedang menuju
+                                        lokasi Anda</h4>
+                                    <p class="text-sm text-slate-500 mt-1">Estimasi tiba: <span
+                                            class="font-bold text-slate-900">Hari ini, 16:45 WIB</span></p>
+                                </div>
+                                <div
+                                    class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-[100px] -z-0 opacity-50">
+                                </div>
+                            </div>
+
+                            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                                <h3 class="font-black text-slate-900 mb-8 tracking-tight text-lg">Riwayat Perjalanan
+                                </h3>
+                                <!-- Timeline Vertical -->
+                                <div
+                                    class="relative space-y-10 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100">
+                                    <!-- Step 4 (Future) -->
+                                    <div class="relative pl-14">
+                                        <div
+                                            class="absolute left-0 top-1 w-10 h-10 bg-white border-2 border-slate-200 rounded-full flex items-center justify-center z-10 text-slate-300">
+                                            <i data-lucide="check" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-slate-400 text-lg">Tiba di Tujuan</h5>
+                                            <p class="text-sm text-slate-400 italic mt-1">Menunggu penerimaan oleh UMKM
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 3 (Active) -->
+                                    <div class="relative pl-14">
+                                        <div
+                                            class="absolute left-0 top-1 w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center z-10 shadow-lg shadow-emerald-500/30 ring-4 ring-white">
+                                            <i data-lucide="truck" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-black text-slate-900 text-lg">Sedang Dikirim</h5>
+                                            <p class="text-sm text-slate-500 mt-1 mb-3">Kurir: Budi Sudarsono (+62
+                                                812-3456-xxx)</p>
+                                            <p
+                                                class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block">
+                                                22 Apr 2024 - 14:20 WIB</p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 2 (Success) -->
+                                    <div class="relative pl-14">
+                                        <div
+                                            class="absolute left-0 top-1 w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center z-10 border-2 border-emerald-500 ring-4 ring-white">
+                                            <i data-lucide="package" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-slate-900 text-lg">Diproses di Hub LogistiKita
+                                            </h5>
+                                            <p class="text-sm text-slate-500 mt-1 mb-3">Penyortiran barang di Hub
+                                                Jakarta Selatan</p>
+                                            <p
+                                                class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block">
+                                                22 Apr 2024 - 09:15 WIB</p>
+                                        </div>
+                                    </div>
+                                    <!-- Step 1 (Success) -->
+                                    <div class="relative pl-14">
+                                        <div
+                                            class="absolute left-0 top-1 w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center z-10 border-2 border-emerald-500 ring-4 ring-white">
+                                            <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                                        </div>
+                                        <div>
+                                            <h5 class="font-bold text-slate-900 text-lg">Request Diterima</h5>
+                                            <p class="text-sm text-slate-500 mt-1 mb-3">Pesanan pengiriman telah
+                                                dikonfirmasi sistem</p>
+                                            <p
+                                                class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block">
+                                                22 Apr 2024 - 08:00 WIB</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Info Paket & Aksi -->
+                        <div class="xl:col-span-1 space-y-6">
+                            <div class="bg-white p-8 rounded-[2rem] border border-slate-100 shadow-sm">
+                                <h3 class="font-black text-slate-900 mb-6 flex items-center gap-2 tracking-tight">
+                                    <i data-lucide="info" class="w-5 h-5 text-emerald-600"></i> Detail Paket
+                                </h3>
+                                <div class="space-y-5">
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">
+                                            Pengirim</p>
+                                        <p class="text-sm font-bold text-slate-900">PT. Supplier Bahan Makmur</p>
+                                    </div>
+                                    <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                                        <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">
+                                            Isi Paket</p>
+                                        <p class="text-sm font-bold text-slate-900 leading-relaxed">25kg Tepung
+                                            Terigu<br>10kg Gula Pasir</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Map Placeholder -->
+                            <div
+                                class="bg-slate-100 rounded-[2rem] h-56 flex flex-col items-center justify-center text-slate-400 border border-slate-200 relative overflow-hidden group">
+                                <i data-lucide="map" class="w-12 h-12 mb-3 text-slate-300"></i>
+                                <span class="text-[10px] font-black uppercase tracking-widest">Peta Real-time</span>
+                                <div
+                                    class="absolute inset-0 bg-slate-900/10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-sm">
+                                    <button
+                                        class="bg-white text-sm font-black text-slate-900 px-6 py-3 rounded-xl shadow-xl hover:scale-105 transition-transform">Buka
+                                        Peta Langsung</button>
+                                </div>
+                            </div>
+
+                            <button onclick="konfirmasiTerima()"
+                                class="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold py-4 rounded-xl shadow-xl transition-all flex items-center justify-center gap-3 group">
+                                Konfirmasi Diterima
+                                <div
+                                    class="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center group-hover:bg-emerald-500 transition-colors">
+                                    <i data-lucide="check" class="w-4 h-4"></i>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+        
+        window.addEventListener('DOMContentLoaded', () => {
+            const user = checkAuth('../Login/login.html');
+            if (user) {
+                if(user.role !== 'user') {
+                    window.location.href = '../Login/login.html';
+                } else {
+                    document.getElementById('user-display-name').innerText = user.email || 'UMKM';
+                    const dateEl = document.getElementById('current-date');
+                    if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                    document.getElementById('app-content').classList.remove('invisible');
+                    lucide.createIcons();
+                }
+            }
+        });
+    </script>
+</body>
+</html>

@@ -25,7 +25,7 @@
             <div class="p-8 flex items-center justify-between">
                 <div class="flex items-center gap-3">
                     <div class="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                        <i data-lucide="package" class="text-white"></i>
+                        <i data-lucide="package" class="group-hover:text-emerald-400"></i>
                     </div>
                     <span class="text-xl font-bold tracking-tight">HUB<span class="text-emerald-400">SUPPLIER</span></span>
                 </div>
@@ -34,11 +34,11 @@
 
             <nav class="mt-4 px-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
                 <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">UMKM MENU</p>
-                <a href="umkm.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
-                    <i data-lucide="layout-dashboard" class="text-white"></i> <span class="font-semibold text-sm">Dashboard</span>
+                <a href="umkm.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                    <i data-lucide="layout-dashboard" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Dashboard</span>
                 </a>
-                <a href="umkm_pesanan_saya.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="shopping-cart" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Pesanan Saya</span>
+                <a href="umkm_pesanan_saya.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
+                    <i data-lucide="shopping-cart" class="text-white"></i> <span class="font-semibold text-sm">Pesanan Saya</span>
                 </a>
                 <a href="umkm_lacak_paket.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="truck" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Lacak Paket</span>
@@ -66,7 +66,7 @@
                 <div class="flex items-center gap-4">
                     <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><i data-lucide="menu"></i></button>
                     <div>
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Dashboard UMKM (Pembeli)</h1>
+                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Pesanan Saya</h1>
                         <p class="text-xs text-slate-500 hidden md:block">Belanja stok kebutuhan usaha Anda.</p>
                     </div>
                 </div>
@@ -90,95 +90,51 @@
             </header>
 
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+
                 <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
                     <div>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Ringkasan Pembelian</h2>
-                        <p class="text-slate-500 text-sm">Update otomatis: <span id="current-date"></span></p>
+                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Pesanan Saya</h2>
+                        <p class="text-slate-500 text-sm">Pantau status pesanan bahan baku Anda.</p>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                    <!-- Stat 1 -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-600">
-                                <i data-lucide="shopping-cart"></i>
-                            </div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Bulan Ini</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Pesanan</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">24</p>
-                    </div>
-                    <!-- Stat 2 -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="p-4 rounded-2xl bg-slate-900 text-white">
-                                <i data-lucide="truck"></i>
-                            </div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Aktif</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sedang Dikirim</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">3</p>
-                    </div>
-                    <!-- Stat 3 -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-600">
-                                <i data-lucide="tag"></i>
-                            </div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Tersedia</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Voucher</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">5</p>
-                    </div>
-                    <!-- Stat 4 -->
-                    <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
-                        <div class="flex justify-between items-start mb-6">
-                            <div class="p-4 rounded-2xl bg-slate-900 text-white">
-                                <i data-lucide="zap"></i>
-                            </div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">+500</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Poin Hub</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">12,500</p>
-                    </div>
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
+                    <button class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap">Semua</button>
+                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Belum Bayar</button>
+                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Dikemas</button>
+                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Dikirim</button>
+                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Selesai</button>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <!-- Table Section -->
-                    <div class="lg:col-span-2">
-                        <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden">
-                            <div class="p-8 border-b border-slate-50 flex justify-between items-center">
+                <div class="space-y-6">
+                    <!-- Order 1 -->
+                    <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="store" class="text-emerald-600 w-5 h-5"></i>
+                                <span class="font-bold text-slate-900">PT Sejahtera Abadi</span>
+                            </div>
+                            <span class="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-600">SEDANG DIKIRIM</span>
+                        </div>
+                        <div class="flex gap-4">
+                            <div class="w-20 h-20 bg-slate-100 rounded-xl flex-shrink-0 flex justify-center items-center">
+                                <i data-lucide="package" class="w-8 h-8 text-slate-300"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h4 class="font-bold text-slate-900">Tepung Terigu Premium 1Kg</h4>
+                                <p class="text-sm text-slate-500 mt-1">25 x Rp 12.000</p>
+                            </div>
+                            <div class="text-right flex flex-col justify-between">
                                 <div>
-                                    <h3 class="font-black text-slate-900 text-lg tracking-tight">Riwayat Pembelian Saya</h3>
+                                    <p class="text-xs text-slate-500 font-bold mb-1">Total Belanja</p>
+                                    <p class="font-black text-emerald-600 text-lg">Rp 300.000</p>
                                 </div>
-                            </div>
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left">
-                                    <thead>
-                                        <tr class="bg-slate-50/50 text-slate-400 text-[10px] uppercase tracking-[0.2em] font-black">
-                                            <th class="px-8 py-5">Pesanan ID</th>
-                                            <th class="px-8 py-5">Status</th>
-                                            <th class="px-8 py-5 text-right">Nilai Pembelian</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-slate-50">
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-8 py-5 flex items-center gap-4"><div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"><i data-lucide="truck" size="18"></i></div><span class="text-sm font-bold">ORD-9125</span></td>
-                                            <td class="px-8 py-5"><span class="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-600">DIKIRIM</span></td>
-                                            <td class="px-8 py-5 text-right font-black">Rp 2,500,000</td>
-                                        </tr>
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-8 py-5 flex items-center gap-4"><div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"><i data-lucide="package" size="18"></i></div><span class="text-sm font-bold">ORD-9126</span></td>
-                                            <td class="px-8 py-5"><span class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600">SELESAI</span></td>
-                                            <td class="px-8 py-5 text-right font-black">Rp 800,000</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <button class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">Lacak Paket</button>
                             </div>
                         </div>
                     </div>
                 </div>
+
             </div>
         </main>
     </div>
