@@ -353,16 +353,8 @@
 
 
         window.onload = () => {
-            const userSession = checkAuth();
-            if (userSession) {
-                let dashUrl = 'umkm.html';
-                if (userSession.role === 'admin') dashUrl = 'admin.html';
-                if (userSession.role === 'supplier') dashUrl = 'supplier.html';
-                window.location.href = '../dashboard/' + dashUrl;
-            } else {
-                localStorage.clear();
-                showView('login');
-            }
+            // Selalu tampilkan form login agar user bisa login ulang jika diinginkan
+            showView('login');
         };
     </script>
 </body>
