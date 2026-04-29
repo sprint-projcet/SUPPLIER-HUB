@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -34,21 +34,21 @@
 
             <nav class="mt-4 px-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
                 <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">ADMIN MENU</p>
-                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
+                <a href="admin.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
                     <i data-lucide="layout-dashboard" class="text-white"></i> <span class="font-semibold text-sm">Overview</span>
-                </button>
-                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                </a>
+                <a href="admin_daftar_supplier.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="users" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Daftar Supplier</span>
-                </button>
-                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                </a>
+                <a href="admin_kontrol_stok.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="package" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Kontrol Stok</span>
-                </button>
-                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                </a>
+                <a href="admin_keuangan.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="bar-chart-3" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Keuangan</span>
-                </button>
-                <button class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                </a>
+                <a href="admin_pengaturan.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="settings" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Pengaturan</span>
-                </button>
+                </a>
             </nav>
 
             <div class="px-6 pb-8">
@@ -197,7 +197,8 @@
                     window.location.href = '../Login/login.html';
                 } else {
                     document.getElementById('user-display-name').innerText = user.email || 'Admin';
-                    document.getElementById('current-date').innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
+                    const dateEl = document.getElementById('current-date');
+                    if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');
                     lucide.createIcons();
                 }
