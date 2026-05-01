@@ -172,6 +172,86 @@ graph LR
     C_Order -->|If Paid| HTTP_Log
 ```
 
+## 6. Implementasi Algoritma Inti
+
+Sistem backend mengintegrasikan 3 algoritma utama untuk memastikan performa yang cepat dan efisien dalam pemrosesan data katalog serta pesanan.
+
+### 6.1. Knuth-Morris-Pratt (KMP) - Pencarian Teks
+
+- **Penempatan**: Pada endpoint pencarian produk atau pencarian nama supplier (`GET /api/items?search={query}`).
+- **Alur Pengaplikasian**: Ketika _request_ pencarian masuk, backend mengambil memori array data produk. Algoritma KMP akan langsung mencocokkan pola _query_ yang diinput oleh UMKM ke setiap teks nama bahan baku secara efisien tanpa _backtracking_ (menghemat komputasi dengan kompleksitas $O(n+m)$).
+- **Cara Implementasi / Pseudo-code**:
+  Di level _Service_ Golang, KMP memfilter _array of struct_ sebelum dikembalikan ke HTTP _Response_.
+  ```go
+  // Pseudo-code KMP di Golang
+  func KMPMatch(text string, pattern string) bool {
+      // 1. Buat array LPS (Longest Prefix Suffix) dari pattern
+      // 2. Lakukan iterasi pada text dan pattern secara sekuensial
+      // 3. Jika cocok seluruh pattern, return true
+      // 4. Jika ada karakter tidak cocok, geser indeks pola berdasarkan tabel LPS
+  }
+  // Implementasi:
+  // var filteredItems []Item
+  // for _, item := range allItems {
+  //     if KMPMatch(strings.ToLower(item.Name), query) {
+  //         filteredItems = append(filteredItems, item)
+  //     }
+  // }
+  ```
+
+### 6.2. Quick Sort / Merge Sort - Pengurutan Data
+
+- **Penempatan**: Pada mekanisme filter/sorting setelah data difilter oleh KMP (atau secara global) via `GET /api/items?sort_by=price_asc`.
+- **Alur Pengaplikasian**: Hasil _array_ produk dari pencarian KMP akan langsung dioper ke dalam fungsi `QuickSort()`. Jika UMKM menekan "Harga Termurah", pivot diatur berdasarkan `integer` harga (_Price_) dan akan diurutkan secara sangat responsif di dalam memori internal server rata-rata $O(n \log n)$.
+- **Cara Implementasi / Pseudo-code**:
+  Dipanggil pada array `filteredItems` hasil KMP.
+  ```go
+  // Pseudo-code Quick Sort (Ascending by Price)
+  func QuickSortPrice(items []Item, low, high int) {
+      if low < high {
+          pi := partition(items, low, high)
+          QuickSortPrice(items, low, pi-1)
+          QuickSortPrice(items, pi+1, high)
+      }
+  }
+  func partition(items []Item, low, high int) int {
+      pivot := items[high].Price
+      i := low - 1
+      for j := low; j < high; j++ {
+          if items[j].Price <= pivot {
+              i++
+              items[i], items[j] = items[j], items[i] // Swap
+          }
+      }
+      items[i+1], items[high] = items[high], items[i+1]
+      return i + 1
+  }
+  ```
+
+### 6.3. Binary Search - Validasi Eksistensi Terurut
+
+- **Penempatan**: Berjalan sebagai _guard clause_ atau validasi ketika UMKM menekan tombol order di endpoint pemesanan (`POST /api/orders`).
+- **Alur Pengaplikasian**: Sesuai Aturan No. 6: Validasi wajib. Sebelum backend melangkah ke kalkulasi berat "Biaya Layanan Supplier 3%" dan menembak Gateway SmartBank, backend akan memvalidasi apakah `item_id` benar-benar valid. Backend menggunakan Binary Search yang mencari di daftar ID cache yang sudah tersortir secara sangat cepat $O(\log n)$.
+- **Cara Implementasi / Pseudo-code**:
+  Backend menarik/menyiapkan array ID produk yang sudah di-_sort_ (misalnya dari Redis Cache/DB index), lalu mencari kecocokan `item_id`.
+  ```go
+  // Pseudo-code Binary Search untuk Validasi
+  func IsItemValid(sortedIDs []string, targetID string) bool {
+      low, high := 0, len(sortedIDs)-1
+      for low <= high {
+          mid := low + (high-low)/2
+          if sortedIDs[mid] == targetID {
+              return true // Item Valid
+          } else if sortedIDs[mid] < targetID {
+              low = mid + 1
+          } else {
+              high = mid - 1
+          }
+      }
+      return false // Item Tidak Ditemukan / Invalid
+  }
+  ```
+
 ---
 
 **Status Dokumen:** ✅ Selesai
