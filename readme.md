@@ -80,12 +80,12 @@ Arsitektur aplikasi akan dipisahkan menjadi komponen Frontend, Backend, dan Mock
 
 ```mermaid
 graph TD
-    subgraph Klien UMKM / Supplier
+    subgraph "Klien UMKM / Supplier"
         UI[Frontend Web UI<br>HTML, Tailwind, JS]
     end
 
-    subgraph SupplierHub System
-        subgraph Backend Golang
+    subgraph "SupplierHub System"
+        subgraph "Backend Golang"
             API_Auth[Auth Service]
             API_Product[Product & Stock Service]
             API_Order[Order Service]
@@ -94,7 +94,7 @@ graph TD
         DB[(Database SQL<br>PostgreSQL/MySQL)]
     end
 
-    subgraph External Ecosystem (Mocked/Real)
+    subgraph "External Ecosystem (Mocked/Real)"
         GW{API Gateway}
         Bank[SmartBank API]
         Logistik[LogistiKita API]
