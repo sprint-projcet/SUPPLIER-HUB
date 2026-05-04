@@ -141,6 +141,11 @@
                     <p class="text-gray-500 text-sm">Temukan supplier bahan baku terbaik</p>
                 </div>
             </div>
+            <div id="reg-umkm-error"
+                class="hidden mb-6 p-3 bg-red-50 text-red-600 rounded-lg flex items-start gap-2 text-sm border border-red-100">
+                <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+                <span id="reg-umkm-error-msg"></span>
+            </div>
             <form id="form-reg-umkm" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="md:col-span-2">
@@ -186,6 +191,11 @@
                     <h2 class="text-2xl font-bold text-gray-900">Daftar Mitra Supplier</h2>
                     <p class="text-gray-500 text-sm">Kelola supply chain Anda bersama kami</p>
                 </div>
+            </div>
+            <div id="reg-supplier-error"
+                class="hidden mb-6 p-3 bg-red-50 text-red-600 rounded-lg flex items-start gap-2 text-sm border border-red-100">
+                <i data-lucide="alert-circle" class="w-5 h-5 shrink-0"></i>
+                <span id="reg-supplier-error-msg"></span>
             </div>
             <form id="form-reg-supplier" class="space-y-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -283,6 +293,12 @@
             views.forEach(v => {
                 document.getElementById(`view-${v}`).classList.add('hidden');
             });
+            
+            // Sembunyikan error message lama saat pindah form
+            if (document.getElementById('reg-umkm-error')) document.getElementById('reg-umkm-error').classList.add('hidden');
+            if (document.getElementById('reg-supplier-error')) document.getElementById('reg-supplier-error').classList.add('hidden');
+            if (document.getElementById('login-error')) document.getElementById('login-error').classList.add('hidden');
+
             document.getElementById(`view-${viewId}`).classList.remove('hidden');
             initIcons();
         }
@@ -347,7 +363,9 @@
                 document.getElementById('success-desc').innerText = `Kami telah mendaftarkan ${inputs[1].value} ke dalam sistem. Silakan login.`;
                 showView('success');
             } catch (err) {
-                alert(err.message);
+                const errorBox = document.getElementById('reg-umkm-error');
+                errorBox.classList.remove('hidden');
+                document.getElementById('reg-umkm-error-msg').innerText = err.message;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Daftar Sekarang';
@@ -388,7 +406,9 @@
                 document.getElementById('success-desc').innerText = 'Dokumen legalitas Anda sedang ditinjau oleh admin. Silakan login untuk mengecek status.';
                 showView('success');
             } catch (err) {
-                alert(err.message);
+                const errorBox = document.getElementById('reg-supplier-error');
+                errorBox.classList.remove('hidden');
+                document.getElementById('reg-supplier-error-msg').innerText = err.message;
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerText = 'Kirim Dokumen & Daftar';
