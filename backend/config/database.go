@@ -7,6 +7,7 @@ import (
 	"supplierhub-backend/models"
 
 	"github.com/joho/godotenv"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
@@ -46,4 +47,30 @@ func ConnectDatabase() {
 	}
 
 	DB = database
+
+	// SEEDER: Membuat akun Admin default jika belum ada
+	seedAdmin()
+}
+
+func seedAdmin() {
+	var admin models.User
+	// Cek apakah admin sudah ada
+	if err := DB.Where("email = ?", "admin@supplierhub.com").First(&admin).Error; err != nil {
+		// Jika tidak ada, buat admin baru
+		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
+		
+		newAdmin := models.User{
+			BusinessName: "System Administrator",
+			Email:        "admin@supplierhub.com",
+			PasswordHash: string(hashedPassword),
+			Role:         models.RoleAdmin,
+			Status:       "active",
+		}
+		
+		if err := DB.Create(&newAdmin).Error; err == nil {
+			log.Println("✅ Akun Admin default berhasil dibuat (admin@supplierhub.com / admin123)")
+		} else {
+			log.Printf("⚠️ Gagal membuat akun Admin default: %v\n", err)
+		}
+	}
 }
