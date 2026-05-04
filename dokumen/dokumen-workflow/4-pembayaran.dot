@@ -1,0 +1,25 @@
+digraph Pembayaran {
+    rankdir=TB;
+    node [shape=box, style=filled, fillcolor="#f9f9f9", fontname="Arial"];
+    
+    Start [shape=oval, fillcolor="#d4edda", label="Mulai"];
+    Input [label="Input: order_id, total_amount, bank_request_data"];
+    Validasi [shape=diamond, fillcolor="#fff3cd", label="Validasi Payload Request"];
+    ProsesBayar [label="Proses: Kirim request POST API Gateway -> SmartBank"];
+    CekStatus [shape=diamond, fillcolor="#fff3cd", label="Status Response dari Bank"];
+    UpdateDB [label="Proses: Update Status Order (Paid / Failed)"];
+    TriggerLogistik [label="Proses Tambahan: Picu LogistiKita jika Paid"];
+    Output [label="Output: Status Transaksi Pembayaran & Data Payment"];
+    End [shape=oval, fillcolor="#f8d7da", label="Selesai"];
+
+    Start -> Input;
+    Input -> Validasi;
+    Validasi -> ProsesBayar [label="Valid"];
+    Validasi -> Output [label="Tidak Valid"];
+    ProsesBayar -> CekStatus;
+    CekStatus -> UpdateDB [label="Callback Status Diterima"];
+    UpdateDB -> TriggerLogistik [label="Jika Paid"];
+    TriggerLogistik -> Output;
+    UpdateDB -> Output [label="Jika Failed"];
+    Output -> End;
+}
