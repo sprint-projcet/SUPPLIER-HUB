@@ -321,21 +321,78 @@
             });
         });
 
-        document.getElementById('form-reg-umkm').addEventListener('submit', (e) => {
+        document.getElementById('form-reg-umkm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const email = e.target.querySelector('input[type="email"]').value;
-            document.getElementById('success-title').innerText = 'Pendaftaran UMKM Berhasil!';
-            document.getElementById('success-desc').innerText = `Kami telah mengirimkan email konfirmasi ke ${email}. ID Pengguna Anda: UMKM-${Math.floor(Math.random() * 9000)}`;
-            showView('success');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Mendaftar...';
+
+            const inputs = e.target.querySelectorAll('input, textarea');
+            const formData = new FormData();
+            formData.append("role", "user");
+            formData.append("business_name", inputs[0].value);
+            formData.append("email", inputs[1].value);
+            formData.append("password", inputs[2].value);
+            formData.append("address", inputs[3].value); // textarea
+
+            try {
+                const response = await fetch("http://localhost:8080/api/auth/register", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Terjadi kesalahan');
+
+                document.getElementById('success-title').innerText = 'Pendaftaran UMKM Berhasil!';
+                document.getElementById('success-desc').innerText = `Kami telah mendaftarkan ${inputs[1].value} ke dalam sistem. Silakan login.`;
+                showView('success');
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Daftar Sekarang';
+            }
         });
 
-        document.getElementById('form-reg-supplier').addEventListener('submit', (e) => {
+        document.getElementById('form-reg-supplier').addEventListener('submit', async (e) => {
             e.preventDefault();
-            document.getElementById('success-icon').innerHTML = '<i data-lucide="clock" class="w-8 h-8"></i>';
-            document.getElementById('success-icon').className = 'w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4';
-            document.getElementById('success-title').innerText = 'Menunggu Verifikasi';
-            document.getElementById('success-desc').innerText = 'Dokumen legalitas Anda sedang ditinjau oleh admin. Kami akan memberi kabar dalam 24 jam.';
-            showView('success');
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            submitBtn.innerText = 'Mengunggah...';
+
+            const inputs = e.target.querySelectorAll('input, select');
+            const fileInput = document.getElementById('file-supplier');
+
+            const formData = new FormData();
+            formData.append("role", "supplier");
+            formData.append("business_name", inputs[0].value);
+            formData.append("email", inputs[1].value);
+            formData.append("password", inputs[2].value);
+            formData.append("category", inputs[3].value);
+            formData.append("region", inputs[4].value);
+            if(fileInput.files.length > 0) {
+                formData.append("document", fileInput.files[0]);
+            }
+
+            try {
+                const response = await fetch("http://localhost:8080/api/auth/register", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+                if (!response.ok) throw new Error(result.error || 'Terjadi kesalahan');
+
+                document.getElementById('success-icon').innerHTML = '<i data-lucide="clock" class="w-8 h-8"></i>';
+                document.getElementById('success-icon').className = 'w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4';
+                document.getElementById('success-title').innerText = 'Menunggu Verifikasi';
+                document.getElementById('success-desc').innerText = 'Dokumen legalitas Anda sedang ditinjau oleh admin. Silakan login untuk mengecek status.';
+                showView('success');
+            } catch (err) {
+                alert(err.message);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.innerText = 'Kirim Dokumen & Daftar';
+            }
         });
 
         document.getElementById('file-supplier').addEventListener('change', (e) => {

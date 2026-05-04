@@ -62,27 +62,30 @@ const roleConfig = {
  * Fungsi untuk simulasi login ke sistem.
  */
 function loginUser(email, password, role) {
-    return new Promise((resolve, reject) => {
-        // Simulasi delay request server 1 detik
-        setTimeout(() => {
-            if (password.length < 6) {
-                reject('Kredensial tidak valid (min. 6 karakter).');
-            } else {
-                let dashRole = 'user';
-                if (role === 'Supplier') dashRole = 'supplier';
-                if (role === 'Admin') dashRole = 'admin';
-
-                const userSession = {
-                    name: role,       // Simulasi nama pakai role sementara
-                    role: dashRole,   // Role yang diolah dashboard
-                    email: email,
-                    token: 'mock_jwt_token_' + Math.random().toString(36).substring(2),
-                    lastLogin: new Date().toISOString()
-                };
-                localStorage.setItem('user_session', JSON.stringify(userSession));
-                resolve(userSession);
-            }
-        }, 1000);
+    return fetch("http://localhost:8080/api/auth/login", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ email: email, password: password })
+    })
+    .then(response => response.json().then(data => ({ status: response.status, ok: response.ok, data })))
+    .then(({ status, ok, data }) => {
+        if (!ok) {
+            throw new Error(data.error || 'Terjadi kesalahan saat login.');
+        }
+        
+        const userSession = {
+            name: data.user.business_name || role,
+            role: data.role,
+            email: data.user.email,
+            token: data.token,
+            id: data.user.id,
+            lastLogin: new Date().toISOString()
+        };
+        
+        localStorage.setItem('user_session', JSON.stringify(userSession));
+        return userSession;
     });
 }
 

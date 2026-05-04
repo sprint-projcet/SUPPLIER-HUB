@@ -7,13 +7,13 @@ import (
 	"supplierhub-backend/models"
 
 	"github.com/joho/godotenv"
-	"gorm.io/driver/postgres"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 )
 
 var DB *gorm.DB
 
-// ConnectDatabase menginisialisasi hubungan koneksi aplikasi dengan PostgreSQL
+// ConnectDatabase menginisialisasi hubungan koneksi aplikasi dengan MySQL
 func ConnectDatabase() {
 	// Memuat konfigurasi environment variables (opsional jika sudah ada OS ENV)
 	err := godotenv.Load()
@@ -23,16 +23,16 @@ func ConnectDatabase() {
 
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
-		// Default config (contoh development)
-		dsn = "host=localhost user=postgres password=postgres dbname=supplierhub port=5432 sslmode=disable"
+		// Default config untuk MySQL (contoh development)
+		dsn = "root:@tcp(127.0.0.1:3306)/supplierhub?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 
-	database, err := gorm.Open(postgres.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
 	if err != nil {
-		log.Fatalf("Gagal terhubung ke database: %v", err)
+		log.Fatalf("Gagal terhubung ke database MySQL: %v", err)
 	}
 
-	log.Println("Database Terhubung!")
+	log.Println("Database MySQL Terhubung!")
 
 	// Menjalankan Auto Migration (Menyesuaikan skema tabel ke Data Models secara otomatis)
 	err = database.AutoMigrate(
