@@ -40,7 +40,8 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		supplierGroup.GET("/stats", controllers.GetSupplierStats)
 		supplierGroup.GET("/products", controllers.GetSupplierProducts)
-		// CRUD Produk biasanya akan ada Endpoint POST/PUT/DELETE juga di sini
+		supplierGroup.POST("/products", controllers.CreateProduct)
+		// CRUD Produk biasanya akan ada Endpoint PUT/DELETE juga di sini
 		supplierGroup.GET("/orders", controllers.GetSupplierOrders)
 		supplierGroup.PUT("/orders/:id", controllers.UpdateOrderStatus)
 	}
