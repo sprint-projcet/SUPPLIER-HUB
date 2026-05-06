@@ -60,6 +60,12 @@
       from { opacity: 0; transform: scale(0.95); }
       to { opacity: 1; transform: scale(1); }
     }
+
+    .wishlist-heart.liked {
+      fill: #ef4444;
+      stroke: #ef4444;
+      filter: drop-shadow(0 0 5px rgba(239, 68, 68, 0.4));
+    }
   </style>
 </head>
 <body class="text-slate-800">
@@ -67,27 +73,28 @@
   <!-- Header Navigasi -->
   <nav class="sticky top-0 z-50 glass-effect border-b border-green-100 py-4 px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <div class="flex items-center gap-2">
-        <div class="w-10 h-10 flex items-center justify-center">
-                   <img src="assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain"> 
-
-        </div>
-        <span class="text-xl font-bold text-slate-900 tracking-tight">SUPPLIER<span class="text-green-brand">HUB</span></span>
-      </div>
-      <!-- Sisi Kanan: Tombol Dashboard & Keranjang -->
-      <div class="flex items-center gap-3">
-        <button onclick="window.location.href='dashboard.html'" class="flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all text-sm font-semibold shadow-md shadow-green-200 group">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 transform group-hover:-translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+      <!-- Sisi Kiri: Logo -->
+      <div class="flex items-center gap-2 cursor-pointer" onclick="resetAll()">
+        <div class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-xl">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
           </svg>
-          Dashboard
-        </button>
+        </div>
+        <span class="text-xl font-bold text-slate-900 tracking-tight uppercase hidden sm:block">SUPPLIER<span class="text-green-brand">HUB</span></span>
+      </div>
 
+      <!-- Sisi Kanan: Keranjang & Dashboard -->
+      <div class="flex items-center gap-2 sm:gap-3">
+        <!-- Tombol Keranjang -->
         <button onclick="toggleCart()" class="relative p-2.5 text-slate-700 bg-white border border-green-100 rounded-full hover:bg-green-50 transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
           </svg>
-          <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+          <span id="cartBadge" class="absolute -top-1 -right-1 bg-green-600 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden">0</span>
+        </button>
+
+        <button onclick="window.location.href='dashboard.html'" class="hidden md:flex items-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-xl hover:bg-green-700 transition-all text-sm font-semibold shadow-md shadow-green-200">
+          Dashboard
         </button>
       </div>
     </div>
@@ -122,40 +129,22 @@
     </div>
   </div>
 
-<!-- Main Content -->
-<main class="max-w-7xl mx-auto px-6 py-12">
-  <!-- Section Header: Margin bottom dikurangi jadi mb-4 -->
-  <div class="flex flex-col items-center text-center mb-4">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-emerald-800 mb-3 tracking-tight">
-      Kemurnian Alam, <span class="text-emerald-600">Kualitas Utama</span>
-    </h1>
-    
-    <p class="text-emerald-700/70 text-lg md:text-xl max-w-2xl leading-relaxed font-medium">
-      Menghadirkan bahan baku pilihan langsung dari sumber terbaik untuk memenuhi standar tinggi kebutuhan Anda.
-    </p>
-
-    <!-- Garis pemanis tetap ada tapi margin top dikecilkan -->
-    <div class="w-16 h-1 bg-emerald-500 mt-4 rounded-full"></div>
-  </div>
-
-  <!-- Search Bar: Margin top dikurangi jadi mt-4 agar lebih dekat dengan judul -->
-  <div class="flex justify-center">
-    <div class="relative mt-4 mb-10 group w-full md:w-96">
-      <input 
-        id="searchInput" 
-        type="text" 
-        placeholder="Cari bahan baku terbaik..." 
-        class="pl-12 pr-6 py-4 border border-emerald-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 w-full bg-white transition-all duration-300 shadow-sm group-hover:shadow-md text-slate-700 placeholder:text-slate-400"
-      >
+  <!-- Main Content -->
+  <main class="max-w-7xl mx-auto px-6 py-8">
+    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
+      <div>
+        <h1 class="text-3xl font-bold text-slate-900 mb-2">Penyedia Bahan Baku</h1>
+        <p class="text-slate-500">Kualitas terbaik dari alam, dikirim langsung ke dapur Anda.</p>
+      </div>
       
-      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 transition-colors duration-300">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="relative">
+        <input id="searchInput" type="text" placeholder="Cari bahan baku..." class="pl-10 pr-4 py-3 border border-green-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-brand/30 w-full md:w-80 bg-white transition-all shadow-sm">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3.5 top-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
     </div>
-  </div>
-</main>
+
     <!-- Filter Kategori -->
     <div class="mb-10 overflow-x-auto pb-4 no-scrollbar">
       <div class="flex gap-3" id="categoryContainer">
@@ -210,8 +199,20 @@
                         <p id="modalCategory" class="text-xs font-bold text-green-600 uppercase tracking-widest"></p>
                         <span id="modalAvailabilityTag" class="text-[10px] font-bold px-2 py-0.5 rounded-md"></span>
                     </div>
-                    <h2 id="modalTitle" class="text-2xl font-bold text-slate-900 mb-2"></h2>
+                    <div class="flex justify-between items-center mb-1">
+                      <h2 id="modalTitle" class="text-2xl font-bold text-slate-900"></h2>
+                      <button id="modalWishBtn" class="p-2 rounded-full hover:bg-slate-100 transition-colors">
+                        <svg xmlns="http://www.w3.org/2000/svg" id="modalHeartIcon" class="h-6 w-6 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+                      </button>
+                    </div>
                     
+                    <div class="flex items-center gap-2 mb-3 text-slate-500">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                        </svg>
+                        <span id="modalSupplier" class="text-sm font-semibold"></span>
+                    </div>
+
                     <div class="flex items-center gap-2 mb-4">
                         <div class="flex text-yellow-400"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg></div>
                         <span id="modalRating" class="text-sm font-bold text-slate-700"></span>
@@ -263,8 +264,9 @@
     </div>
   </div>
 
+  <!-- Toast Notifikasi -->
   <div id="toast" class="fixed bottom-6 right-6 translate-x-80 opacity-0 bg-white border border-green-100 text-slate-800 px-6 py-4 rounded-2xl shadow-2xl transition-all duration-500 z-[100] flex items-center gap-3">
-    <div class="w-8 h-8 bg-green-brand rounded-full flex items-center justify-center shadow-inner">
+    <div id="toastIcon" class="w-8 h-8 bg-green-brand rounded-full flex items-center justify-center shadow-inner">
       <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>
     </div>
     <span id="toastMessage" class="font-medium">Berhasil!</span>
@@ -272,21 +274,22 @@
 
   <script>
     const products = [
-      { id: 1, title: 'Beras Premium 5kg', price: 75000, category: 'Karbohidrat', rating: 4.8, reviews: 124, badge: 'Terlaris', isAvailable: true, img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400', desc: 'Beras putih pulen kualitas super dari petani Cianjur. Tanpa pemutih dan pengawet tambahan.', stock: '500+ Karung', origin: 'Cianjur, Jawa Barat' },
-      { id: 2, title: 'Minyak Goreng 2L', price: 38000, category: 'Minyak', rating: 4.5, reviews: 89, isAvailable: true, img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=400', desc: 'Minyak kelapa sawit pilihan yang jernih dan sehat. Cocok untuk menggoreng pada suhu tinggi.', stock: '120 Dus', origin: 'Medan, Sumatera Utara' },
-      { id: 3, title: 'Telur Ayam 1kg', price: 28000, category: 'Protein', rating: 4.9, reviews: 256, badge: 'Segar', isAvailable: false, img: 'https://images.unsplash.com/photo-1516106366711-237ebfeef681?auto=format&fit=crop&q=80&w=400', desc: 'Telur ayam negeri segar pilihan, langsung dari peternakan. Isi 15-16 butir per kg.', stock: '0 Peti', origin: 'Blitar, Jawa Timur' },
-      { id: 4, title: 'Daging Sapi Lokal 1kg', price: 145000, category: 'Protein', rating: 4.7, reviews: 56, isAvailable: true, img: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&q=80&w=400', desc: 'Daging sapi segar potongan paha belakang (knuckle). Rendah lemak dan tekstur lembut.', stock: '25 Kg', origin: 'Boyolali, Jawa Tengah' },
-      { id: 5, title: 'Gula Pasir 1kg', price: 16500, category: 'Bumbu', rating: 4.6, reviews: 92, isAvailable: true, img: 'https://images.unsplash.com/photo-1622484210811-39e763136746?auto=format&fit=crop&q=80&w=400', desc: 'Gula kristal putih murni dari tebu pilihan. Butiran halus dan mudah larut.', stock: '300 Kg', origin: 'Lampung' },
-      { id: 6, title: 'Tepung Terigu 1kg', price: 13000, category: 'Karbohidrat', rating: 4.4, reviews: 45, isAvailable: true, img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400', desc: 'Tepung terigu protein sedang, cocok untuk aneka kue, donat, dan gorengan.', stock: '150 Kg', origin: 'Jakarta' },
-      { id: 7, title: 'Bawang Merah 1kg', price: 35000, category: 'Sayuran', rating: 4.8, reviews: 112, isAvailable: true, img: 'https://images.unsplash.com/photo-1580201092675-a0a6a6cafbb1?auto=format&fit=crop&q=80&w=400', desc: 'Bawang merah Brebes ukuran sedang-besar. Aroma kuat dan tahan lama disimpan.', stock: '80 Kg', origin: 'Brebes, Jawa Tengah' },
-      { id: 8, title: 'Bawang Putih 1kg', price: 42000, category: 'Sayuran', rating: 4.7, reviews: 78, isAvailable: false, img: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=400', desc: 'Bawang putih kating premium. Siung besar, padat, dan sangat aromatik.', stock: '0 Kg', origin: 'Impor Grade A' },
-      { id: 9, title: 'Garam Dapur 500g', price: 5000, category: 'Bumbu', rating: 4.3, reviews: 34, isAvailable: true, img: 'https://images.unsplash.com/photo-1533560232123-d8ed32332309?auto=format&fit=crop&q=80&w=400', desc: 'Garam beryodium tinggi. Putih bersih dan diolah secara higienis.', stock: '500 Pcs', origin: 'Pati, Jawa Tengah' },
-      { id: 10, title: 'Susu Cair Fresh 1L', price: 19000, category: 'Lainnya', rating: 4.9, reviews: 167, isAvailable: true, img: 'https://images.unsplash.com/photo-1550583724-125581cc255b?auto=format&fit=crop&q=80&w=400', desc: 'Susu sapi murni yang telah dipasteurisasi. Tanpa tambahan gula dan pengawet.', stock: '40 Liter', origin: 'Lembang, Jawa Barat' },
-      { id: 11, title: 'Cabai Rawit 1kg', price: 55000, category: 'Sayuran', rating: 4.5, reviews: 65, isAvailable: true, img: 'https://images.unsplash.com/photo-1588252303782-cb80119cb665?auto=format&fit=crop&q=80&w=400', desc: 'Cabai rawit merah petik segar. Pedas maksimal dan kualitas terbaik.', stock: '20 Kg', origin: 'Garut, Jawa Barat' },
-      { id: 12, title: 'Ayam Potong 1kg', price: 42000, category: 'Protein', rating: 4.8, reviews: 203, badge: 'Diskon', isAvailable: true, img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=400', desc: 'Ayam broiler potong higienis. Tanpa suntikan hormon dan antibiotik.', stock: '35 Kg', origin: 'Bogor, Jawa Barat' }
+      { id: 1, title: 'Beras Premium 5kg', price: 75000, category: 'Karbohidrat', supplier: 'PT Tani Makmur', rating: 4.8, reviews: 124, badge: 'Terlaris', isAvailable: true, img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=400', desc: 'Beras putih pulen kualitas super dari petani Cianjur. Tanpa pemutih dan pengawet tambahan.', stock: '500+ Karung', origin: 'Cianjur, Jawa Barat' },
+      { id: 2, title: 'Minyak Goreng 2L', price: 38000, category: 'Minyak', supplier: 'PT Sawit Sejahtera', rating: 4.5, reviews: 89, isAvailable: true, img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=400', desc: 'Minyak kelapa sawit pilihan yang jernih dan sehat. Cocok untuk menggoreng pada suhu tinggi.', stock: '120 Dus', origin: 'Medan, Sumatera Utara' },
+      { id: 3, title: 'Telur Ayam 1kg', price: 28000, category: 'Protein', supplier: 'Farm Segar Blitar', rating: 4.9, reviews: 256, badge: 'Segar', isAvailable: false, img: 'https://images.unsplash.com/photo-1516106366711-237ebfeef681?auto=format&fit=crop&q=80&w=400', desc: 'Telur ayam negeri segar pilihan, langsung dari peternakan. Isi 15-16 butir per kg.', stock: '0 Peti', origin: 'Blitar, Jawa Timur' },
+      { id: 4, title: 'Daging Sapi Lokal 1kg', price: 145000, category: 'Protein', supplier: 'RPH Berkah Jaya', rating: 4.7, reviews: 56, isAvailable: true, img: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&q=80&w=400', desc: 'Daging sapi segar potongan paha belakang (knuckle). Rendah lemak dan tekstur lembut.', stock: '25 Kg', origin: 'Boyolali, Jawa Tengah' },
+      { id: 5, title: 'Gula Pasir 1kg', price: 16500, category: 'Bumbu', supplier: 'PG Gula Manis', rating: 4.6, reviews: 92, isAvailable: true, img: 'https://images.unsplash.com/photo-1622484210811-39e763136746?auto=format&fit=crop&q=80&w=400', desc: 'Gula kristal putih murni dari tebu pilihan. Butiran halus dan mudah larut.', stock: '300 Kg', origin: 'Lampung' },
+      { id: 6, title: 'Tepung Terigu 1kg', price: 13000, category: 'Karbohidrat', supplier: 'PT Pangan Mandiri', rating: 4.4, reviews: 45, isAvailable: true, img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=400', desc: 'Tepung terigu protein sedang, cocok untuk aneka kue, donat, dan gorengan.', stock: '150 Kg', origin: 'Jakarta' },
+      { id: 7, title: 'Bawang Merah 1kg', price: 35000, category: 'Sayuran', supplier: 'Bawang Brebes Lestari', rating: 4.8, reviews: 112, isAvailable: true, img: 'https://images.unsplash.com/photo-1580201092675-a0a6a6cafbb1?auto=format&fit=crop&q=80&w=400', desc: 'Bawang merah Brebes ukuran sedang-besar. Aroma kuat dan tahan lama disimpan.', stock: '80 Kg', origin: 'Brebes, Jawa Tengah' },
+      { id: 8, title: 'Bawang Putih 1kg', price: 42000, category: 'Sayuran', supplier: 'Bawang Brebes Lestari', rating: 4.7, reviews: 78, isAvailable: false, img: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=400', desc: 'Bawang putih kating premium. Siung besar, padat, dan sangat aromatik.', stock: '0 Kg', origin: 'Impor Grade A' },
+      { id: 9, title: 'Garam Dapur 500g', price: 5000, category: 'Bumbu', supplier: 'UD Garam Rakyat', rating: 4.3, reviews: 34, isAvailable: true, img: 'https://images.unsplash.com/photo-1533560232123-d8ed32332309?auto=format&fit=crop&q=80&w=400', desc: 'Garam beryodium tinggi. Putih bersih dan diolah secara higienis.', stock: '500 Pcs', origin: 'Pati, Jawa Tengah' },
+      { id: 10, title: 'Susu Cair Fresh 1L', price: 19000, category: 'Lainnya', supplier: 'Lembang Dairy Farm', rating: 4.9, reviews: 167, isAvailable: true, img: 'https://images.unsplash.com/photo-1550583724-125581cc255b?auto=format&fit=crop&q=80&w=400', desc: 'Susu sapi murni yang telah dipasteurisasi. Tanpa tambahan gula dan pengawet.', stock: '40 Liter', origin: 'Lembang, Jawa Barat' },
+      { id: 11, title: 'Cabai Rawit 1kg', price: 55000, category: 'Sayuran', supplier: 'Sayur Kita Official', rating: 4.5, reviews: 65, isAvailable: true, img: 'https://images.unsplash.com/photo-1588252303782-cb80119cb665?auto=format&fit=crop&q=80&w=400', desc: 'Cabai rawit merah petik segar. Pedas maksimal dan kualitas terbaik.', stock: '20 Kg', origin: 'Garut, Jawa Barat' },
+      { id: 12, title: 'Ayam Potong 1kg', price: 42000, category: 'Protein', supplier: 'Unggas Prima Sentosa', rating: 4.8, reviews: 203, badge: 'Diskon', isAvailable: true, img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=400', desc: 'Ayam broiler potong higienis. Tanpa suntikan hormon dan antibiotik.', stock: '35 Kg', origin: 'Bogor, Jawa Barat' }
     ];
 
     let cart = [];
+    let wishlistIds = []; // Hanya menyimpan ID untuk status 'love'
     let currentCategory = 'All';
     let searchQuery = '';
 
@@ -317,7 +320,7 @@
       
       const filtered = products.filter(p => {
         const matchesCat = currentCategory === 'All' || p.category === currentCategory;
-        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase());
+        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.supplier.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesCat && matchesSearch;
       });
 
@@ -329,12 +332,13 @@
         document.getElementById('noResults').classList.add('hidden');
         
         filtered.forEach((p, index) => {
+          const isLiked = wishlistIds.includes(p.id);
           const card = document.createElement('div');
           const isOutOfStock = p.isAvailable === false;
-          card.className = `bg-white rounded-2xl border border-green-50 overflow-hidden card-hover transition-all duration-300 cursor-pointer ${isOutOfStock ? 'opacity-80' : ''}`;
+          card.className = `bg-white rounded-2xl border border-green-50 overflow-hidden card-hover transition-all duration-300 cursor-pointer relative ${isOutOfStock ? 'opacity-80' : ''}`;
           card.style.animation = `fadeInUp 0.4s ease forwards ${index * 0.05}s`;
           card.onclick = (e) => {
-            if (!e.target.closest('.add-to-cart-btn')) {
+            if (!e.target.closest('.action-btn')) {
               openProductModal(p.id);
             }
           };
@@ -348,8 +352,15 @@
                 ${p.badge ? `<div class="bg-green-brand text-white text-[10px] font-bold px-2.5 py-1 rounded-lg uppercase tracking-wider shadow-lg">${p.badge}</div>` : ''}
               </div>
 
-              <!-- Status Ketersediaan di Pojok Kanan Atas -->
-              <div class="absolute top-3 right-3 z-10">
+              <!-- Tombol Love (Favorit) -->
+              <button onclick="toggleLike(${p.id}); event.stopPropagation();" class="action-btn absolute top-3 right-3 z-20 bg-white/80 backdrop-blur p-2 rounded-full shadow-md hover:bg-white transition-all">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 wishlist-heart ${isLiked ? 'liked' : 'text-slate-300'}" fill="${isLiked ? 'currentColor' : 'none'}" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+                </svg>
+              </button>
+
+              <!-- Status Ketersediaan -->
+              <div class="absolute bottom-3 left-3 z-10">
                 ${isOutOfStock 
                   ? `<span class="bg-red-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow-lg uppercase">Habis</span>`
                   : `<span class="bg-blue-500 text-white text-[9px] font-bold px-2.5 py-1 rounded-full shadow-lg uppercase">Tersedia</span>`
@@ -360,13 +371,20 @@
               ${isOutOfStock ? `<div class="absolute inset-0 bg-slate-900/40 backdrop-grayscale-[0.5] flex items-center justify-center">
                   <span class="text-white font-bold text-xs border-2 border-white/40 px-3 py-1 rounded-lg bg-black/20">STOK KOSONG</span>
               </div>` : ''}
-
-              <div class="absolute inset-0 bg-black/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
             <div class="p-5">
-              <p class="text-[10px] font-bold text-green-500 uppercase tracking-widest mb-1">${p.category}</p>
-              <h3 class="font-bold text-slate-800 text-lg mb-1 leading-tight h-14 overflow-hidden">${p.title}</h3>
+              <div class="flex justify-between items-start mb-1">
+                <p class="text-[10px] font-bold text-green-500 uppercase tracking-widest">${p.category}</p>
+              </div>
+              <h3 class="font-bold text-slate-800 text-lg mb-1 leading-tight h-7 overflow-hidden">${p.title}</h3>
               
+              <div class="flex items-center gap-1 text-slate-400 mb-3">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+                </svg>
+                <span class="text-[11px] font-semibold truncate">${p.supplier}</span>
+              </div>
+
               <div class="flex items-center gap-1.5 mb-3 mt-1">
                 <div class="flex items-center text-yellow-400">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -381,7 +399,7 @@
                 <button 
                     onclick="addToCart(${p.id}); event.stopPropagation();" 
                     ${isOutOfStock ? 'disabled' : ''}
-                    class="add-to-cart-btn p-2.5 rounded-xl transition-all shadow-sm active:scale-90 
+                    class="action-btn p-2.5 rounded-xl transition-all shadow-sm active:scale-90 
                     ${isOutOfStock ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-green-50 hover:bg-green-brand hover:text-white text-green-brand'}">
                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
                 </button>
@@ -401,10 +419,12 @@
         if (!p) return;
 
         const isOutOfStock = p.isAvailable === false;
+        const isLiked = wishlistIds.includes(p.id);
 
         document.getElementById('modalImg').src = p.img;
         document.getElementById('modalCategory').innerText = p.category;
         document.getElementById('modalTitle').innerText = p.title;
+        document.getElementById('modalSupplier').innerText = p.supplier;
         document.getElementById('modalRating').innerText = p.rating;
         document.getElementById('modalReviews').innerText = `${p.reviews} Ulasan`;
         document.getElementById('modalDescription').innerText = p.desc || 'Deskripsi produk berkualitas tinggi dari mitra pilihan kami.';
@@ -412,7 +432,22 @@
         document.getElementById('modalStock').innerText = p.stock || (isOutOfStock ? 'Habis' : 'Tersedia');
         document.getElementById('modalOrigin').innerText = p.origin || 'Indonesia';
         
-        // Update Availability Tag di Modal
+        // Modal heart btn
+        const wishBtn = document.getElementById('modalWishBtn');
+        const heartIcon = document.getElementById('modalHeartIcon');
+        
+        const updateModalHeart = (liked) => {
+            heartIcon.setAttribute('fill', liked ? 'currentColor' : 'none');
+            heartIcon.className = `h-6 w-6 transition-colors ${liked ? 'text-red-500' : 'text-slate-300'}`;
+        };
+
+        updateModalHeart(isLiked);
+
+        wishBtn.onclick = () => {
+            toggleLike(p.id);
+            updateModalHeart(wishlistIds.includes(p.id));
+        };
+        
         const availabilityTag = document.getElementById('modalAvailabilityTag');
         if(isOutOfStock) {
             availabilityTag.innerText = "Tidak Tersedia";
@@ -448,6 +483,23 @@
         document.body.style.overflow = 'auto';
     }
 
+    // Fungsi Love/Favorit (Lokal per Produk)
+    function toggleLike(id) {
+        const p = products.find(x => x.id === id);
+        const index = wishlistIds.indexOf(id);
+        
+        if (index === -1) {
+            wishlistIds.push(id);
+            showToast(`${p.title} ditambahkan ke favorit`, 'wishlist');
+        } else {
+            wishlistIds.splice(index, 1);
+            showToast(`${p.title} dihapus dari favorit`, 'remove');
+        }
+        
+        renderProducts();
+    }
+
+    // Fungsi Pencarian & Reset
     function resetAll() {
       searchQuery = '';
       document.getElementById('searchInput').value = '';
@@ -459,16 +511,20 @@
       renderProducts();
     });
 
-    function toggleCart() { document.getElementById('cartDrawer').classList.toggle('hidden'); renderCart(); }
+    // Fungsi Keranjang
+    function toggleCart() { 
+        document.getElementById('cartDrawer').classList.toggle('hidden'); 
+        renderCart(); 
+    }
     
     function addToCart(productId) {
       const p = products.find(x => x.id === productId);
-      if (p.isAvailable === false) return; // Guard
+      if (p.isAvailable === false) return;
       
       const exists = cart.find(x => x.id === productId);
       if(exists) exists.qty++; else cart.push({...p, qty: 1});
       updateBadge();
-      showToast(`${p.title} masuk keranjang!`);
+      showToast(`${p.title} masuk keranjang!`, 'success');
     }
 
     function updateBadge() {
@@ -490,11 +546,14 @@
         div.innerHTML = `
           <div class="flex-1">
             <h4 class="font-bold text-slate-800 text-sm">${item.title}</h4>
+            <p class="text-[10px] text-slate-400 font-medium mb-1">${item.supplier}</p>
             <p class="text-xs text-slate-500">${formatRupiah(item.price)} x ${item.qty}</p>
           </div>
-          <button onclick="removeFromCart(${item.id})" class="text-red-400 hover:text-red-600 p-2">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-          </button>`;
+          <div class="flex items-center gap-1">
+             <button onclick="removeFromCart(${item.id})" class="text-red-400 hover:text-red-600 p-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+             </button>
+          </div>`;
         container.appendChild(div);
       });
       totalEl.innerText = formatRupiah(total);
@@ -510,7 +569,13 @@
       let total = 0;
       cart.forEach(i => {
         total += i.price * i.qty;
-        sum.innerHTML += `<div class="flex justify-between text-sm"><span>${i.title} (x${i.qty})</span><b>${formatRupiah(i.price*i.qty)}</b></div>`;
+        sum.innerHTML += `<div class="flex justify-between text-sm py-1 border-b border-slate-50">
+          <div>
+            <span class="block font-medium">${i.title} (x${i.qty})</span>
+            <span class="text-[10px] text-slate-400">${i.supplier}</span>
+          </div>
+          <b class="text-slate-700">${formatRupiah(i.price*i.qty)}</b>
+        </div>`;
       });
       document.getElementById('finalTotal').innerText = formatRupiah(total);
       modal.classList.replace('hidden', 'flex');
@@ -519,15 +584,29 @@
     function closeCheckout() { document.getElementById('checkoutModal').classList.replace('flex', 'hidden'); }
     
     function confirmPurchase() {
-      showToast("Memproses pesanan...");
-      setTimeout(() => { cart = []; updateBadge(); closeCheckout(); toggleCart(); showToast("Pesanan Berhasil!"); }, 1000);
+      showToast("Memproses pesanan...", 'success');
+      setTimeout(() => { cart = []; updateBadge(); closeCheckout(); toggleCart(); showToast("Pesanan Berhasil!", 'success'); }, 1000);
     }
 
     function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
 
-    function showToast(m) {
+    function showToast(m, type = 'success') {
       const t = document.getElementById('toast');
-      document.getElementById('toastMessage').innerText = m;
+      const icon = document.getElementById('toastIcon');
+      const msg = document.getElementById('toastMessage');
+      msg.innerText = m;
+      
+      if (type === 'wishlist') {
+          icon.className = "w-8 h-8 bg-pink-500 rounded-full flex items-center justify-center shadow-inner";
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>`;
+      } else if (type === 'remove') {
+          icon.className = "w-8 h-8 bg-slate-400 rounded-full flex items-center justify-center shadow-inner";
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>`;
+      } else {
+          icon.className = "w-8 h-8 bg-green-brand rounded-full flex items-center justify-center shadow-inner";
+          icon.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor"><path d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"/></svg>`;
+      }
+
       t.classList.remove('translate-x-80', 'opacity-0');
       setTimeout(() => t.classList.add('translate-x-80', 'opacity-0'), 3000);
     }
