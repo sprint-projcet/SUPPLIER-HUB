@@ -3,20 +3,17 @@ digraph BiayaLayanan {
     node [shape=box, style=filled, fillcolor="#f9f9f9", fontname="Arial"];
     
     Start [shape=oval, fillcolor="#d4edda", label="Mulai"];
-    Input [label="Input: order_id, total_harga_barang"];
-    Validasi [shape=diamond, fillcolor="#fff3cd", label="Validasi Data Nominal"];
-    Kalkulasi [label="Proses: Hitung Fee Supplier = 3% * total_harga"];
-    UpdateAmount [label="Proses: Update Total Tagihan Keseluruhan = total_harga + Fee Supplier"];
-    IntegrasiBank [label="Integrasi: Sertakan Nominal Fee dalam Request ke SmartBank"];
-    Output [label="Output: Total Fee & Rincian Tagihan Diperbarui"];
+    Input [label="Input: quantity, price (dari item)"];
+    KalkulasiDasar [label="Proses: total_base_price = quantity * price"];
+    KalkulasiFee [label="Proses: system_fee = 3% * total_base_price"];
+    UpdateAmount [label="Proses: grand_total = total_base_price + system_fee"];
+    Output [label="Output: grand_total, system_fee"];
     End [shape=oval, fillcolor="#f8d7da", label="Selesai"];
 
     Start -> Input;
-    Input -> Validasi;
-    Validasi -> Kalkulasi [label="Valid"];
-    Validasi -> Output [label="Tidak Valid"];
-    Kalkulasi -> UpdateAmount;
-    UpdateAmount -> IntegrasiBank;
-    IntegrasiBank -> Output;
+    Input -> KalkulasiDasar;
+    KalkulasiDasar -> KalkulasiFee;
+    KalkulasiFee -> UpdateAmount;
+    UpdateAmount -> Output;
     Output -> End;
 }
