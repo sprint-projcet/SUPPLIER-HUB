@@ -73,16 +73,13 @@
   <!-- Header Navigasi -->
   <nav class="sticky top-0 z-50 glass-effect border-b border-green-100 py-4 px-6">
     <div class="max-w-7xl mx-auto flex justify-between items-center">
-      <!-- Sisi Kiri: Logo -->
-      <div class="flex items-center gap-2 cursor-pointer" onclick="resetAll()">
-        <div class="w-10 h-10 flex items-center justify-center bg-green-100 rounded-xl">
-          <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
-          </svg>
-        </div>
-        <span class="text-xl font-bold text-slate-900 tracking-tight uppercase hidden sm:block">SUPPLIER<span class="text-green-brand">HUB</span></span>
-      </div>
+      <div class="flex items-center gap-2">
+        <div class="w-10 h-10 flex items-center justify-center">
+                   <img src="assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain"> 
 
+        </div>
+        <span class="text-xl font-bold text-slate-900 tracking-tight">SUPPLIER<span class="text-green-brand">HUB</span></span>
+      </div>
       <!-- Sisi Kanan: Keranjang & Dashboard -->
       <div class="flex items-center gap-2 sm:gap-3">
         <!-- Tombol Keranjang -->
@@ -129,21 +126,40 @@
     </div>
   </div>
 
-  <!-- Main Content -->
-  <main class="max-w-7xl mx-auto px-6 py-8">
-    <div class="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-6">
-      <div>
-        <h1 class="text-3xl font-bold text-slate-900 mb-2">Penyedia Bahan Baku</h1>
-        <p class="text-slate-500">Kualitas terbaik dari alam, dikirim langsung ke dapur Anda.</p>
-      </div>
+ <!-- Main Content -->
+<main class="max-w-7xl mx-auto px-6 py-12">
+  <!-- Section Header: Margin bottom dikurangi jadi mb-4 -->
+  <div class="flex flex-col items-center text-center mb-4">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-emerald-800 mb-3 tracking-tight">
+      Kemurnian Alam, <span class="text-emerald-600">Kualitas Utama</span>
+    </h1>
+    
+    <p class="text-emerald-700/70 text-lg md:text-xl max-w-2xl leading-relaxed font-medium">
+      Menghadirkan bahan baku pilihan langsung dari sumber terbaik untuk memenuhi standar tinggi kebutuhan Anda.
+    </p>
+
+    <!-- Garis pemanis tetap ada tapi margin top dikecilkan -->
+    <div class="w-16 h-1 bg-emerald-500 mt-4 rounded-full"></div>
+  </div>
+
+  <!-- Search Bar: Margin top dikurangi jadi mt-4 agar lebih dekat dengan judul -->
+  <div class="flex justify-center">
+    <div class="relative mt-4 mb-10 group w-full md:w-96">
+      <input 
+        id="searchInput" 
+        type="text" 
+        placeholder="Cari bahan baku terbaik..." 
+        class="pl-12 pr-6 py-4 border border-emerald-100 rounded-2xl focus:outline-none focus:ring-4 focus:ring-emerald-500/10 focus:border-emerald-500 w-full bg-white transition-all duration-300 shadow-sm group-hover:shadow-md text-slate-700 placeholder:text-slate-400"
+      >
       
-      <div class="relative">
-        <input id="searchInput" type="text" placeholder="Cari bahan baku..." class="pl-10 pr-4 py-3 border border-green-100 rounded-2xl focus:outline-none focus:ring-2 focus:ring-green-brand/30 w-full md:w-80 bg-white transition-all shadow-sm">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-3.5 top-3.5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div class="absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500 transition-colors duration-300">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
       </div>
     </div>
+  </div>
+</main>
 
     <!-- Filter Kategori -->
     <div class="mb-10 overflow-x-auto pb-4 no-scrollbar">
