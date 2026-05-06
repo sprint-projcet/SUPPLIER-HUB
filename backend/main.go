@@ -25,6 +25,9 @@ func main() {
 	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
 	r.Use(cors.New(corsConfig))
 
+	// Serve folder uploads sebagai static files
+	r.Static("/uploads", "./uploads")
+
 	// 4. Setup Routes
 	routes.SetupRoutes(r)
 
