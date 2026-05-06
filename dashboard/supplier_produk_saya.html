@@ -155,6 +155,7 @@
             </div>
             <div class="p-6">
                 <form id="addProductForm" class="space-y-4">
+                    <input type="hidden" id="prod-id">
                     <div class="grid grid-cols-3 gap-4">
                         <div class="col-span-2">
                             <label class="block text-sm font-semibold text-gray-700 mb-1">Nama Produk</label>
@@ -209,10 +210,34 @@
     </div>
 
     <script>
+        let productsData = [];
+
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
         
-        function openAddProductModal() {
+        function openAddProductModal(id = null) {
             const modal = document.getElementById('addProductModal');
+            const title = modal.querySelector('h3');
+            
+            if (id) {
+                title.innerText = 'Edit Produk';
+                const p = productsData.find(x => x.id === id);
+                if(p) {
+                    document.getElementById('prod-id').value = p.id;
+                    const parts = p.name.split(' - ');
+                    document.getElementById('prod-name').value = parts[0] || p.name;
+                    document.getElementById('prod-qty').value = parts[1] || '';
+                    document.getElementById('prod-category').value = p.category || 'Lainnya';
+                    document.getElementById('prod-stock').value = p.stock;
+                    document.getElementById('prod-price').value = p.price;
+                    document.getElementById('prod-location').value = p.location || '';
+                    document.getElementById('prod-desc').value = p.description || '';
+                }
+            } else {
+                title.innerText = 'Tambah Produk Baru';
+                document.getElementById('addProductForm').reset();
+                document.getElementById('prod-id').value = '';
+            }
+
             modal.classList.remove('hidden');
             // small delay to allow display block to apply before transition
             setTimeout(() => {
@@ -239,8 +264,8 @@
                     headers: { 'Authorization': 'Bearer ' + token }
                 });
                 if(res.ok) {
-                    const products = await res.json();
-                    renderCatalog(products);
+                    productsData = await res.json();
+                    renderCatalog(productsData);
                 }
             } catch(e) {
                 console.error("Gagal mengambil produk:", e);
@@ -288,6 +313,10 @@
                                 <i data-lucide="map-pin" class="w-3 h-3"></i> ${p.location || '-'}
                             </div>
                         </div>
+                        <div class="mt-3 pt-3 border-t border-slate-50 flex items-center justify-end gap-2">
+                            <button onclick="openAddProductModal('${p.id}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit Produk"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Hapus Produk"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
                 </div>
                 `;
@@ -295,15 +324,41 @@
             lucide.createIcons();
         }
 
+        async function deleteProduct(id) {
+            if(!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
+            const token = localStorage.getItem('token');
+            if(!token) return;
+
+            try {
+                const res = await fetch('http://localhost:8080/api/supplier/products/' + id, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': 'Bearer ' + token }
+                });
+                if(res.ok) {
+                    alert('Produk berhasil dihapus');
+                    fetchProducts();
+                } else {
+                    const data = await res.json();
+                    alert('Gagal: ' + (data.error || 'Terjadi kesalahan'));
+                }
+            } catch(e) {
+                alert('Gagal terhubung ke server');
+            }
+        }
+
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const token = localStorage.getItem('token');
             if(!token) return alert('Sesi habis, silakan login kembali');
 
+            const prodId = document.getElementById('prod-id').value;
+            const isEdit = !!prodId;
+
             const formData = new FormData();
             const nameBase = document.getElementById('prod-name').value;
             const qty = document.getElementById('prod-qty').value;
-            formData.append('name', `${nameBase} - ${qty}`);
+            const finalName = qty ? `${nameBase} - ${qty}` : nameBase;
+            formData.append('name', finalName);
             formData.append('category', document.getElementById('prod-category').value);
             formData.append('price', document.getElementById('prod-price').value);
             formData.append('stock', document.getElementById('prod-stock').value);
@@ -315,19 +370,21 @@
                 formData.append('image', fileInput.files[0]);
             }
 
+            const url = isEdit ? `http://localhost:8080/api/supplier/products/${prodId}` : 'http://localhost:8080/api/supplier/products';
+            const method = isEdit ? 'PUT' : 'POST';
+
             try {
-                const res = await fetch('http://localhost:8080/api/supplier/products', {
-                    method: 'POST',
+                const res = await fetch(url, {
+                    method: method,
                     headers: {
                         'Authorization': 'Bearer ' + token
-                        // Jangan set Content-Type, biarkan browser set multipart/form-data otomatis beserta boundary
                     },
                     body: formData
                 });
                 const data = await res.json();
                 
                 if(res.ok) {
-                    alert('Produk berhasil ditambahkan!');
+                    alert(isEdit ? 'Produk berhasil diupdate!' : 'Produk berhasil ditambahkan!');
                     closeAddProductModal();
                     e.target.reset();
                     fetchProducts(); // Refresh list

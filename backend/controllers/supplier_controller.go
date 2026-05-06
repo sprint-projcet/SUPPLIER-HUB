@@ -83,6 +83,76 @@ func CreateProduct(c *gin.Context) {
 	})
 }
 
+func UpdateProduct(c *gin.Context) {
+	supplierID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	productID := c.Param("id")
+
+	var product models.Product
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan"})
+		return
+	}
+
+	name := c.PostForm("name")
+	category := c.PostForm("category")
+	priceStr := c.PostForm("price")
+	stockStr := c.PostForm("stock")
+	description := c.PostForm("description")
+	location := c.PostForm("location")
+
+	if name != "" { product.Name = name }
+	if category != "" { product.Category = category }
+	if priceStr != "" { 
+		if price, err := strconv.ParseFloat(priceStr, 64); err == nil { product.Price = price }
+	}
+	if stockStr != "" {
+		if stock, err := strconv.Atoi(stockStr); err == nil { product.Stock = stock }
+	}
+	if description != "" { product.Description = description }
+	if location != "" { product.Location = location }
+
+	file, err := c.FormFile("image")
+	if err == nil {
+		filename := uuid.New().String() + filepath.Ext(file.Filename)
+		uploadPath := "uploads/" + filename
+		if err := c.SaveUploadedFile(file, uploadPath); err == nil {
+			product.ImageURL = "http://localhost:8080/" + uploadPath
+		}
+	}
+
+	if err := config.DB.Save(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate produk"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Produk berhasil diupdate", "data": product})
+}
+
+func DeleteProduct(c *gin.Context) {
+	supplierID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+	productID := c.Param("id")
+
+	result := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).Delete(&models.Product{})
+	if result.Error != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus produk"})
+		return
+	}
+	if result.RowsAffected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Produk berhasil dihapus"})
+}
+
 func GetSupplierOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Melihat pesanan masuk dari UMKM ke Supplier ini"})
 }
