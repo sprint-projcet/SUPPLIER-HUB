@@ -45,6 +45,8 @@ type Product struct {
 	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
 	Stock       int       `gorm:"type:int;default:0" json:"stock"`
 	Description string    `gorm:"type:text" json:"description"`
+	ImageURL    string    `gorm:"type:varchar(255)" json:"image_url"`
+	Location    string    `gorm:"type:varchar(100)" json:"location"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
