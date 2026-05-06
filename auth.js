@@ -115,6 +115,7 @@ function checkAuth(redirectUrl = null) {
  */
 function logoutUser(redirectUrl = '../Login/login.html') {
     localStorage.removeItem('user_session');
+    sessionStorage.setItem('justLoggedOut', 'true');
     window.location.href = redirectUrl;
 }
 

@@ -16,6 +16,8 @@ func SetupRoutes(router *gin.Engine) {
 	{
 		authGroup.POST("/register", controllers.Register)
 		authGroup.POST("/login", controllers.Login)
+		authGroup.GET("/google", controllers.GoogleLogin)
+		authGroup.GET("/google/callback", controllers.GoogleCallback)
 	}
 
 	// Semua rute di bawah ini wajib melampirkan JWT token

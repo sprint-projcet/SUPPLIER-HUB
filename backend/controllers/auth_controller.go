@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -12,6 +15,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/oauth2"
 )
 
 // DTO untuk input form Register
@@ -40,8 +44,13 @@ func Register(c *gin.Context) {
 	region := c.PostForm("region")
 
 	// 1. Validasi Input
-	if businessName == "" || email == "" || password == "" || role == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Kolom Nama, Email, Password, dan Role wajib diisi!"})
+	isGoogle := c.PostForm("is_google") == "true"
+	if businessName == "" || email == "" || role == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Kolom Nama, Email, dan Role wajib diisi!"})
+		return
+	}
+	if !isGoogle && password == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Password wajib diisi!"})
 		return
 	}
 
@@ -74,9 +83,16 @@ func Register(c *gin.Context) {
 		return
 	}
 
-	// 4. Hash Password
-	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
+	// 4. Hash Password (atau dummy jika Google)
+	var hashedPassword []byte
+	var errHash error
+	if isGoogle {
+		hashedPassword, errHash = bcrypt.GenerateFromPassword([]byte("google-oauth-dummy-pass"), bcrypt.DefaultCost)
+	} else {
+		hashedPassword, errHash = bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	}
+	
+	if errHash != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memproses password"})
 		return
 	}
@@ -171,4 +187,128 @@ func Login(c *gin.Context) {
 			"email":         user.Email,
 		},
 	})
+}
+
+// GoogleLogin mengarahkan user ke halaman login Google
+func GoogleLogin(c *gin.Context) {
+	if config.GoogleOAuthConfig == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Google OAuth belum dikonfigurasi"})
+		return
+	}
+	url := config.GoogleOAuthConfig.AuthCodeURL("state-token", oauth2.AccessTypeOffline)
+	c.Redirect(http.StatusTemporaryRedirect, url)
+}
+
+// GoogleCallback menangani response dari Google setelah login
+func GoogleCallback(c *gin.Context) {
+	state := c.Query("state")
+	if state != "state-token" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "State tidak valid"})
+		return
+	}
+
+	code := c.Query("code")
+	if code == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Code tidak ditemukan"})
+		return
+	}
+
+	token, err := config.GoogleOAuthConfig.Exchange(context.Background(), code)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menukar token: " + err.Error()})
+		return
+	}
+
+	client := config.GoogleOAuthConfig.Client(context.Background(), token)
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mendapatkan info user dari Google"})
+		return
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membaca response info user"})
+		return
+	}
+
+	var googleUser map[string]interface{}
+	if err := json.Unmarshal(body, &googleUser); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal parsing info user"})
+		return
+	}
+
+	email, ok := googleUser["email"].(string)
+	if !ok || email == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Email tidak ditemukan dari akun Google"})
+		return
+	}
+
+	name, _ := googleUser["name"].(string)
+
+	// Cek user di DB
+	var user models.User
+	if err := config.DB.Where("email = ?", email).First(&user).Error; err != nil {
+		// User belum ada, instruksikan frontend untuk menampilkan popup lengkapi profil & pilih role
+		htmlContent := `
+		<html><body>
+		<script>
+			window.opener.postMessage(
+				{
+					type: "GOOGLE_LOGIN_NEEDS_REGISTRATION",
+					email: "` + email + `",
+					name: "` + name + `"
+				}, 
+				"*"
+			);
+			window.close();
+		</script>
+		</body></html>
+		`
+		c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlContent))
+		return
+	}
+
+	// Generate JWT Token (sama seperti fungsi Login)
+	secret := os.Getenv("JWT_SECRET")
+	if secret == "" {
+		secret = "super_secret_key_supplierhub"
+	}
+
+	claims := jwt.MapClaims{
+		"user_id": user.ID,
+		"role":    user.Role,
+		"exp":     time.Now().Add(time.Hour * 72).Unix(),
+	}
+
+	jwtToken := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	tokenString, err := jwtToken.SignedString([]byte(secret))
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat token autentikasi"})
+		return
+	}
+
+	htmlContent := `
+	<html><body>
+	<script>
+		window.opener.postMessage(
+			{
+				type: "GOOGLE_LOGIN_SUCCESS",
+				token: "` + tokenString + `",
+				role: "` + string(user.Role) + `",
+				user: {
+					id: "` + user.ID + `",
+					business_name: "` + user.BusinessName + `",
+					email: "` + user.Email + `"
+				}
+			}, 
+			"*"
+		);
+		window.close();
+	</script>
+	</body></html>
+	`
+
+	c.Data(http.StatusOK, "text/html; charset=utf-8", []byte(htmlContent))
 }

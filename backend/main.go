@@ -13,6 +13,7 @@ import (
 func main() {
 	// 1. Inisialisasi Koneksi Database
 	config.ConnectDatabase()
+	config.SetupGoogleOAuth()
 
 	// 2. Setup Gin Router
 	r := gin.Default()
