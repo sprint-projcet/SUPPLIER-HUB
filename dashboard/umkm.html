@@ -37,7 +37,7 @@
                 <a href="umkm.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
                     <i data-lucide="layout-dashboard" class="text-white"></i> <span class="font-semibold text-sm">Dashboard</span>
                 </a>
-                <a href="../katalog.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
+                <a href="katalog.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
                     <i data-lucide="store" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Katalog Produk</span>
                 </a>
                 <a href="umkm_pesanan_saya.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
@@ -110,7 +110,7 @@
                             <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Bulan Ini</span>
                         </div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total Pesanan</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">24</p>
+                        <p id="stat-total-orders" class="text-3xl font-black text-slate-900 mt-2">...</p>
                     </div>
                     <!-- Stat 2 -->
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
@@ -121,7 +121,7 @@
                             <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Aktif</span>
                         </div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Sedang Dikirim</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">3</p>
+                        <p id="stat-shipped-orders" class="text-3xl font-black text-slate-900 mt-2">...</p>
                     </div>
                     <!-- Stat 3 -->
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
@@ -132,7 +132,7 @@
                             <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Tersedia</span>
                         </div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Voucher</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">5</p>
+                        <p id="stat-vouchers" class="text-3xl font-black text-slate-900 mt-2">...</p>
                     </div>
                     <!-- Stat 4 -->
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
@@ -143,7 +143,7 @@
                             <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">+500</span>
                         </div>
                         <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Poin Hub</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">12,500</p>
+                        <p id="stat-points" class="text-3xl font-black text-slate-900 mt-2">...</p>
                     </div>
                 </div>
 
@@ -165,17 +165,9 @@
                                             <th class="px-8 py-5 text-right">Nilai Pembelian</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-50">
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-8 py-5 flex items-center gap-4"><div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"><i data-lucide="truck" size="18"></i></div><span class="text-sm font-bold">ORD-9125</span></td>
-                                            <td class="px-8 py-5"><span class="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-600">DIKIRIM</span></td>
-                                            <td class="px-8 py-5 text-right font-black">Rp 2,500,000</td>
-                                        </tr>
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-8 py-5 flex items-center gap-4"><div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"><i data-lucide="package" size="18"></i></div><span class="text-sm font-bold">ORD-9126</span></td>
-                                            <td class="px-8 py-5"><span class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600">SELESAI</span></td>
-                                            <td class="px-8 py-5 text-right font-black">Rp 800,000</td>
-                                        </tr>
+                                    <tbody id="orders-table-body" class="divide-y divide-slate-50">
+                                        <!-- Data riwayat pesanan akan diisi oleh Javascript -->
+                                        <tr><td colspan="3" class="px-8 py-5 text-center text-slate-400 italic">Memuat riwayat pesanan...</td></tr>
                                     </tbody>
                                 </table>
                             </div>
@@ -189,6 +181,77 @@
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
         
+        async function fetchDashboardData() {
+            const sessionData = localStorage.getItem('user_session');
+            const userSession = sessionData ? JSON.parse(sessionData) : null;
+            const token = userSession ? userSession.token : null;
+            if (!token) return;
+
+            // Fetch Stats
+            try {
+                const resStats = await fetch('http://localhost:8080/api/user/stats', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (resStats.ok) {
+                    const stats = await resStats.json();
+                    document.getElementById('stat-total-orders').innerText = stats.total_orders;
+                    document.getElementById('stat-shipped-orders').innerText = stats.shipped_orders;
+                    document.getElementById('stat-vouchers').innerText = stats.vouchers;
+                    document.getElementById('stat-points').innerText = new Intl.NumberFormat('id-ID').format(stats.points);
+                }
+            } catch (err) {
+                console.error("Gagal memuat stats", err);
+            }
+
+            // Fetch Orders
+            try {
+                const resOrders = await fetch('http://localhost:8080/api/user/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                if (resOrders.ok) {
+                    const result = await resOrders.json();
+                    const tbody = document.getElementById('orders-table-body');
+                    tbody.innerHTML = '';
+                    
+                    if (result.data && result.data.length > 0) {
+                        result.data.forEach(order => {
+                            let statusBadge = '';
+                            if (order.status === 'pending') {
+                                statusBadge = '<span class="text-[10px] font-black px-3 py-1 rounded-full bg-yellow-50 text-yellow-600">PENDING</span>';
+                            } else if (order.status === 'shipped') {
+                                statusBadge = '<span class="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-600">DIKIRIM</span>';
+                            } else if (order.status === 'completed') {
+                                statusBadge = '<span class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600">SELESAI</span>';
+                            } else {
+                                statusBadge = `<span class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-600 uppercase">${order.status}</span>`;
+                            }
+
+                            const formattedPrice = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(order.grand_total);
+                            const shortId = order.id.substring(0, 8).toUpperCase();
+
+                            tbody.innerHTML += `
+                                <tr class="hover:bg-slate-50 transition-colors">
+                                    <td class="px-8 py-5 flex items-center gap-4">
+                                        <div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center">
+                                            <i data-lucide="${order.status === 'shipped' ? 'truck' : 'package'}" size="18"></i>
+                                        </div>
+                                        <span class="text-sm font-bold">ORD-${shortId}</span>
+                                    </td>
+                                    <td class="px-8 py-5">${statusBadge}</td>
+                                    <td class="px-8 py-5 text-right font-black">${formattedPrice}</td>
+                                </tr>
+                            `;
+                        });
+                        lucide.createIcons(); // render ulang ikon lucide di tabel
+                    } else {
+                        tbody.innerHTML = '<tr><td colspan="3" class="px-8 py-5 text-center text-slate-400 italic">Belum ada riwayat pesanan.</td></tr>';
+                    }
+                }
+            } catch (err) {
+                console.error("Gagal memuat pesanan", err);
+            }
+        }
+        
         window.addEventListener('DOMContentLoaded', () => {
             const user = checkAuth('../Login/login.html');
             if (user) {
@@ -200,6 +263,9 @@
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');
                     lucide.createIcons();
+                    
+                    // Panggil fungsi fetch
+                    fetchDashboardData();
                 }
             }
         });

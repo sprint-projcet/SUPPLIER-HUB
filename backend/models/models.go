@@ -45,10 +45,13 @@ type Product struct {
 	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
 	Stock       int       `gorm:"type:int;default:0" json:"stock"`
 	Description string    `gorm:"type:text" json:"description"`
+	Location    string    `gorm:"type:varchar(255)" json:"location"`
 	ImageURL    string    `gorm:"type:varchar(255)" json:"image_url"`
-	Location    string    `gorm:"type:varchar(100)" json:"location"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+
+	// Relations
+	Supplier    User      `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
 }
 
 // OrderStatus defines the lifecycle of an order
@@ -65,13 +68,20 @@ const (
 
 // Order merepresentasikan tagihan pembelian antara UMKM dan Supplier
 type Order struct {
-	ID         string      `gorm:"type:varchar(36);primaryKey" json:"id"`
-	UmkmID     string      `gorm:"type:varchar(36);not null;index" json:"umkm_id"`
-	SupplierID string      `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
-	TotalPrice float64     `gorm:"type:numeric(15,2);not null" json:"total_price"`
-	Status     OrderStatus `gorm:"type:varchar(20);default:'pending'" json:"status"`
-	CreatedAt  time.Time   `json:"created_at"`
-	UpdatedAt  time.Time   `json:"updated_at"`
+	ID             string      `gorm:"type:varchar(36);primaryKey" json:"id"`
+	UmkmID         string      `gorm:"type:varchar(36);not null;index" json:"umkm_id"`
+	SupplierID     string      `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
+	ProductID      string      `gorm:"type:varchar(36);not null;index" json:"product_id"`
+	Quantity       int         `gorm:"not null" json:"quantity"`
+	TotalBasePrice float64     `gorm:"type:numeric(15,2);not null" json:"total_base_price"`
+	SystemFee      float64     `gorm:"type:numeric(15,2);default:0" json:"system_fee"`
+	GrandTotal     float64     `gorm:"type:numeric(15,2);not null" json:"grand_total"`
+	Status         OrderStatus `gorm:"type:varchar(20);default:'pending'" json:"status"`
+	CreatedAt      time.Time   `json:"created_at"`
+	UpdatedAt      time.Time   `json:"updated_at"`
+
+	// Relations
+	Product Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
 }
 
 // Log merepresentasikan rekam jejak aktivitas (Audit) untuk Admin
