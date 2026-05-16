@@ -1,158 +1,306 @@
-﻿<!DOCTYPE html>
+﻿<!doctype html>
 <html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Supplier Hub - Supplier Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../auth.js"></script>
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; }
-        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
-        .custom-scrollbar::-webkit-scrollbar-track { background: #f8fafc; }
-        .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 20px; }
-        .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+      body {
+        font-family: "Plus Jakarta Sans", sans-serif;
+      }
+      .custom-scrollbar::-webkit-scrollbar {
+        width: 6px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-track {
+        background: #f8fafc;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 20px;
+      }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+      }
     </style>
-</head>
-<body class="bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 overflow-hidden">
-    
+  </head>
+  <body
+    class="bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 overflow-hidden"
+  >
     <div id="app-content" class="min-h-screen flex invisible">
-        <!-- Sidebar - Supplier Theme (Greenish Navy) -->
-        <aside id="sidebar" class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transition-all duration-300 transform lg:relative lg:translate-x-0 border-r border-slate-800 flex flex-col">
-            <div class="p-8 flex items-center justify-between">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 rounded-xl flex items-center justify-center">
-                        <img src="../assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain">
-                    </div>
-                    <span class="text-xl font-bold tracking-tight">SUPPLIER<span class="text-emerald-400">HUB</span></span>
-                </div>
-                <button onclick="toggleSidebar()" class="lg:hidden text-slate-400"><i data-lucide="x"></i></button>
+      <!-- Sidebar - Supplier Theme (Greenish Navy) -->
+      <aside
+        id="sidebar"
+        class="fixed inset-y-0 left-0 z-50 w-72 bg-slate-900 text-white transition-all duration-300 transform lg:relative lg:translate-x-0 border-r border-slate-800 flex flex-col"
+      >
+        <div class="p-8 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center">
+              <img
+                src="../assets/logo.png"
+                alt="Logo SupplierHub"
+                class="w-12 h-12 object-contain"
+              />
             </div>
+            <span class="text-xl font-bold tracking-tight"
+              >SUPPLIER<span class="text-emerald-400">HUB</span></span
+            >
+          </div>
+          <button onclick="toggleSidebar()" class="lg:hidden text-slate-400">
+            <i data-lucide="x"></i>
+          </button>
+        </div>
 
-            <nav class="mt-4 px-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar">
-                <p class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4">SUPPLIER MENU</p>
-                <a href="supplier.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="layout-dashboard" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Dashboard</span>
-                </a>
-                <a href="supplier_produk_saya.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="package" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Produk Saya</span>
-                </a>
-                <a href="supplier_daftar_pesanan.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="shopping-cart" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Daftar Pesanan</span>
-                </a>
-                <a href="supplier_analitik.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40">
-                    <i data-lucide="bar-chart-3" class="text-white"></i> <span class="font-semibold text-sm">Analitik Toko</span>
-                </a>
-                <a href="supplier_toko.html" class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white">
-                    <i data-lucide="settings" class="group-hover:text-emerald-400"></i> <span class="font-semibold text-sm">Toko Saya</span>
-                </a>
-            </nav>
+        <nav
+          class="mt-4 px-6 space-y-1.5 flex-1 overflow-y-auto custom-scrollbar"
+        >
+          <p
+            class="px-4 text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mb-4"
+          >
+            SUPPLIER MENU
+          </p>
+          <a
+            href="supplier.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i
+              data-lucide="layout-dashboard"
+              class="group-hover:text-emerald-400"
+            ></i>
+            <span class="font-semibold text-sm">Dashboard</span>
+          </a>
+          <a
+            href="supplier_produk_saya.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i data-lucide="package" class="group-hover:text-emerald-400"></i>
+            <span class="font-semibold text-sm">Produk Saya</span>
+          </a>
+          <a
+            href="supplier_daftar_pesanan.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i
+              data-lucide="shopping-cart"
+              class="group-hover:text-emerald-400"
+            ></i>
+            <span class="font-semibold text-sm">Daftar Pesanan</span>
+          </a>
+          <a
+            href="supplier_analitik.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group bg-emerald-600 text-white shadow-xl shadow-emerald-900/40"
+          >
+            <i data-lucide="bar-chart-3" class="text-white"></i>
+            <span class="font-semibold text-sm">Analitik Toko</span>
+          </a>
+          <a
+            href="supplier_toko.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i data-lucide="settings" class="group-hover:text-emerald-400"></i>
+            <span class="font-semibold text-sm">Toko Saya</span>
+          </a>
+        </nav>
 
-            <div class="px-6 pb-8">
-                <button onclick="logoutUser('../Login/login.html')" class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:text-red-400 transition-colors group">
-                    <div class="flex items-center gap-3">
-                        <i data-lucide="log-out" size="20"></i> <span class="font-semibold text-sm">Keluar Sistem</span>
-                    </div>
-                </button>
+        <div class="px-6 pb-8">
+          <button
+            onclick="logoutUser('../Login/login.html')"
+            class="w-full flex items-center justify-between px-4 py-3 text-slate-400 hover:text-red-400 transition-colors group"
+          >
+            <div class="flex items-center gap-3">
+              <i data-lucide="log-out" size="20"></i>
+              <span class="font-semibold text-sm">Keluar Sistem</span>
             </div>
-        </aside>
+          </button>
+        </div>
+      </aside>
 
-        <!-- Main Content -->
-        <main class="flex-1 flex flex-col h-screen overflow-hidden">
-            <header class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40">
-                <div class="flex items-center gap-4">
-                    <button onclick="toggleSidebar()" class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"><i data-lucide="menu"></i></button>
-                    <div>
-                        <h1 class="text-xl font-bold text-slate-900 tracking-tight">Analitik Toko</h1>
-                        <p class="text-xs text-slate-500 hidden md:block">Portal Mitra Supplier</p>
-                    </div>
-                </div>
-                <div class="flex items-center gap-6">
-                    <div class="hidden md:flex items-center bg-slate-50 rounded-xl px-4 py-2.5 w-72 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all">
-                        <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
-                        <input type="text" placeholder="Cari Pesanan..." class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700" />
-                    </div>
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-3 pl-2">
-                            <div class="text-right hidden sm:block">
-                                <p id="user-display-name" class="text-sm font-bold text-slate-900 leading-none">Supplier</p>
-                                <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-1.5">Role: SUPPLIER</p>
-                            </div>
-                            <div class="w-11 h-11 rounded-xl bg-emerald-50 border-2 border-white shadow-sm overflow-hidden ring-1 ring-slate-200 flex py-1 justify-center">
-                                <i data-lucide="store" class="text-emerald-600 w-7 h-7 mt-1.5"></i>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </header>
-
-            <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-
-                <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
-                    <div>
-                        <h2 class="text-2xl font-black text-slate-900 tracking-tight">Analitik Toko</h2>
-                        <p class="text-slate-500 text-sm">Pantau performa dan penjualan toko Anda.</p>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-                    <div class="bg-emerald-600 text-white p-6 rounded-3xl shadow-lg shadow-emerald-600/20">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-white/20 rounded-xl"><i data-lucide="trending-up"></i></div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-white">+15%</span>
-                        </div>
-                        <p class="text-xs font-bold text-emerald-100 uppercase tracking-widest">Total Penjualan</p>
-                        <p class="text-3xl font-black mt-2">Rp 45.2M</p>
-                    </div>
-                    <div class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-blue-50 text-blue-600 rounded-xl"><i data-lucide="package"></i></div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">+5%</span>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Produk Terjual</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">1,204</p>
-                    </div>
-                    <div class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-3 bg-orange-50 text-orange-600 rounded-xl"><i data-lucide="users"></i></div>
-                        </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Pengunjung Toko</p>
-                        <p class="text-3xl font-black text-slate-900 mt-2">8,592</p>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex items-center justify-center min-h-[300px]">
-                    <div class="text-center">
-                        <i data-lucide="bar-chart" class="w-16 h-16 mx-auto text-slate-200 mb-4"></i>
-                        <h3 class="text-lg font-bold text-slate-700">Grafik Penjualan</h3>
-                        <p class="text-slate-500 text-sm mt-2">Data visualisasi sedang dimuat...</p>
-                    </div>
-                </div>
-
+      <!-- Main Content -->
+      <main class="flex-1 flex flex-col h-screen overflow-hidden">
+        <header
+          class="h-20 bg-white border-b border-slate-200 flex items-center justify-between px-8 sticky top-0 z-40"
+        >
+          <div class="flex items-center gap-4">
+            <button
+              onclick="toggleSidebar()"
+              class="lg:hidden p-2 text-slate-600 hover:bg-slate-100 rounded-lg"
+            >
+              <i data-lucide="menu"></i>
+            </button>
+            <div>
+              <h1 class="text-xl font-bold text-slate-900 tracking-tight">
+                Analitik Toko
+              </h1>
+              <p class="text-xs text-slate-500 hidden md:block">
+                Portal Mitra Supplier
+              </p>
             </div>
-        </main>
+          </div>
+          <div class="flex items-center gap-6">
+            <div
+              class="hidden md:flex items-center bg-slate-50 rounded-xl px-4 py-2.5 w-72 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all"
+            >
+              <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
+              <input
+                type="text"
+                placeholder="Cari Pesanan..."
+                class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
+              />
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="flex items-center gap-3 pl-2">
+                <div class="text-right hidden sm:block">
+                  <p
+                    id="user-display-name"
+                    class="text-sm font-bold text-slate-900 leading-none"
+                  >
+                    Supplier
+                  </p>
+                  <p
+                    class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mt-1.5"
+                  >
+                    Role: SUPPLIER
+                  </p>
+                </div>
+                <div
+                  class="w-11 h-11 rounded-xl bg-emerald-50 border-2 border-white shadow-sm overflow-hidden ring-1 ring-slate-200 flex py-1 justify-center"
+                >
+                  <i
+                    data-lucide="store"
+                    class="text-emerald-600 w-7 h-7 mt-1.5"
+                  ></i>
+                </div>
+              </div>
+            </div>
+          </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+          <div
+            class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
+          >
+            <div>
+              <h2 class="text-2xl font-black text-slate-900 tracking-tight">
+                Analitik Toko
+              </h2>
+              <p class="text-slate-500 text-sm">
+                Pantau performa dan penjualan toko Anda.
+              </p>
+            </div>
+          </div>
+
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+          >
+            <div
+              class="bg-emerald-600 text-white p-6 rounded-3xl shadow-lg shadow-emerald-600/20"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div class="p-3 bg-white/20 rounded-xl">
+                  <i data-lucide="trending-up"></i>
+                </div>
+                <span
+                  class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-white"
+                  >+15%</span
+                >
+              </div>
+              <p
+                class="text-xs font-bold text-emerald-100 uppercase tracking-widest"
+              >
+                Total Penjualan
+              </p>
+              <p class="text-3xl font-black mt-2">Rp 45.2M</p>
+            </div>
+            <div
+              class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div class="p-3 bg-blue-50 text-blue-600 rounded-xl">
+                  <i data-lucide="package"></i>
+                </div>
+                <span
+                  class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50"
+                  >+5%</span
+                >
+              </div>
+              <p
+                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+              >
+                Produk Terjual
+              </p>
+              <p class="text-3xl font-black text-slate-900 mt-2">1,204</p>
+            </div>
+            <div
+              class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
+            >
+              <div class="flex justify-between items-start mb-4">
+                <div class="p-3 bg-orange-50 text-orange-600 rounded-xl">
+                  <i data-lucide="users"></i>
+                </div>
+              </div>
+              <p
+                class="text-xs font-bold text-slate-400 uppercase tracking-widest"
+              >
+                Pengunjung Toko
+              </p>
+              <p class="text-3xl font-black text-slate-900 mt-2">8,592</p>
+            </div>
+          </div>
+
+          <div
+            class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex items-center justify-center min-h-[300px]"
+          >
+            <div class="text-center">
+              <i
+                data-lucide="bar-chart"
+                class="w-16 h-16 mx-auto text-slate-200 mb-4"
+              ></i>
+              <h3 class="text-lg font-bold text-slate-700">Grafik Penjualan</h3>
+              <p class="text-slate-500 text-sm mt-2">
+                Data visualisasi sedang dimuat...
+              </p>
+            </div>
+          </div>
+        </div>
+      </main>
     </div>
 
     <script>
-        function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-        
-        window.addEventListener('DOMContentLoaded', () => {
-            const user = checkAuth('../Login/login.html');
-            if (user) {
-                if(user.role !== 'supplier') {
-                    window.location.href = '../Login/login.html';
-                } else {
-                    document.getElementById('user-display-name').innerText = user.email || 'Supplier';
-                    const dateEl = document.getElementById('current-date');
-                    if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
-                    document.getElementById('app-content').classList.remove('invisible');
-                    lucide.createIcons();
-                }
-            }
-        });
+      function toggleSidebar() {
+        document
+          .getElementById("sidebar")
+          .classList.toggle("-translate-x-full");
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        const user = checkAuth("../Login/login.html");
+        if (user) {
+          if (user.role !== "supplier") {
+            window.location.href = "../Login/login.html";
+          } else {
+            document.getElementById("user-display-name").innerText =
+              user.email || "Supplier";
+            const dateEl = document.getElementById("current-date");
+            if (dateEl)
+              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
+                day: "numeric",
+                month: "long",
+                year: "numeric",
+              });
+            document
+              .getElementById("app-content")
+              .classList.remove("invisible");
+            lucide.createIcons();
+          }
+        }
+      });
     </script>
-</body>
+  </body>
 </html>

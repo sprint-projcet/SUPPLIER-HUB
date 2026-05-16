@@ -12,7 +12,7 @@ var GoogleOAuthConfig *oauth2.Config
 func SetupGoogleOAuth() {
 	redirectURL := os.Getenv("GOOGLE_REDIRECT_URL")
 	if redirectURL == "" {
-		redirectURL = "http://localhost:8080/api/auth/google/callback"
+		redirectURL = PublicURL("/api/auth/google/callback")
 	}
 
 	GoogleOAuthConfig = &oauth2.Config{

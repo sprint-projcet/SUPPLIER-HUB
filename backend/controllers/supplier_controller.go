@@ -14,10 +14,10 @@ import (
 
 func GetSupplierStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"stock": 1240,
+		"stock":      1240,
 		"new_orders": 12,
 		"revenue_rp": 450000000,
-		"rating": 4.8,
+		"rating":     4.8,
 	})
 }
 
@@ -57,7 +57,7 @@ func CreateProduct(c *gin.Context) {
 		filename := uuid.New().String() + filepath.Ext(file.Filename)
 		uploadPath := "uploads/" + filename
 		if err := c.SaveUploadedFile(file, uploadPath); err == nil {
-			imageURL = "http://localhost:8080/" + uploadPath
+			imageURL = config.PublicURL(uploadPath)
 		}
 	}
 

@@ -8,8 +8,8 @@ import (
 
 func GetAdminStats(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
-		"total_suppliers": 128,
-		"revenue_growth": "24%",
+		"total_suppliers":    128,
+		"revenue_growth":     "24%",
 		"total_transactions": 2400000,
 	})
 }

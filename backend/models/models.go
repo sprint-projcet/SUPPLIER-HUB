@@ -23,9 +23,9 @@ type User struct {
 	PasswordHash string    `gorm:"type:varchar(255);not null" json:"-"` // Disembunyikan di JSON response
 	Role         Role      `gorm:"type:varchar(20);not null" json:"role"`
 	Address      string    `gorm:"type:text" json:"address"`
-	Category     string    `gorm:"type:varchar(100)" json:"category"` // Untuk Kategori Bahan Supplier
-	Region       string    `gorm:"type:varchar(100)" json:"region"`   // Untuk Wilayah Supply
-	DocumentURL  string    `gorm:"type:varchar(255)" json:"document_url"` // Opsional untuk UMKM, Wajib bagi Supplier
+	Category     string    `gorm:"type:varchar(100)" json:"category"`                // Untuk Kategori Bahan Supplier
+	Region       string    `gorm:"type:varchar(100)" json:"region"`                  // Untuk Wilayah Supply
+	DocumentURL  string    `gorm:"type:varchar(255)" json:"document_url"`            // Opsional untuk UMKM, Wajib bagi Supplier
 	Status       string    `gorm:"type:varchar(20);default:'pending'" json:"status"` // pending, active, suspended
 	CreatedAt    time.Time `json:"created_at"`
 	UpdatedAt    time.Time `json:"updated_at"`
@@ -51,7 +51,7 @@ type Product struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 
 	// Relations
-	Supplier    User      `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
+	Supplier User `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
 }
 
 // OrderStatus defines the lifecycle of an order
