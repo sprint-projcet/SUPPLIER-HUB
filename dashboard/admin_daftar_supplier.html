@@ -213,6 +213,7 @@
                 >
                   <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
                   <input
+                    id="supplier-search"
                     type="text"
                     placeholder="Cari supplier..."
                     class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -239,79 +240,16 @@
                     <th class="px-8 py-5 text-center">Aksi</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 flex items-center gap-4">
-                      <div
-                        class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex justify-center items-center font-bold"
-                      >
-                        PT
-                      </div>
-                      <div>
-                        <span class="text-sm font-bold text-slate-900 block"
-                          >PT Sejahtera Abadi</span
-                        >
-                        <span class="text-xs text-slate-500"
-                          >Jakarta Selatan</span
-                        >
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-600 font-semibold">
-                      Bahan Baku Makanan
-                    </td>
-                    <td class="px-8 py-5">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600"
-                        >AKTIF</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <button
-                        class="p-2 text-slate-400 hover:text-emerald-600 transition-colors rounded-lg hover:bg-emerald-50"
-                      >
-                        <i data-lucide="edit-3" class="w-4 h-4"></i>
-                      </button>
-                      <button
-                        class="p-2 text-slate-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
-                      >
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 flex items-center gap-4">
-                      <div
-                        class="w-10 h-10 bg-blue-100 text-blue-600 rounded-xl flex justify-center items-center font-bold"
-                      >
-                        CV
-                      </div>
-                      <div>
-                        <span class="text-sm font-bold text-slate-900 block"
-                          >CV Makmur Sentosa</span
-                        >
-                        <span class="text-xs text-slate-500">Surabaya</span>
-                      </div>
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-600 font-semibold">
-                      Kemasan & Plastik
-                    </td>
-                    <td class="px-8 py-5">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-slate-100 text-slate-600"
-                        >MENUNGGU VERIFIKASI</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <button
-                        class="p-2 text-slate-400 hover:text-emerald-600 transition-colors rounded-lg hover:bg-emerald-50"
-                      >
-                        <i data-lucide="edit-3" class="w-4 h-4"></i>
-                      </button>
-                      <button
-                        class="p-2 text-slate-400 hover:text-red-600 transition-colors rounded-lg hover:bg-red-50"
-                      >
-                        <i data-lucide="trash-2" class="w-4 h-4"></i>
-                      </button>
+                <tbody
+                  id="supplier-table-body"
+                  class="divide-y divide-slate-50"
+                >
+                  <tr>
+                    <td
+                      colspan="4"
+                      class="px-8 py-8 text-center text-slate-400 font-semibold"
+                    >
+                      Memuat supplier...
                     </td>
                   </tr>
                 </tbody>
@@ -329,12 +267,191 @@
           .classList.toggle("-translate-x-full");
       }
 
+      let supplierSearchTimeout;
+      let adminAuthToken = "";
+
+      function escapeHTML(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function getInitials(name) {
+        return String(name || "SH")
+          .split(/\s+/)
+          .filter(Boolean)
+          .slice(0, 2)
+          .map((word) => word[0])
+          .join("")
+          .toUpperCase();
+      }
+
+      function renderSupplierStatus(status) {
+        const statusMap = {
+          active: ["AKTIF", "bg-emerald-50 text-emerald-600"],
+          pending: ["MENUNGGU VERIFIKASI", "bg-slate-100 text-slate-600"],
+          suspended: ["DITANGGUHKAN", "bg-red-50 text-red-600"],
+        };
+        const [label, classes] = statusMap[status] || [
+          String(status || "-").toUpperCase(),
+          "bg-slate-100 text-slate-600",
+        ];
+
+        return `<span class="text-[10px] font-black px-3 py-1 rounded-full ${classes}">${label}</span>`;
+      }
+
+      function renderSuppliers(suppliers) {
+        const tbody = document.getElementById("supplier-table-body");
+        if (!tbody) return;
+
+        if (!suppliers || suppliers.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                Belum ada supplier terdaftar.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = suppliers
+          .map((supplier) => {
+            const isPending = supplier.status === "pending";
+            const location = supplier.region || supplier.address || "-";
+            const category = supplier.category || "-";
+            const verifyButton = isPending
+              ? `
+                <button
+                  onclick="verifySupplier('${escapeHTML(supplier.id)}')"
+                  class="px-3 py-2 text-xs font-black rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  Verifikasi
+                </button>
+              `
+              : "";
+            const documentButton = supplier.document_url
+              ? `
+                <a
+                  href="../${escapeHTML(supplier.document_url)}"
+                  target="_blank"
+                  class="p-2 text-slate-400 hover:text-blue-600 transition-colors rounded-lg hover:bg-blue-50 inline-flex"
+                  title="Lihat dokumen"
+                >
+                  <i data-lucide="file-text" class="w-4 h-4"></i>
+                </a>
+              `
+              : "";
+
+            return `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-8 py-5 flex items-center gap-4">
+                  <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-xl flex justify-center items-center font-bold">
+                    ${escapeHTML(getInitials(supplier.business_name))}
+                  </div>
+                  <div>
+                    <span class="text-sm font-bold text-slate-900 block">${escapeHTML(supplier.business_name || "-")}</span>
+                    <span class="text-xs text-slate-500">${escapeHTML(supplier.email || location)}</span>
+                    <span class="text-[10px] text-slate-400 block mt-1">${escapeHTML(location)} · ${supplier.product_count || 0} produk</span>
+                  </div>
+                </td>
+                <td class="px-8 py-5 text-sm text-slate-600 font-semibold">${escapeHTML(category)}</td>
+                <td class="px-8 py-5">${renderSupplierStatus(supplier.status)}</td>
+                <td class="px-8 py-5 text-center">
+                  <div class="flex items-center justify-center gap-2">
+                    ${verifyButton}
+                    ${documentButton}
+                  </div>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+        lucide.createIcons();
+      }
+
+      async function fetchSuppliers(search = "") {
+        const tbody = document.getElementById("supplier-table-body");
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                Memuat supplier...
+              </td>
+            </tr>
+          `;
+        }
+
+        const url = search
+          ? buildApiUrl(
+              `/api/admin/suppliers?search=${encodeURIComponent(search)}`,
+            )
+          : buildApiUrl("/api/admin/suppliers");
+        const response = await fetch(url, {
+          headers: { Authorization: `Bearer ${adminAuthToken}` },
+        });
+        const result = await response.json();
+
+        if (!response.ok) {
+          throw new Error(result.error || "Gagal memuat supplier");
+        }
+
+        renderSuppliers(result.data || []);
+      }
+
+      async function verifySupplier(supplierID) {
+        if (!supplierID) return;
+        const shouldVerify = confirm("Verifikasi supplier ini?");
+        if (!shouldVerify) return;
+
+        try {
+          const response = await fetch(
+            buildApiUrl(
+              `/api/admin/suppliers/${encodeURIComponent(supplierID)}/verify`,
+            ),
+            {
+              method: "PUT",
+              headers: { Authorization: `Bearer ${adminAuthToken}` },
+            },
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || "Gagal memverifikasi supplier");
+          }
+
+          alert(result.message || "Supplier berhasil diverifikasi");
+          const searchInput = document.getElementById("supplier-search");
+          fetchSuppliers(searchInput ? searchInput.value.trim() : "");
+        } catch (err) {
+          alert(err.message);
+        }
+      }
+
+      function setupSupplierSearch() {
+        const searchInput = document.getElementById("supplier-search");
+        if (!searchInput) return;
+
+        searchInput.addEventListener("input", () => {
+          clearTimeout(supplierSearchTimeout);
+          supplierSearchTimeout = setTimeout(() => {
+            fetchSuppliers(searchInput.value.trim()).catch((err) => {
+              console.error("Gagal mencari supplier", err);
+              renderSuppliers([]);
+            });
+          }, 300);
+        });
+      }
+
       window.addEventListener("DOMContentLoaded", () => {
         const user = checkAuth("../Login/login.html");
         if (user) {
           if (user.role !== "admin") {
             window.location.href = "../Login/login.html";
           } else {
+            adminAuthToken = user.token;
             document.getElementById("user-display-name").innerText =
               user.email || "Superadmin";
             const dateEl = document.getElementById("current-date");
@@ -344,10 +461,26 @@
                 month: "long",
                 year: "numeric",
               });
+            setupSupplierSearch();
+            fetchSuppliers().catch((err) => {
+              console.error("Gagal memuat supplier", err);
+              const tbody = document.getElementById("supplier-table-body");
+              if (tbody) {
+                tbody.innerHTML = `
+                  <tr>
+                    <td colspan="4" class="px-8 py-8 text-center text-red-500 font-semibold">
+                      ${escapeHTML(err.message)}
+                    </td>
+                  </tr>
+                `;
+              }
+            });
             lucide.createIcons();
           }
         }
       });
+
+      window.verifySupplier = verifySupplier;
     </script>
   </body>
 </html>

@@ -222,7 +222,12 @@
               >
                 Total Supplier
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">128</p>
+              <p
+                id="admin-total-suppliers"
+                class="text-3xl font-black text-slate-900 mt-2"
+              >
+                0
+              </p>
             </div>
             <!-- Stat 2 -->
             <div
@@ -242,7 +247,12 @@
               >
                 Total Transaksi
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">Rp 2.4M</p>
+              <p
+                id="admin-total-transactions"
+                class="text-3xl font-black text-slate-900 mt-2"
+              >
+                0
+              </p>
             </div>
             <!-- Stat 3 -->
             <div
@@ -262,7 +272,12 @@
               >
                 Pesanan Aktif
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">45</p>
+              <p
+                id="admin-active-orders"
+                class="text-3xl font-black text-slate-900 mt-2"
+              >
+                0
+              </p>
             </div>
             <!-- Stat 4 -->
             <div
@@ -282,7 +297,12 @@
               >
                 Revenue Growth
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">24%</p>
+              <p
+                id="admin-revenue-growth"
+                class="text-3xl font-black text-slate-900 mt-2"
+              >
+                0%
+              </p>
             </div>
           </div>
 
@@ -317,47 +337,16 @@
                         <th class="px-8 py-5 text-right">Nilai Transaksi</th>
                       </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-50">
-                      <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-5 flex items-center gap-4">
-                          <div
-                            class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"
-                          >
-                            <i data-lucide="package" size="18"></i>
-                          </div>
-                          <span class="text-sm font-bold"
-                            >INV/2024/GLOBAL-01</span
-                          >
-                        </td>
-                        <td class="px-8 py-5">
-                          <span
-                            class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600"
-                            >SELESAI</span
-                          >
-                        </td>
-                        <td class="px-8 py-5 text-right font-black">
-                          Rp 12,000,000
-                        </td>
-                      </tr>
-                      <tr class="hover:bg-slate-50 transition-colors">
-                        <td class="px-8 py-5 flex items-center gap-4">
-                          <div
-                            class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center"
-                          >
-                            <i data-lucide="package" size="18"></i>
-                          </div>
-                          <span class="text-sm font-bold"
-                            >INV/2024/GLOBAL-02</span
-                          >
-                        </td>
-                        <td class="px-8 py-5">
-                          <span
-                            class="text-[10px] font-black px-3 py-1 rounded-full bg-orange-50 text-orange-600"
-                            >PROSES</span
-                          >
-                        </td>
-                        <td class="px-8 py-5 text-right font-black">
-                          Rp 5,450,000
+                    <tbody
+                      id="admin-transactions-body"
+                      class="divide-y divide-slate-50"
+                    >
+                      <tr>
+                        <td
+                          colspan="3"
+                          class="px-8 py-8 text-center text-slate-400 font-semibold"
+                        >
+                          Memuat transaksi...
                         </td>
                       </tr>
                     </tbody>
@@ -375,6 +364,115 @@
         document
           .getElementById("sidebar")
           .classList.toggle("-translate-x-full");
+      }
+
+      function formatRupiah(value) {
+        return new Intl.NumberFormat("id-ID", {
+          style: "currency",
+          currency: "IDR",
+          minimumFractionDigits: 0,
+        }).format(Number(value) || 0);
+      }
+
+      function escapeHTML(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function renderStatusBadge(status) {
+        const statusMap = {
+          pending: ["PENDING", "bg-yellow-50 text-yellow-600"],
+          paid: ["LUNAS", "bg-emerald-50 text-emerald-600"],
+          processing: ["PROSES", "bg-orange-50 text-orange-600"],
+          shipped: ["DIKIRIM", "bg-blue-50 text-blue-600"],
+          completed: ["SELESAI", "bg-emerald-50 text-emerald-600"],
+          cancelled: ["BATAL", "bg-red-50 text-red-600"],
+        };
+        const [label, classes] = statusMap[status] || [
+          String(status || "-").toUpperCase(),
+          "bg-slate-100 text-slate-600",
+        ];
+
+        return `<span class="text-[10px] font-black px-3 py-1 rounded-full ${classes}">${label}</span>`;
+      }
+
+      function renderRecentOrders(orders) {
+        const tbody = document.getElementById("admin-transactions-body");
+        if (!tbody) return;
+
+        if (!orders || orders.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                Belum ada transaksi.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = orders
+          .map((order) => {
+            const invoiceCode = `INV/${new Date(order.created_at).getFullYear()}/${String(order.id).slice(0, 8).toUpperCase()}`;
+            const productName = order.product
+              ? order.product.name
+              : "Transaksi SupplierHub";
+
+            return `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-8 py-5 flex items-center gap-4">
+                  <div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center">
+                    <i data-lucide="package" size="18"></i>
+                  </div>
+                  <div>
+                    <span class="text-sm font-bold block">${escapeHTML(invoiceCode)}</span>
+                    <span class="text-xs text-slate-400">${escapeHTML(productName)}</span>
+                  </div>
+                </td>
+                <td class="px-8 py-5">${renderStatusBadge(order.status)}</td>
+                <td class="px-8 py-5 text-right font-black">${formatRupiah(order.grand_total)}</td>
+              </tr>
+            `;
+          })
+          .join("");
+        lucide.createIcons();
+      }
+
+      async function fetchAdminStats(token) {
+        const response = await fetch(buildApiUrl("/api/admin/stats"), {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error || "Gagal memuat statistik admin");
+        }
+
+        document.getElementById("admin-total-suppliers").innerText =
+          data.total_suppliers ?? 0;
+        document.getElementById("admin-total-transactions").innerText =
+          data.total_transactions ?? 0;
+        document.getElementById("admin-active-orders").innerText =
+          data.active_orders ?? 0;
+        document.getElementById("admin-revenue-growth").innerText =
+          data.revenue_growth || "0%";
+        renderRecentOrders(data.recent_orders || []);
+      }
+
+      function renderAdminStatsError(message) {
+        const tbody = document.getElementById("admin-transactions-body");
+        if (tbody) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="3" class="px-8 py-8 text-center text-red-500 font-semibold">
+                ${escapeHTML(message)}
+              </td>
+            </tr>
+          `;
+        }
       }
 
       window.addEventListener("DOMContentLoaded", () => {
@@ -396,6 +494,11 @@
               .getElementById("app-content")
               .classList.remove("invisible");
             lucide.createIcons();
+
+            fetchAdminStats(user.token).catch((err) => {
+              console.error("Gagal memuat dashboard admin", err);
+              renderAdminStatsError(err.message);
+            });
 
             // Tampilkan Popup Notification menggunakan SweetAlert2
             if (!sessionStorage.getItem("adminWelcomeShown")) {
