@@ -453,6 +453,8 @@
     <script>
       let currentRole = "UMKM";
       let views = ["login", "reg-umkm", "reg-supplier", "success", "dashboard"];
+      const POST_LOGIN_REDIRECT_KEY = "postLoginRedirect";
+      const REGISTER_VIEW_PARAM = "register";
 
       function initIcons() {
         lucide.createIcons();
@@ -488,6 +490,69 @@
         activeBtn.classList.remove("border-gray-200", "text-gray-500");
       }
 
+      function getDashboardUrl(role) {
+        let dashUrl = "umkm.html";
+        if (role === "admin") dashUrl = "admin.html";
+        if (role === "supplier") dashUrl = "supplier.html";
+        return "../dashboard/" + dashUrl;
+      }
+
+      function consumePostLoginRedirect(role, fallbackUrl) {
+        const redirectUrl = sessionStorage.getItem(POST_LOGIN_REDIRECT_KEY);
+        if (redirectUrl) sessionStorage.removeItem(POST_LOGIN_REDIRECT_KEY);
+
+        return redirectUrl && role === "user" ? redirectUrl : fallbackUrl;
+      }
+
+      function redirectAfterLogin(role) {
+        const fallbackUrl = getDashboardUrl(role);
+        window.location.href = consumePostLoginRedirect(role, fallbackUrl);
+      }
+
+      function getInitialView() {
+        const requestedView = new URLSearchParams(window.location.search).get(
+          "view",
+        );
+        if (views.includes(requestedView)) return requestedView;
+        return requestedView === REGISTER_VIEW_PARAM
+          ? REGISTER_VIEW_PARAM
+          : "login";
+      }
+
+      function openRegisterChoice() {
+        showView("login");
+        Swal.fire({
+          title: "Daftar sebagai",
+          text: "Pilih jenis akun yang ingin Anda buat.",
+          icon: "question",
+          showCancelButton: true,
+          confirmButtonText: "UMKM (Pembeli)",
+          cancelButtonText: "Supplier (Penjual)",
+          confirmButtonColor: "#02C39A",
+          cancelButtonColor: "#475569",
+          reverseButtons: true,
+        }).then((result) => {
+          if (result.isConfirmed) {
+            showView("reg-umkm");
+            return;
+          }
+
+          if (result.dismiss === Swal.DismissReason.cancel) {
+            showView("reg-supplier");
+          }
+        });
+      }
+
+      function showInitialView() {
+        const initialView = getInitialView();
+        if (initialView === REGISTER_VIEW_PARAM) {
+          openRegisterChoice();
+          return;
+        }
+
+        showView(initialView);
+      }
+
       document.getElementById("login-form").addEventListener("submit", (e) => {
         e.preventDefault();
         const pass = document.getElementById("login-pass").value;
@@ -500,10 +565,7 @@
 
         loginUser(email, pass, currentRole)
           .then((userSession) => {
-            let dashUrl = "umkm.html";
-            if (userSession.role === "admin") dashUrl = "admin.html";
-            if (userSession.role === "supplier") dashUrl = "supplier.html";
-            window.location.href = "../dashboard/" + dashUrl;
+            redirectAfterLogin(userSession.role);
           })
           .catch((err) => {
             errorBox.classList.remove("hidden");
@@ -668,13 +730,7 @@
         const data = event.data;
         if (data && data.type === "GOOGLE_LOGIN_SUCCESS") {
           const userSession = saveUserSessionFromAuthResponse(data);
-
-          // Redirect sesuai role
-          let dashUrl = "umkm.html";
-          if (userSession.role === "admin") dashUrl = "admin.html";
-          if (userSession.role === "supplier") dashUrl = "supplier.html";
-
-          window.location.href = "../dashboard/" + dashUrl;
+          redirectAfterLogin(userSession.role);
         } else if (data && data.type === "GOOGLE_LOGIN_ERROR") {
           Swal.fire({
             title: "Login Google Gagal",
@@ -734,7 +790,7 @@
       });
 
       window.onload = () => {
-        showView("login");
+        showInitialView();
 
         if (sessionStorage.getItem("justLoggedOut")) {
           sessionStorage.removeItem("justLoggedOut");

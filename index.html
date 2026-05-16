@@ -6,6 +6,7 @@
     <link rel="shortcut icon" href="./assets/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Koneksi Bisnis Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="auth.js"></script>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
@@ -194,16 +195,32 @@
           <!-- Auth Buttons -->
           <div class="hidden lg:flex items-center gap-4">
             <button
-              onclick="window.location.href = 'Login/login.html'"
+              data-auth-guest
+              onclick="goToLogin()"
               class="text-green-700 font-bold hover:text-green-800 px-4 py-2"
             >
               Masuk
             </button>
             <button
-              onclick="window.location.href = 'Login/login.html'"
+              data-auth-guest
+              onclick="goToRegister()"
               class="bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-green-100 hover:scale-105 active:scale-95"
             >
               Gabung Sekarang
+            </button>
+            <button
+              data-auth-user
+              onclick="goToDashboard()"
+              class="hidden bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-lg shadow-green-100 hover:scale-105 active:scale-95"
+            >
+              Dashboard
+            </button>
+            <button
+              data-auth-user
+              onclick="logoutFromIndex()"
+              class="hidden text-slate-500 font-bold hover:text-red-600 px-4 py-2"
+            >
+              Keluar
             </button>
           </div>
 
@@ -245,16 +262,32 @@
           >
           <div class="flex flex-col gap-3 pt-2">
             <button
-              onclick="window.location.href = 'Login/login.html'"
+              data-auth-guest
+              onclick="goToLogin()"
               class="w-full text-green-700 font-bold py-3 border border-green-200 rounded-xl"
             >
               Masuk
             </button>
             <button
-              onclick="window.location.href = 'Login/login.html'"
+              data-auth-guest
+              onclick="goToRegister()"
               class="w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100"
             >
               Daftar Gratis
+            </button>
+            <button
+              data-auth-user
+              onclick="goToDashboard()"
+              class="hidden w-full bg-green-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-green-100"
+            >
+              Dashboard
+            </button>
+            <button
+              data-auth-user
+              onclick="logoutFromIndex()"
+              class="hidden w-full text-red-600 font-bold py-3 border border-red-100 rounded-xl"
+            >
+              Keluar
             </button>
           </div>
         </div>
@@ -322,9 +355,22 @@
               class="mt-8 flex flex-wrap justify-center lg:justify-start gap-4 text-sm text-slate-400 font-medium"
             >
               <span>Populer:</span>
-              <a href="#" class="hover:text-green-600 underline">Tekstil</a>
-              <a href="#" class="hover:text-green-600 underline">Elektronik</a>
-              <a href="#" class="hover:text-green-600 underline"
+              <a
+                href="dashboard/katalog.html?q=Tekstil"
+                data-catalog-query="Tekstil"
+                class="hover:text-green-600 underline"
+                >Tekstil</a
+              >
+              <a
+                href="dashboard/katalog.html?q=Elektronik"
+                data-catalog-query="Elektronik"
+                class="hover:text-green-600 underline"
+                >Elektronik</a
+              >
+              <a
+                href="dashboard/katalog.html?q=Bahan%20Makanan"
+                data-catalog-query="Bahan Makanan"
+                class="hover:text-green-600 underline"
                 >Bahan Makanan</a
               >
             </div>
@@ -761,7 +807,12 @@
           </p>
         </div>
         <div class="grid grid-cols-2 md:grid-cols-4 gap-6">
-          <div class="group cursor-pointer">
+          <div
+            class="group cursor-pointer"
+            data-catalog-query="Tekstil"
+            role="button"
+            tabindex="0"
+          >
             <div
               class="bg-green-50 rounded-3xl p-6 text-center border border-transparent hover:border-green-200 hover:bg-green-100 transition-all duration-300"
             >
@@ -771,7 +822,12 @@
               <h4 class="font-bold text-slate-800">Tekstil & Pakaian</h4>
             </div>
           </div>
-          <div class="group cursor-pointer">
+          <div
+            class="group cursor-pointer"
+            data-catalog-query="Elektronik"
+            role="button"
+            tabindex="0"
+          >
             <div
               class="bg-blue-50 rounded-3xl p-6 text-center border border-transparent hover:border-blue-200 hover:bg-blue-100 transition-all duration-300"
             >
@@ -781,7 +837,12 @@
               <h4 class="font-bold text-slate-800">Elektronik</h4>
             </div>
           </div>
-          <div class="group cursor-pointer">
+          <div
+            class="group cursor-pointer"
+            data-catalog-query="Bahan Makanan"
+            role="button"
+            tabindex="0"
+          >
             <div
               class="bg-amber-50 rounded-3xl p-6 text-center border border-transparent hover:border-amber-200 hover:bg-amber-100 transition-all duration-300"
             >
@@ -791,7 +852,12 @@
               <h4 class="font-bold text-slate-800">Bahan Makanan</h4>
             </div>
           </div>
-          <div class="group cursor-pointer">
+          <div
+            class="group cursor-pointer"
+            data-catalog-query="Kemasan"
+            role="button"
+            tabindex="0"
+          >
             <div
               class="bg-rose-50 rounded-3xl p-6 text-center border border-transparent hover:border-rose-200 hover:bg-rose-100 transition-all duration-300"
             >
@@ -929,20 +995,22 @@
         <div
           class="pt-8 border-t border-slate-800 text-center text-slate-500 text-[10px]"
         >
-          <p>© 2024 SupplierHub Modern Business. Navy Design Edition.</p>
+          <p>&copy; 2024 SupplierHub Modern Business. Navy Design Edition.</p>
         </div>
       </div>
     </footer>
 
     <script>
       const SELECTORS = {
+        authGuest: "[data-auth-guest]",
+        authUser: "[data-auth-user]",
+        catalogQuery: "[data-catalog-query]",
         counter: ".counter",
         mainNav: "#main-nav",
         menuButton: "#menu-btn",
         menuIcon: "#menu-icon",
         mobileMenu: "#mobile-menu",
         searchInput: "#search-input",
-        suppliersSection: "#suppliers",
         toast: "#toast",
       };
 
@@ -960,9 +1028,83 @@
       const COUNTER_OBSERVER_OPTIONS = { threshold: 0.5 };
       const NAV_SCROLL_THRESHOLD = 40;
       const TOAST_DURATION = 3000;
+      const POST_LOGIN_REDIRECT_KEY = "postLoginRedirect";
 
       function getElement(selector) {
         return document.querySelector(selector);
+      }
+
+      function getDashboardUrl(role) {
+        if (role === "admin") return "dashboard/admin.html";
+        if (role === "supplier") return "dashboard/supplier.html";
+        return "dashboard/umkm.html";
+      }
+
+      function getCurrentSession() {
+        return typeof getStoredUserSession === "function"
+          ? getStoredUserSession()
+          : null;
+      }
+
+      function setElementVisibility(elements, shouldShow) {
+        elements.forEach((element) => {
+          element.classList.toggle("hidden", !shouldShow);
+        });
+      }
+
+      function updateAuthNavigation() {
+        const user = getCurrentSession();
+        setElementVisibility(
+          document.querySelectorAll(SELECTORS.authGuest),
+          !user,
+        );
+        setElementVisibility(
+          document.querySelectorAll(SELECTORS.authUser),
+          Boolean(user),
+        );
+      }
+
+      function goToLogin() {
+        window.location.href = "Login/login.html";
+      }
+
+      function goToRegister() {
+        window.location.href = "Login/login.html?view=register";
+      }
+
+      function goToDashboard() {
+        const user = getCurrentSession();
+        window.location.href = getDashboardUrl(user ? user.role : "user");
+      }
+
+      function logoutFromIndex() {
+        logoutUser("index.html");
+      }
+
+      function getCatalogUrl(query) {
+        return `dashboard/katalog.html?q=${encodeURIComponent(query)}`;
+      }
+
+      function openCatalog(query) {
+        const keyword = query || "";
+        const user = getCurrentSession();
+        const catalogUrl = getCatalogUrl(keyword);
+
+        if (!user) {
+          sessionStorage.setItem(
+            POST_LOGIN_REDIRECT_KEY,
+            new URL(catalogUrl, window.location.href).href,
+          );
+          window.location.href = "Login/login.html";
+          return;
+        }
+
+        if (user.role !== "user") {
+          showToast("Katalog bahan baku hanya tersedia untuk akun UMKM.");
+          return;
+        }
+
+        window.location.href = catalogUrl;
       }
 
       function toggleMobileMenu() {
@@ -1058,7 +1200,24 @@
 
         window.addEventListener("scroll", updateNavbarStyle);
         updateNavbarStyle();
+        updateAuthNavigation();
+        setupCatalogLinks();
         setupCounterObserver();
+      }
+
+      function setupCatalogLinks() {
+        document.querySelectorAll(SELECTORS.catalogQuery).forEach((element) => {
+          element.addEventListener("click", (event) => {
+            event.preventDefault();
+            openCatalog(element.dataset.catalogQuery || "");
+          });
+
+          element.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter" && event.key !== " ") return;
+            event.preventDefault();
+            openCatalog(element.dataset.catalogQuery || "");
+          });
+        });
       }
 
       function showToast(message) {
@@ -1075,22 +1234,23 @@
 
       function handleSearch() {
         const searchInput = getElement(SELECTORS.searchInput);
-        const suppliersSection = getElement(SELECTORS.suppliersSection);
-        const keyword = searchInput ? searchInput.value : "";
+        const keyword = searchInput ? searchInput.value.trim() : "";
 
         if (!keyword) {
           showToast("Silakan masukkan kata kunci!");
           return;
         }
 
-        showToast("Mencari supplier untuk: " + keyword);
-        if (suppliersSection)
-          suppliersSection.scrollIntoView({ behavior: "smooth" });
+        openCatalog(keyword);
       }
 
       document.addEventListener("DOMContentLoaded", setupEventListeners);
 
       // Dipertahankan global karena dipanggil oleh atribut onclick di markup.
+      window.goToDashboard = goToDashboard;
+      window.goToLogin = goToLogin;
+      window.goToRegister = goToRegister;
+      window.logoutFromIndex = logoutFromIndex;
       window.showToast = showToast;
       window.handleSearch = handleSearch;
     </script>
