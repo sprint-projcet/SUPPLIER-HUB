@@ -1,5 +1,8 @@
 // auth.js
-// Simulasi Autentikasi dan Konfigurasi Dashboard Multi-Role
+// Autentikasi dan Konfigurasi Dashboard Multi-Role
+
+const API_BASE_URL = window.SUPPLIER_HUB_API_BASE_URL || 'http://localhost:8080';
+const LEGACY_AUTH_KEYS = ['authToken', 'userRole', 'userData', 'token'];
 
 const roleConfig = {
     admin: {
@@ -59,10 +62,45 @@ const roleConfig = {
 };
 
 /**
- * Fungsi untuk simulasi login ke sistem.
+ * Menormalkan response auth backend menjadi format sesi frontend.
+ */
+function createUserSession(data, fallbackRole = 'user') {
+    const user = data.user || {};
+    const role = data.role || fallbackRole;
+
+    return {
+        name: user.business_name || user.email || role,
+        role: role,
+        email: user.email || '',
+        token: data.token,
+        id: user.id || '',
+        lastLogin: new Date().toISOString()
+    };
+}
+
+/**
+ * Menyimpan sesi di satu sumber data agar dashboard membaca format yang konsisten.
+ */
+function saveUserSession(userSession) {
+    localStorage.setItem('user_session', JSON.stringify(userSession));
+    LEGACY_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
+    return userSession;
+}
+
+function saveUserSessionFromAuthResponse(data, fallbackRole = 'user') {
+    return saveUserSession(createUserSession(data, fallbackRole));
+}
+
+function clearUserSession() {
+    localStorage.removeItem('user_session');
+    LEGACY_AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
+}
+
+/**
+ * Fungsi untuk login ke sistem.
  */
 function loginUser(email, password, role) {
-    return fetch("http://localhost:8080/api/auth/login", {
+    return fetch(`${API_BASE_URL}/api/auth/login`, {
         method: "POST",
         headers: {
             "Content-Type": "application/json"
@@ -74,18 +112,8 @@ function loginUser(email, password, role) {
         if (!ok) {
             throw new Error(data.error || 'Terjadi kesalahan saat login.');
         }
-        
-        const userSession = {
-            name: data.user.business_name || role,
-            role: data.role,
-            email: data.user.email,
-            token: data.token,
-            id: data.user.id,
-            lastLogin: new Date().toISOString()
-        };
-        
-        localStorage.setItem('user_session', JSON.stringify(userSession));
-        return userSession;
+
+        return saveUserSessionFromAuthResponse(data, role);
     });
 }
 
@@ -104,7 +132,7 @@ function checkAuth(redirectUrl = null) {
         return user;
     } catch (e) {
         console.error("Data sesi korup:", e);
-        localStorage.removeItem('user_session');
+        clearUserSession();
         if (redirectUrl) window.location.href = redirectUrl;
         return null;
     }
@@ -114,7 +142,7 @@ function checkAuth(redirectUrl = null) {
  * Fungsi Logout untuk memutus sesi.
  */
 function logoutUser(redirectUrl = '../Login/login.html') {
-    localStorage.removeItem('user_session');
+    clearUserSession();
     sessionStorage.setItem('justLoggedOut', 'true');
     window.location.href = redirectUrl;
 }

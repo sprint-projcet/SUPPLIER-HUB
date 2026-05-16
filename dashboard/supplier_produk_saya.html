@@ -230,8 +230,13 @@
             }, 200);
         }
 
+        function getSupplierAuthToken() {
+            const user = checkAuth();
+            return user ? user.token : null;
+        }
+
         async function fetchProducts() {
-            const token = localStorage.getItem('token');
+            const token = getSupplierAuthToken();
             if(!token) return;
 
             try {
@@ -297,7 +302,7 @@
 
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const token = localStorage.getItem('token');
+            const token = getSupplierAuthToken();
             if(!token) return alert('Sesi habis, silakan login kembali');
 
             const formData = new FormData();
@@ -345,7 +350,7 @@
                 if(user.role !== 'supplier') {
                     window.location.href = '../Login/login.html';
                 } else {
-                    document.getElementById('user-display-name').innerText = user.business_name || user.email || 'Supplier';
+                    document.getElementById('user-display-name').innerText = user.name || user.business_name || user.email || 'Supplier';
                     const dateEl = document.getElementById('current-date');
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');

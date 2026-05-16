@@ -113,11 +113,12 @@
                 </div>
 
                 <div class="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
-                    <button class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap">Semua</button>
-                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Belum Bayar</button>
-                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Dikemas</button>
-                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Dikirim</button>
-                    <button class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Selesai</button>
+                    <button data-status-filter="all" onclick="setOrderFilter('all')" class="order-filter px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap">Semua</button>
+                    <button data-status-filter="pending" onclick="setOrderFilter('pending')" class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Pending</button>
+                    <button data-status-filter="processing" onclick="setOrderFilter('processing')" class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Diproses</button>
+                    <button data-status-filter="shipped" onclick="setOrderFilter('shipped')" class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Dikirim</button>
+                    <button data-status-filter="completed" onclick="setOrderFilter('completed')" class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Selesai</button>
+                    <button data-status-filter="cancelled" onclick="setOrderFilter('cancelled')" class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap">Batal</button>
                 </div>
 
                 <div id="ordersContainer" class="space-y-6">
@@ -130,86 +131,184 @@
 
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
-        
-        async function fetchOrders() {
+
+        let activeStatusFilter = 'all';
+
+        function getSessionToken() {
             const sessionData = localStorage.getItem('user_session');
             const userSession = sessionData ? JSON.parse(sessionData) : null;
-            const token = userSession ? userSession.token : null;
+            return userSession ? userSession.token : null;
+        }
+
+        function jsArg(value) {
+            return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+        }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function formatRupiah(value) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(value || 0));
+        }
+
+        function getStatusMeta(status) {
+            const normalized = String(status || '').toLowerCase();
+            const map = {
+                pending: { label: 'PENDING', color: 'bg-yellow-50 text-yellow-600', icon: 'clock' },
+                paid: { label: 'DIBAYAR', color: 'bg-emerald-50 text-emerald-600', icon: 'credit-card' },
+                processing: { label: 'DIPROSES', color: 'bg-indigo-50 text-indigo-600', icon: 'package-check' },
+                shipped: { label: 'DIKIRIM', color: 'bg-blue-50 text-blue-600', icon: 'truck' },
+                completed: { label: 'SELESAI', color: 'bg-emerald-50 text-emerald-600', icon: 'check-circle-2' },
+                cancelled: { label: 'BATAL', color: 'bg-red-50 text-red-600', icon: 'x-circle' }
+            };
+            return map[normalized] || { label: normalized.toUpperCase() || 'UNKNOWN', color: 'bg-slate-100 text-slate-600', icon: 'package' };
+        }
+
+        function setOrderFilter(status) {
+            activeStatusFilter = status;
+            document.querySelectorAll('.order-filter').forEach(btn => {
+                const active = btn.dataset.statusFilter === status;
+                btn.classList.toggle('bg-slate-900', active);
+                btn.classList.toggle('text-white', active);
+                btn.classList.toggle('bg-white', !active);
+                btn.classList.toggle('text-slate-600', !active);
+                btn.classList.toggle('border', !active);
+                btn.classList.toggle('border-slate-200', !active);
+            });
+            fetchOrders();
+        }
+
+        function renderAction(order) {
+            const orderID = jsArg(order.id);
+            if (order.status === 'pending') {
+                return `
+                    <div class="flex flex-wrap gap-2 mt-2 justify-end">
+                        <button onclick="cancelOrder(${orderID})" class="px-4 py-2 bg-white border border-red-100 text-red-600 rounded-xl text-xs font-bold hover:bg-red-50 transition-colors">Batalkan</button>
+                    </div>
+                `;
+            }
+            if (order.status === 'shipped' || order.status === 'paid') {
+                return `
+                    <div class="flex flex-wrap gap-2 mt-2 justify-end">
+                        <a href="umkm_lacak_paket.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">Lacak Paket</a>
+                        <button onclick="completeOrder(${orderID})" class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors">Terima</button>
+                    </div>
+                `;
+            }
+            return `
+                <a href="katalog.html" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
+            `;
+        }
+
+        function renderOrders(orders) {
+            const container = document.getElementById('ordersContainer');
+            container.innerHTML = '';
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Belum ada pesanan untuk filter ini.</p><a href="katalog.html" class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Mulai Belanja</a></div>';
+                return;
+            }
+
+            orders.forEach(order => {
+                const product = order.product || {};
+                const supplier = product.supplier || {};
+                const statusMeta = getStatusMeta(order.status);
+                const productName = escapeHTML(product.name || 'Produk');
+                const supplierName = escapeHTML(supplier.business_name || 'Supplier');
+                const imageURL = escapeHTML(product.image_url || '../assets/logo.png');
+                const basePriceFormatted = formatRupiah(product.price);
+                const priceFormatted = formatRupiah(order.grand_total);
+                const shortId = String(order.id || '').substring(0, 8).toUpperCase();
+
+                container.innerHTML += `
+                    <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm transition-all hover:shadow-md">
+                        <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
+                            <div class="flex items-center gap-3">
+                                <i data-lucide="store" class="text-emerald-600 w-5 h-5"></i>
+                                <span class="font-bold text-slate-900">${supplierName}</span>
+                            </div>
+                            <span class="text-[10px] font-black px-3 py-1 rounded-full ${statusMeta.color}">${statusMeta.label}</span>
+                        </div>
+                        <div class="flex flex-col md:flex-row gap-4">
+                            <div class="w-20 h-20 bg-slate-100 rounded-xl flex-shrink-0 flex justify-center items-center overflow-hidden">
+                                <img src="${imageURL}" alt="${productName}" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
+                                <i data-lucide="package" class="w-8 h-8 text-slate-300 hidden"></i>
+                            </div>
+                            <div class="flex-1">
+                                <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">ORD-${shortId}</p>
+                                <h4 class="font-bold text-slate-900">${productName}</h4>
+                                <p class="text-sm text-slate-500 mt-1">${Number(order.quantity || 0)} x ${basePriceFormatted}</p>
+                            </div>
+                            <div class="text-left md:text-right flex flex-col justify-between md:items-end">
+                                <div>
+                                    <p class="text-xs text-slate-500 font-bold mb-1">Total Belanja</p>
+                                    <p class="font-black text-emerald-600 text-lg">${priceFormatted}</p>
+                                </div>
+                                ${renderAction(order)}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+            lucide.createIcons();
+        }
+        
+        async function fetchOrders() {
+            const token = getSessionToken();
             if (!token) return;
 
             try {
-                const res = await fetch('http://localhost:8080/api/user/orders', {
+                const url = activeStatusFilter === 'all'
+                    ? 'http://localhost:8080/api/user/orders'
+                    : `http://localhost:8080/api/user/orders?status=${encodeURIComponent(activeStatusFilter)}`;
+                const res = await fetch(url, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const result = await res.json();
-                const container = document.getElementById('ordersContainer');
-                container.innerHTML = '';
-
-                if (res.ok && result.data && result.data.length > 0) {
-                    result.data.forEach(order => {
-                        let statusBadge = '';
-                        let statusColor = '';
-                        let actionButton = '';
-
-                        if (order.status === 'pending') {
-                            statusBadge = 'PENDING';
-                            statusColor = 'bg-yellow-50 text-yellow-600';
-                            actionButton = '<button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 block w-max">Menunggu Konfirmasi Supplier</button>';
-                        } else if (order.status === 'awaiting_payment') {
-                            statusBadge = 'BELUM BAYAR';
-                            statusColor = 'bg-amber-50 text-amber-600';
-                            actionButton = '<button class="px-4 py-2 bg-amber-500 text-white rounded-xl text-xs font-bold hover:bg-amber-600 transition-colors shadow-lg shadow-amber-500/20 mt-2 block w-max">Bayar Sekarang (Simulasi)</button>';
-                        } else if (order.status === 'shipped') {
-                            statusBadge = 'DIKIRIM';
-                            statusColor = 'bg-blue-50 text-blue-600';
-                            actionButton = '<a href="umkm_lacak_paket.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20 mt-2 block w-max">Lacak Paket</a>';
-                        } else if (order.status === 'completed' || order.status === 'paid') {
-                            statusBadge = 'SELESAI';
-                            statusColor = 'bg-emerald-50 text-emerald-600';
-                            actionButton = '<div class="flex gap-2 mt-2"><button class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">Beri Ulasan</button><button class="px-4 py-2 bg-slate-900 text-white rounded-xl text-xs font-bold hover:bg-slate-800 transition-colors shadow-lg shadow-slate-900/20">Beli Lagi</button></div>';
-                        } else {
-                            statusBadge = order.status.toUpperCase();
-                            statusColor = 'bg-slate-100 text-slate-600';
-                        }
-
-                        const priceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(order.grand_total);
-                        const basePriceFormatted = new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(order.product.price);
-                        
-                        container.innerHTML += `
-                            <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm transition-all hover:shadow-md">
-                                <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
-                                    <div class="flex items-center gap-3">
-                                        <i data-lucide="store" class="text-emerald-600 w-5 h-5"></i>
-                                        <span class="font-bold text-slate-900">${order.product.supplier ? order.product.supplier.business_name : 'Supplier'}</span>
-                                    </div>
-                                    <span class="text-[10px] font-black px-3 py-1 rounded-full ${statusColor}">${statusBadge}</span>
-                                </div>
-                                <div class="flex gap-4">
-                                    <div class="w-20 h-20 bg-slate-100 rounded-xl flex-shrink-0 flex justify-center items-center overflow-hidden">
-                                        <img src="${order.product.image_url || '../assets/product1.png'}" alt="Produk" class="w-full h-full object-cover" onerror="this.style.display='none'; this.nextElementSibling.style.display='block';">
-                                        <i data-lucide="package" class="w-8 h-8 text-slate-300 hidden"></i>
-                                    </div>
-                                    <div class="flex-1">
-                                        <h4 class="font-bold text-slate-900">${order.product.name}</h4>
-                                        <p class="text-sm text-slate-500 mt-1">${order.quantity} x ${basePriceFormatted}</p>
-                                    </div>
-                                    <div class="text-right flex flex-col justify-between items-end">
-                                        <div>
-                                            <p class="text-xs text-slate-500 font-bold mb-1">Total Belanja</p>
-                                            <p class="font-black text-emerald-600 text-lg">${priceFormatted}</p>
-                                        </div>
-                                        ${actionButton}
-                                    </div>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    lucide.createIcons();
+                if (res.ok) {
+                    renderOrders(result.data || []);
                 } else {
-                    container.innerHTML = '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Belum ada riwayat pesanan.</p><a href="katalog.html" class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Mulai Belanja</a></div>';
+                    throw new Error(result.error || 'Gagal memuat pesanan');
                 }
             } catch (err) {
                 console.error("Gagal memuat pesanan", err);
+                document.getElementById('ordersContainer').innerHTML = `<div class="text-center p-8 bg-white rounded-3xl border border-red-100 text-red-500 font-bold">${escapeHTML(err.message)}</div>`;
+            }
+        }
+
+        async function updateOrderStatus(orderID, action) {
+            const token = getSessionToken();
+            if (!token) return;
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/user/orders/${encodeURIComponent(orderID)}/${action}`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || 'Gagal memperbarui pesanan');
+                fetchOrders();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
+        function cancelOrder(orderID) {
+            if (confirm('Batalkan pesanan ini? Stok akan dikembalikan ke katalog.')) {
+                updateOrderStatus(orderID, 'cancel');
+            }
+        }
+
+        function completeOrder(orderID) {
+            if (confirm('Konfirmasi paket sudah diterima?')) {
+                updateOrderStatus(orderID, 'complete');
             }
         }
 
@@ -219,7 +318,7 @@
                 if(user.role !== 'user') {
                     window.location.href = '../Login/login.html';
                 } else {
-                    document.getElementById('user-display-name').innerText = user.email || 'UMKM';
+                    document.getElementById('user-display-name').innerText = user.name || user.email || 'UMKM';
                     const dateEl = document.getElementById('current-date');
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');

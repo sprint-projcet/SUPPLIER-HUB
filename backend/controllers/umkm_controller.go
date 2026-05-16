@@ -2,48 +2,82 @@ package controllers
 
 import (
 	"net/http"
+	"sort"
 	"strings"
 
 	"supplierhub-backend/config"
 	"supplierhub-backend/models"
 
 	"github.com/gin-gonic/gin"
+	"gorm.io/gorm"
 )
 
-func GetUserStats(c *gin.Context) {
-	umkmID, exists := c.Get("user_id")
+func getAuthenticatedUserID(c *gin.Context) (string, bool) {
+	userID, exists := c.Get("user_id")
 	if !exists {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return "", false
+	}
+
+	userIDString, ok := userID.(string)
+	if !ok || userIDString == "" {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Sesi pengguna tidak valid"})
+		return "", false
+	}
+
+	return userIDString, true
+}
+
+func GetUserStats(c *gin.Context) {
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
 		return
 	}
 
 	var totalOrders int64
+	var pendingOrders int64
 	var shippedOrders int64
+	var completedOrders int64
+	var totalSpending float64
 
 	// Hitung total pesanan UMKM
 	config.DB.Model(&models.Order{}).Where("umkm_id = ?", umkmID).Count(&totalOrders)
+	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderPending).Count(&pendingOrders)
 
 	// Hitung pesanan yang sedang dikirim (shipped)
 	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderShipped).Count(&shippedOrders)
+	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderCompleted).Count(&completedOrders)
+	config.DB.Model(&models.Order{}).
+		Where("umkm_id = ? AND status IN ?", umkmID, []models.OrderStatus{models.OrderPaid, models.OrderProcessing, models.OrderShipped, models.OrderCompleted}).
+		Select("COALESCE(SUM(grand_total), 0)").
+		Scan(&totalSpending)
 
 	c.JSON(http.StatusOK, gin.H{
-		"total_orders":   totalOrders,
-		"shipped_orders": shippedOrders,
-		"vouchers":       0, // Belum ada tabel khusus voucher, set default 0
-		"points":         totalOrders * 10, // Contoh logika bisnis: tiap transaksi dapat 10 poin
+		"total_orders":     totalOrders,
+		"pending_orders":   pendingOrders,
+		"shipped_orders":   shippedOrders,
+		"completed_orders": completedOrders,
+		"total_spending":   totalSpending,
+		"vouchers":         0,                // Belum ada tabel khusus voucher, set default 0
+		"points":           totalOrders * 10, // Contoh logika bisnis: tiap transaksi dapat 10 poin
 	})
 }
 
 func GetUserOrders(c *gin.Context) {
-	umkmID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
 		return
 	}
 
 	var orders []models.Order
+	query := config.DB.Preload("Product").Preload("Product.Supplier").Where("umkm_id = ?", umkmID)
+
+	if status := c.Query("status"); status != "" && status != "all" {
+		query = query.Where("status = ?", status)
+	}
+
 	// Preload Product agar info detail produk ikut terbawa
-	if err := config.DB.Preload("Product").Where("umkm_id = ?", umkmID).Find(&orders).Error; err != nil {
+	if err := query.Order("created_at DESC").Find(&orders).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil daftar pesanan"})
 		return
 	}
@@ -156,7 +190,7 @@ func IsItemValid(sortedIDs []string, targetID string) bool {
 // GetProducts mengambil katalog produk untuk UMKM dengan fitur Pencarian (KMP) dan Sorting (Quick Sort)
 func GetProducts(c *gin.Context) {
 	var allProducts []models.Product
-	
+
 	// Tarik seluruh data produk dari database
 	if err := config.DB.Preload("Supplier").Find(&allProducts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data produk"})
@@ -166,11 +200,14 @@ func GetProducts(c *gin.Context) {
 	// 1. Filtering menggunakan KMP (jika ada query 'search')
 	searchQuery := c.Query("search")
 	var filteredProducts []models.Product
-	
+
 	if searchQuery != "" {
 		for _, product := range allProducts {
-			// Mencari kecocokan pattern KMP pada Nama Produk
-			if KMPMatch(product.Name, searchQuery) {
+			// Mencari kecocokan pattern KMP pada nama produk, kategori, lokasi, atau nama supplier
+			if KMPMatch(product.Name, searchQuery) ||
+				KMPMatch(product.Category, searchQuery) ||
+				KMPMatch(product.Location, searchQuery) ||
+				KMPMatch(product.Supplier.BusinessName, searchQuery) {
 				filteredProducts = append(filteredProducts, product)
 			}
 		}
@@ -201,9 +238,8 @@ type CreateOrderInput struct {
 }
 
 func CreateOrder(c *gin.Context) {
-	umkmID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
 		return
 	}
 
@@ -213,9 +249,13 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
-	// 1. Tarik semua ID produk yang valid dan terurut
+	// 1. Tarik semua ID produk yang valid dan pastikan diurutkan dengan aturan Go (ASCII)
 	var sortedIDs []string
-	config.DB.Model(&models.Product{}).Order("id asc").Pluck("id", &sortedIDs)
+	if err := config.DB.Model(&models.Product{}).Pluck("id", &sortedIDs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memvalidasi produk"})
+		return
+	}
+	sort.Strings(sortedIDs)
 
 	// 2. Validasi ID Produk menggunakan Binary Search (Sesuai Aturan PRD 6.3)
 	if !IsItemValid(sortedIDs, input.ItemID) {
@@ -226,7 +266,12 @@ func CreateOrder(c *gin.Context) {
 	// 3. Ambil data produk asli dari DB untuk kalkulasi harga
 	var product models.Product
 	if err := config.DB.First(&product, "id = ?", input.ItemID).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data produk"})
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan"})
+		return
+	}
+
+	if product.Stock < input.Quantity {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Stok produk tidak mencukupi"})
 		return
 	}
 
@@ -237,7 +282,7 @@ func CreateOrder(c *gin.Context) {
 
 	// 5. Buat dan Simpan Order ke Database
 	order := models.Order{
-		UmkmID:         umkmID.(string),
+		UmkmID:         umkmID,
 		SupplierID:     product.SupplierID,
 		ProductID:      product.ID,
 		Quantity:       input.Quantity,
@@ -247,7 +292,12 @@ func CreateOrder(c *gin.Context) {
 		Status:         models.OrderPending,
 	}
 
-	if err := config.DB.Create(&order).Error; err != nil {
+	if err := config.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Create(&order).Error; err != nil {
+			return err
+		}
+		return tx.Model(&product).Update("stock", product.Stock-input.Quantity).Error
+	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat pesanan"})
 		return
 	}
@@ -256,5 +306,70 @@ func CreateOrder(c *gin.Context) {
 		"status":  "success",
 		"message": "Pesanan berhasil dibuat",
 		"data":    order,
+	})
+}
+
+func CancelOrder(c *gin.Context) {
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+
+	orderID := c.Param("id")
+	var order models.Order
+	if err := config.DB.Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Pesanan tidak ditemukan"})
+		return
+	}
+
+	if order.Status != models.OrderPending {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesanan hanya bisa dibatalkan saat status pending"})
+		return
+	}
+
+	if err := config.DB.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Model(&models.Product{}).
+			Where("id = ?", order.ProductID).
+			Update("stock", gorm.Expr("stock + ?", order.Quantity)).Error; err != nil {
+			return err
+		}
+		return tx.Model(&order).Update("status", models.OrderCancelled).Error
+	}); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membatalkan pesanan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Pesanan berhasil dibatalkan",
+	})
+}
+
+func CompleteOrder(c *gin.Context) {
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return
+	}
+
+	orderID := c.Param("id")
+	var order models.Order
+	if err := config.DB.Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Pesanan tidak ditemukan"})
+		return
+	}
+
+	if order.Status != models.OrderShipped && order.Status != models.OrderPaid {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesanan belum dapat dikonfirmasi selesai"})
+		return
+	}
+
+	if err := config.DB.Model(&order).Update("status", models.OrderCompleted).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan pesanan"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Pesanan berhasil dikonfirmasi selesai",
 	})
 }

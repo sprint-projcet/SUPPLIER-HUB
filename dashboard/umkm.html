@@ -76,7 +76,7 @@
                 <div class="flex items-center gap-6">
                     <div class="hidden md:flex items-center bg-slate-50 rounded-xl px-4 py-2.5 w-72 border border-slate-200 focus-within:border-emerald-500 focus-within:bg-white focus-within:ring-4 focus-within:ring-emerald-500/5 transition-all">
                         <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
-                        <input type="text" placeholder="Cari Supplier..." class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700" />
+                        <input id="dashboard-search" type="text" placeholder="Cari bahan atau supplier..." class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700" />
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="flex items-center gap-3 pl-2">
@@ -129,10 +129,10 @@
                             <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-600">
                                 <i data-lucide="tag"></i>
                             </div>
-                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Tersedia</span>
+                            <span class="text-[10px] font-black px-2 py-1 rounded-lg text-yellow-700 bg-yellow-50">Perlu Aksi</span>
                         </div>
-                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Voucher</p>
-                        <p id="stat-vouchers" class="text-3xl font-black text-slate-900 mt-2">...</p>
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Menunggu</p>
+                        <p id="stat-pending-orders" class="text-3xl font-black text-slate-900 mt-2">...</p>
                     </div>
                     <!-- Stat 4 -->
                     <div class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-300">
@@ -196,7 +196,7 @@
                     const stats = await resStats.json();
                     document.getElementById('stat-total-orders').innerText = stats.total_orders;
                     document.getElementById('stat-shipped-orders').innerText = stats.shipped_orders;
-                    document.getElementById('stat-vouchers').innerText = stats.vouchers;
+                    document.getElementById('stat-pending-orders').innerText = stats.pending_orders;
                     document.getElementById('stat-points').innerText = new Intl.NumberFormat('id-ID').format(stats.points);
                 }
             } catch (err) {
@@ -258,7 +258,7 @@
                 if(user.role !== 'user') {
                     window.location.href = '../Login/login.html';
                 } else {
-                    document.getElementById('user-display-name').innerText = user.email || 'UMKM';
+                    document.getElementById('user-display-name').innerText = user.name || user.email || 'UMKM';
                     const dateEl = document.getElementById('current-date');
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');
@@ -266,6 +266,15 @@
                     
                     // Panggil fungsi fetch
                     fetchDashboardData();
+
+                    const dashboardSearch = document.getElementById('dashboard-search');
+                    if (dashboardSearch) {
+                        dashboardSearch.addEventListener('keydown', (event) => {
+                            if (event.key === 'Enter' && dashboardSearch.value.trim()) {
+                                window.location.href = `katalog.html?q=${encodeURIComponent(dashboardSearch.value.trim())}`;
+                            }
+                        });
+                    }
                 }
             }
         });

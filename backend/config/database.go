@@ -19,7 +19,10 @@ func ConnectDatabase() {
 	// Memuat konfigurasi environment variables (opsional jika sudah ada OS ENV)
 	err := godotenv.Load()
 	if err != nil {
-		log.Println("Peringatan: Tidak dapat memuat file .env (mungkin menggunakan environment default)")
+		err = godotenv.Load("backend/.env")
+	}
+	if err != nil {
+		log.Println("Peringatan: Tidak dapat memuat file .env atau backend/.env (mungkin menggunakan environment default)")
 	}
 
 	dsn := os.Getenv("DATABASE_URL")
@@ -58,7 +61,7 @@ func seedAdmin() {
 	if err := DB.Where("email = ?", "admin@supplierhub.com").First(&admin).Error; err != nil {
 		// Jika tidak ada, buat admin baru
 		hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("admin123"), bcrypt.DefaultCost)
-		
+
 		newAdmin := models.User{
 			BusinessName: "System Administrator",
 			Email:        "admin@supplierhub.com",
@@ -66,7 +69,7 @@ func seedAdmin() {
 			Role:         models.RoleAdmin,
 			Status:       "active",
 		}
-		
+
 		if err := DB.Create(&newAdmin).Error; err == nil {
 			log.Println("✅ Akun Admin default berhasil dibuat (admin@supplierhub.com / admin123)")
 		} else {

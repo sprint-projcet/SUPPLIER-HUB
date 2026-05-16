@@ -373,15 +373,18 @@
             }
 
             try {
-                const response = await fetch("http://localhost:8080/api/auth/register", {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
                     method: "POST",
                     body: formData
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Terjadi kesalahan');
 
+                const isGoogleRegistration = e.target.dataset.isGoogle === 'true';
                 document.getElementById('success-title').innerText = 'Pendaftaran UMKM Berhasil!';
-                document.getElementById('success-desc').innerText = `Kami telah mendaftarkan ${inputs[1].value} ke dalam sistem. Silakan login.`;
+                document.getElementById('success-desc').innerText = isGoogleRegistration
+                    ? `Kami telah mendaftarkan ${inputs[1].value} ke dalam sistem. Silakan masuk kembali dengan Google.`
+                    : `Kami telah mendaftarkan ${inputs[1].value} ke dalam sistem. Silakan login.`;
                 showView('success');
             } catch (err) {
                 const errorBox = document.getElementById('reg-umkm-error');
@@ -418,17 +421,20 @@
             }
 
             try {
-                const response = await fetch("http://localhost:8080/api/auth/register", {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
                     method: "POST",
                     body: formData
                 });
                 const result = await response.json();
                 if (!response.ok) throw new Error(result.error || 'Terjadi kesalahan');
 
+                const isGoogleRegistration = e.target.dataset.isGoogle === 'true';
                 document.getElementById('success-icon').innerHTML = '<i data-lucide="clock" class="w-8 h-8"></i>';
                 document.getElementById('success-icon').className = 'w-16 h-16 bg-yellow-100 text-yellow-600 rounded-full flex items-center justify-center mx-auto mb-4';
                 document.getElementById('success-title').innerText = 'Menunggu Verifikasi';
-                document.getElementById('success-desc').innerText = 'Dokumen legalitas Anda sedang ditinjau oleh admin. Silakan login untuk mengecek status.';
+                document.getElementById('success-desc').innerText = isGoogleRegistration
+                    ? 'Dokumen legalitas Anda sedang ditinjau oleh admin. Setelah diverifikasi, masuk kembali dengan Google untuk mengecek status.'
+                    : 'Dokumen legalitas Anda sedang ditinjau oleh admin. Silakan login untuk mengecek status.';
                 showView('success');
             } catch (err) {
                 const errorBox = document.getElementById('reg-supplier-error');
@@ -471,7 +477,7 @@
 
             // Buka halaman Google Login di jendela baru (popup)
             window.open(
-                "http://localhost:8080/api/auth/google",
+                `${API_BASE_URL}/api/auth/google`,
                 "Google Login",
                 `width=${width},height=${height},top=${top},left=${left}`
             );
@@ -479,22 +485,26 @@
 
         // Dengarkan pesan balasan dari popup jendela Google
         window.addEventListener("message", (event) => {
-            // Validasi asal pesan jika di environment Production (hindari origin yang tidak dikenal)
-            // if (event.origin !== "http://localhost:8080") return;
+            const expectedOrigin = new URL(API_BASE_URL).origin;
+            if (event.origin !== expectedOrigin) return;
 
             const data = event.data;
             if (data && data.type === "GOOGLE_LOGIN_SUCCESS") {
-                // Simpan sesi ke localStorage
-                localStorage.setItem("authToken", data.token);
-                localStorage.setItem("userRole", data.role);
-                localStorage.setItem("userData", JSON.stringify(data.user));
+                const userSession = saveUserSessionFromAuthResponse(data);
 
                 // Redirect sesuai role
                 let dashUrl = 'umkm.html';
-                if (data.role === 'admin') dashUrl = 'admin.html';
-                if (data.role === 'supplier') dashUrl = 'supplier.html';
+                if (userSession.role === 'admin') dashUrl = 'admin.html';
+                if (userSession.role === 'supplier') dashUrl = 'supplier.html';
 
                 window.location.href = '../dashboard/' + dashUrl;
+            } else if (data && data.type === "GOOGLE_LOGIN_ERROR") {
+                Swal.fire({
+                    title: 'Login Google Gagal',
+                    text: data.error || 'Terjadi kesalahan saat login dengan Google.',
+                    icon: 'error',
+                    confirmButtonColor: '#02C39A'
+                });
             } else if (data && data.type === "GOOGLE_LOGIN_NEEDS_REGISTRATION") {
                 Swal.fire({
                     title: 'Pilih Peran Anda',
@@ -506,13 +516,19 @@
                     confirmButtonColor: '#02C39A',
                     cancelButtonColor: '#475569',
                     reverseButtons: true,
-                    allowOutsideClick: false
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
                 }).then((result) => {
                     let role = result.isConfirmed ? 'umkm' : 'supplier';
                     let formId = role === 'umkm' ? 'form-reg-umkm' : 'form-reg-supplier';
                     showView(role === 'umkm' ? 'reg-umkm' : 'reg-supplier');
                     
                     const form = document.getElementById(formId);
+                    const businessInput = form.querySelector('input[type="text"]');
+                    if (businessInput && !businessInput.value) {
+                        businessInput.value = data.name || '';
+                    }
+
                     const emailInput = form.querySelector('input[type="email"]');
                     emailInput.value = data.email;
                     emailInput.readOnly = true;

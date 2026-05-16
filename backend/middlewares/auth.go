@@ -22,7 +22,7 @@ func RequireAuth() gin.HandlerFunc {
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
-			secret = "supersecretdefaultkey" // Hanya untuk development lokal
+			secret = "super_secret_key_supplierhub" // Hanya untuk development lokal
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -38,9 +38,24 @@ func RequireAuth() gin.HandlerFunc {
 		}
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
+			userID, ok := claims["user_id"].(string)
+			if !ok || userID == "" {
+				userID, ok = claims["sub"].(string)
+			}
+			if !ok || userID == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token payload: user_id is missing"})
+				return
+			}
+
+			role, ok := claims["role"].(string)
+			if !ok || role == "" {
+				c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token payload: role is missing"})
+				return
+			}
+
 			// Attach user data to context so controllers can access it
-			c.Set("user_id", claims["sub"])
-			c.Set("user_role", claims["role"])
+			c.Set("user_id", userID)
+			c.Set("user_role", role)
 			c.Next()
 		} else {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token payload"})

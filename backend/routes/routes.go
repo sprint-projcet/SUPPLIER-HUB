@@ -32,6 +32,8 @@ func SetupRoutes(router *gin.Engine) {
 		// Produk katalog (umkm viewing products)
 		userGroup.GET("/products", controllers.GetProducts)
 		userGroup.POST("/orders", controllers.CreateOrder)
+		userGroup.PUT("/orders/:id/cancel", controllers.CancelOrder)
+		userGroup.PUT("/orders/:id/complete", controllers.CompleteOrder)
 	}
 
 	// Supplier Routes

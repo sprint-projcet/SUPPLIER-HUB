@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -104,20 +104,30 @@
             </header>
 
             <div class="flex-1 overflow-y-auto p-8 custom-scrollbar">
-<section id="page-tracking" >
+                
+                <div id="empty-state" class="hidden text-center py-20">
+                    <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                        <i data-lucide="package-search" class="w-10 h-10 text-slate-400"></i>
+                    </div>
+                    <h3 class="text-xl font-bold text-slate-900 mb-2">Tidak Ada Paket Sedang Dikirim</h3>
+                    <p class="text-slate-500 mb-6">Saat ini Anda tidak memiliki pesanan dengan status 'Sedang Dikirim'.</p>
+                    <a href="katalog.html" class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 transition-colors">Belanja Sekarang</a>
+                </div>
+
+                <section id="page-tracking" class="hidden">
                     <div class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
                         <div
                             class="bg-white px-5 py-3 rounded-2xl border border-slate-200 flex items-center gap-4 shadow-sm inline-flex">
                             <span
                                 class="text-[10px] font-black text-slate-400 uppercase tracking-widest bg-slate-100 px-2 py-1 rounded">No.
                                 Resi</span>
-                            <span
-                                class="font-mono font-bold text-emerald-600 text-xl tracking-wider">LK-9921004412</span>
+                            <span id="tracking-resi"
+                                class="font-mono font-bold text-emerald-600 text-xl tracking-wider">Memuat...</span>
                             <div class="h-6 w-px bg-slate-200"></div>
                             <button class="text-slate-400 hover:text-slate-700 transition-colors p-1"><i
                                     data-lucide="copy" class="w-5 h-5"></i></button>
                         </div>
-                        <button
+                        <button onclick="fetchTrackingData()"
                             class="px-5 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2">
                             <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
                         </button>
@@ -228,13 +238,12 @@
                                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                         <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">
                                             Pengirim</p>
-                                        <p class="text-sm font-bold text-slate-900">PT. Supplier Bahan Makmur</p>
+                                        <p id="tracking-supplier" class="text-sm font-bold text-slate-900">Memuat...</p>
                                     </div>
                                     <div class="p-4 bg-slate-50 rounded-2xl border border-slate-100">
                                         <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest mb-1">
                                             Isi Paket</p>
-                                        <p class="text-sm font-bold text-slate-900 leading-relaxed">25kg Tepung
-                                            Terigu<br>10kg Gula Pasir</p>
+                                        <p id="tracking-items" class="text-sm font-bold text-slate-900 leading-relaxed">Memuat...</p>
                                     </div>
                                 </div>
                             </div>
@@ -269,18 +278,80 @@
 
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+        let activeTrackingOrderId = null;
         
+        async function fetchTrackingData() {
+            const sessionData = localStorage.getItem('user_session');
+            const userSession = sessionData ? JSON.parse(sessionData) : null;
+            const token = userSession ? userSession.token : null;
+            if (!token) return;
+
+            try {
+                const res = await fetch('http://localhost:8080/api/user/orders', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                
+                if (res.ok && result.data && result.data.length > 0) {
+                    // Cari pesanan yang dikirim
+                    const shippedOrder = result.data.find(o => o.status === 'shipped');
+                    
+                    if (shippedOrder) {
+                        activeTrackingOrderId = shippedOrder.id;
+                        document.getElementById('page-tracking').classList.remove('hidden');
+                        document.getElementById('empty-state').classList.add('hidden');
+                        
+                        document.getElementById('tracking-resi').innerText = `LK-${String(shippedOrder.id).substring(0, 10).toUpperCase()}`;
+                        document.getElementById('tracking-supplier').innerText = shippedOrder.product.supplier ? shippedOrder.product.supplier.business_name : 'Supplier';
+                        document.getElementById('tracking-items').innerText = `${shippedOrder.quantity}x ${shippedOrder.product.name}`;
+                    } else {
+                        activeTrackingOrderId = null;
+                        document.getElementById('page-tracking').classList.add('hidden');
+                        document.getElementById('empty-state').classList.remove('hidden');
+                    }
+                } else {
+                    activeTrackingOrderId = null;
+                    document.getElementById('page-tracking').classList.add('hidden');
+                    document.getElementById('empty-state').classList.remove('hidden');
+                }
+            } catch (err) {
+                console.error("Gagal memuat pesanan", err);
+            }
+        }
+
+        async function konfirmasiTerima() {
+            if (!activeTrackingOrderId) return;
+            const sessionData = localStorage.getItem('user_session');
+            const userSession = sessionData ? JSON.parse(sessionData) : null;
+            const token = userSession ? userSession.token : null;
+            if (!token) return;
+
+            try {
+                const res = await fetch(`http://localhost:8080/api/user/orders/${encodeURIComponent(activeTrackingOrderId)}/complete`, {
+                    method: 'PUT',
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || 'Gagal mengonfirmasi penerimaan');
+                alert("Paket berhasil dikonfirmasi diterima.");
+                fetchTrackingData();
+            } catch (err) {
+                alert(err.message);
+            }
+        }
+
         window.addEventListener('DOMContentLoaded', () => {
             const user = checkAuth('../Login/login.html');
             if (user) {
                 if(user.role !== 'user') {
                     window.location.href = '../Login/login.html';
                 } else {
-                    document.getElementById('user-display-name').innerText = user.email || 'UMKM';
+                    document.getElementById('user-display-name').innerText = user.name || user.email || 'UMKM';
                     const dateEl = document.getElementById('current-date');
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');
                     lucide.createIcons();
+                    fetchTrackingData();
                 }
             }
         });

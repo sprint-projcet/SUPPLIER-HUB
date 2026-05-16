@@ -112,7 +112,7 @@
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
+                <div id="wishlistGrid" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6">
                     <!-- Wishlist Card 1 -->
                     <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 relative group">
                         <button class="absolute top-6 right-6 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
@@ -162,6 +162,112 @@
 
     <script>
         function toggleSidebar() { document.getElementById('sidebar').classList.toggle('-translate-x-full'); }
+
+        function escapeHTML(value) {
+            return String(value ?? '').replace(/[&<>"']/g, (char) => ({
+                '&': '&amp;',
+                '<': '&lt;',
+                '>': '&gt;',
+                '"': '&quot;',
+                "'": '&#039;'
+            }[char]));
+        }
+
+        function formatRupiah(value) {
+            return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(Number(value || 0));
+        }
+
+        function jsArg(value) {
+            return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+        }
+
+        function getWishlistIDs() {
+            try {
+                return JSON.parse(localStorage.getItem('umkm_wishlist_ids') || '[]').map(String);
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function removeWishlist(id) {
+            const nextIDs = getWishlistIDs().filter(itemID => itemID !== String(id));
+            localStorage.setItem('umkm_wishlist_ids', JSON.stringify(nextIDs));
+            fetchWishlist();
+        }
+
+        function renderEmptyWishlist() {
+            document.getElementById('wishlistGrid').innerHTML = `
+                <div class="md:col-span-2 xl:col-span-4 text-center p-10 bg-white rounded-3xl border border-slate-100">
+                    <div class="w-16 h-16 bg-slate-50 rounded-full mx-auto mb-4 flex items-center justify-center">
+                        <i data-lucide="heart" class="w-8 h-8 text-slate-300"></i>
+                    </div>
+                    <p class="font-bold text-slate-900">Wishlist masih kosong</p>
+                    <p class="text-sm text-slate-500 mt-1">Simpan produk dari katalog untuk melihatnya di sini.</p>
+                    <a href="katalog.html" class="inline-block mt-5 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Buka Katalog</a>
+                </div>
+            `;
+            lucide.createIcons();
+        }
+
+        async function fetchWishlist() {
+            const grid = document.getElementById('wishlistGrid');
+            const wishlistIDs = getWishlistIDs();
+            if (wishlistIDs.length === 0) {
+                renderEmptyWishlist();
+                return;
+            }
+
+            const sessionData = localStorage.getItem('user_session');
+            const userSession = sessionData ? JSON.parse(sessionData) : null;
+            const token = userSession ? userSession.token : null;
+            if (!token) return;
+
+            try {
+                const res = await fetch('http://localhost:8080/api/user/products', {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                const result = await res.json();
+                if (!res.ok) throw new Error(result.error || 'Gagal memuat wishlist');
+
+                const products = (result.data || []).filter(product => wishlistIDs.includes(String(product.id)));
+                if (products.length === 0) {
+                    renderEmptyWishlist();
+                    return;
+                }
+
+                grid.innerHTML = products.map(product => {
+                    const productID = jsArg(product.id);
+                    const image = escapeHTML(product.image_url || '');
+                    const productName = escapeHTML(product.name || 'Produk');
+                    const supplierName = escapeHTML(product.supplier ? product.supplier.business_name : 'Mitra Supplier');
+                    const category = escapeHTML(product.category || 'Bahan Baku');
+                    return `
+                        <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 relative group">
+                            <button onclick="removeWishlist(${productID})" class="absolute top-6 right-6 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
+                                <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                            </button>
+                            <div class="aspect-square bg-slate-100 rounded-2xl mb-4 overflow-hidden flex items-center justify-center">
+                                ${image ? `<img src="${image}" alt="${productName}" class="w-full h-full object-cover">` : '<i data-lucide="image" class="w-12 h-12 text-slate-300"></i>'}
+                            </div>
+                            <div class="px-2">
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="text-[10px] font-black px-2 py-1 rounded-md bg-emerald-50 text-emerald-600">${category}</span>
+                                </div>
+                                <h3 class="font-bold text-slate-900 line-clamp-1">${productName}</h3>
+                                <p class="text-xs text-slate-500 mt-1">${supplierName}</p>
+                                <div class="flex items-center justify-between mt-3">
+                                    <p class="font-black text-emerald-600">${formatRupiah(product.price)}</p>
+                                    <a href="katalog.html?q=${encodeURIComponent(product.name || '')}" class="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"><i data-lucide="shopping-cart" class="w-4 h-4"></i></a>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                lucide.createIcons();
+            } catch (err) {
+                grid.innerHTML = `<div class="md:col-span-2 xl:col-span-4 text-center p-8 bg-white rounded-3xl border border-red-100 text-red-500 font-bold">${escapeHTML(err.message)}</div>`;
+            }
+        }
         
         window.addEventListener('DOMContentLoaded', () => {
             const user = checkAuth('../Login/login.html');
@@ -169,11 +275,12 @@
                 if(user.role !== 'user') {
                     window.location.href = '../Login/login.html';
                 } else {
-                    document.getElementById('user-display-name').innerText = user.email || 'UMKM';
+                    document.getElementById('user-display-name').innerText = user.name || user.email || 'UMKM';
                     const dateEl = document.getElementById('current-date');
                     if (dateEl) dateEl.innerText = new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' });
                     document.getElementById('app-content').classList.remove('invisible');
                     lucide.createIcons();
+                    fetchWishlist();
                 }
             }
         });

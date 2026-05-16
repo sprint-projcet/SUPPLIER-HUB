@@ -344,6 +344,22 @@
     let currentCategory = 'All';
     let searchQuery = '';
 
+    function jsArg(value) {
+      return `'${String(value).replace(/\\/g, '\\\\').replace(/'/g, "\\'")}'`;
+    }
+
+    function loadWishlist() {
+      try {
+        wishlistIds = JSON.parse(localStorage.getItem('umkm_wishlist_ids') || '[]').map(String);
+      } catch (e) {
+        wishlistIds = [];
+      }
+    }
+
+    function saveWishlist() {
+      localStorage.setItem('umkm_wishlist_ids', JSON.stringify(wishlistIds));
+    }
+
     function initCategories() {
       const container = document.getElementById('categoryContainer');
       container.innerHTML = `<button onclick="setCategory('All')" id="cat-All" class="category-chip active px-6 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm">Semua</button>`;
@@ -386,21 +402,21 @@
         document.getElementById('noResults').classList.add('hidden');
 
         filtered.forEach((p, index) => {
-          const isLiked = wishlistIds.includes(p.id);
+          const isLiked = wishlistIds.includes(String(p.id));
           const card = document.createElement('div');
           const isOutOfStock = !p.isAvailable;
           card.className = `group bg-white rounded-3xl border border-slate-100 overflow-hidden card-hover relative flex flex-col`;
           card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.05}s`;
 
           card.innerHTML = `
-            <div class="h-56 bg-slate-100 relative overflow-hidden cursor-pointer" onclick="openProductModal(${p.id})">
+            <div class="h-56 bg-slate-100 relative overflow-hidden cursor-pointer" onclick="openProductModal(${jsArg(p.id)})">
               <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
               
               <div class="absolute top-4 left-4 flex flex-col gap-2">
                 ${p.badge ? `<span class="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-xl">${p.badge}</span>` : ''}
               </div>
 
-              <button onclick="toggleLike(${p.id}); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all">
+              <button onclick="toggleLike(${jsArg(p.id)}); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -419,7 +435,7 @@
                     <p class="text-slate-900 font-black text-xl">${formatRupiah(p.price)}</p>
                 </div>
                 <button 
-                    onclick="addToCart(${p.id}); event.stopPropagation();" 
+                    onclick="addToCart(${jsArg(p.id)}); event.stopPropagation();" 
                     ${isOutOfStock ? 'disabled' : ''}
                     class="w-12 h-12 rounded-2xl transition-all shadow-sm flex items-center justify-center 
                     ${isOutOfStock ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-100'}">
@@ -435,7 +451,7 @@
     }
 
     function openProductModal(id) {
-      const p = products.find(x => x.id === id);
+      const p = products.find(x => String(x.id) === String(id));
       if (!p) return;
       const isOutOfStock = !p.isAvailable;
 
@@ -469,8 +485,10 @@
     }
 
     function toggleLike(id) {
-      const idx = wishlistIds.indexOf(id);
-      if (idx === -1) wishlistIds.push(id); else wishlistIds.splice(idx, 1);
+      const normalizedId = String(id);
+      const idx = wishlistIds.indexOf(normalizedId);
+      if (idx === -1) wishlistIds.push(normalizedId); else wishlistIds.splice(idx, 1);
+      saveWishlist();
       renderProducts();
     }
 
@@ -491,9 +509,9 @@
     }
 
     function addToCart(productId) {
-      const p = products.find(x => x.id === productId);
+      const p = products.find(x => String(x.id) === String(productId));
       if (!p.isAvailable) return;
-      const exists = cart.find(x => x.id === productId);
+      const exists = cart.find(x => String(x.id) === String(productId));
       if (exists) exists.qty++; else cart.push({ ...p, qty: 1 });
       updateBadge();
       showToast(`${p.title} ditambahkan`);
@@ -524,7 +542,7 @@
             <p class="text-[10px] text-slate-400 font-bold mb-2">${item.supplier}</p>
             <div class="flex items-center justify-between">
                 <p class="text-sm font-black text-slate-900">${formatRupiah(item.price)} <span class="text-xs text-slate-300 font-normal">x${item.qty}</span></p>
-                <button onclick="removeFromCart(${item.id})" class="text-slate-300 hover:text-red-500 transition-colors">
+                <button onclick="removeFromCart(${jsArg(item.id)})" class="text-slate-300 hover:text-red-500 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
             </div>
@@ -535,7 +553,7 @@
       document.getElementById('checkoutBtn').disabled = cart.length === 0;
     }
 
-    function removeFromCart(id) { cart = cart.filter(i => i.id !== id); renderCart(); updateBadge(); }
+    function removeFromCart(id) { cart = cart.filter(i => String(i.id) !== String(id)); renderCart(); updateBadge(); }
 
     async function openCheckout() {
       if (cart.length === 0) return;
@@ -619,7 +637,7 @@
         
         if (result.status === 'success' && result.data) {
           products = result.data.map(p => ({
-             id: p.id,
+             id: String(p.id),
              title: p.name,
              price: p.price,
              category: p.category || 'Lainnya',
@@ -653,7 +671,15 @@
       }, 300);
     });
 
-    window.onload = () => { fetchProducts(); };
+    window.onload = () => {
+      loadWishlist();
+      const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+      if (initialQuery) {
+        searchQuery = initialQuery;
+        document.getElementById('searchInput').value = initialQuery;
+      }
+      fetchProducts(initialQuery);
+    };
   </script>
 </body>
 
