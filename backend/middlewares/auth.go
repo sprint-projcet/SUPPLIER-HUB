@@ -22,7 +22,7 @@ func RequireAuth() gin.HandlerFunc {
 		tokenString := strings.Replace(authHeader, "Bearer ", "", 1)
 		secret := os.Getenv("JWT_SECRET")
 		if secret == "" {
-			secret = "supersecretdefaultkey" // Hanya untuk development lokal
+			secret = "super_secret_key_supplierhub" // Harus sama dengan di auth_controller.go
 		}
 
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
@@ -39,7 +39,7 @@ func RequireAuth() gin.HandlerFunc {
 
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
 			// Attach user data to context so controllers can access it
-			c.Set("user_id", claims["sub"])
+			c.Set("user_id", claims["user_id"])
 			c.Set("user_role", claims["role"])
 			c.Next()
 		} else {

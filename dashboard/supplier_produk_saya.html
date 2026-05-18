@@ -256,7 +256,8 @@
         }
 
         async function fetchProducts() {
-            const token = localStorage.getItem('token');
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            const token = session.token;
             if(!token) return;
 
             try {
@@ -326,7 +327,8 @@
 
         async function deleteProduct(id) {
             if(!confirm('Apakah Anda yakin ingin menghapus produk ini?')) return;
-            const token = localStorage.getItem('token');
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            const token = session.token;
             if(!token) return;
 
             try {
@@ -348,7 +350,8 @@
 
         document.getElementById('addProductForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            const token = localStorage.getItem('token');
+            const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+            const token = session.token;
             if(!token) return alert('Sesi habis, silakan login kembali');
 
             const prodId = document.getElementById('prod-id').value;

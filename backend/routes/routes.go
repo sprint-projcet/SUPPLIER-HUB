@@ -20,6 +20,9 @@ func SetupRoutes(router *gin.Engine) {
 		authGroup.GET("/google/callback", controllers.GoogleCallback)
 	}
 
+	// Public Catalog
+	api.GET("/catalog", controllers.GetPublicCatalog)
+
 	// Semua rute di bawah ini wajib melampirkan JWT token
 	api.Use(middlewares.RequireAuth())
 

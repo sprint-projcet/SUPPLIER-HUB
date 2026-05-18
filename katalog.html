@@ -256,21 +256,7 @@
   </div>
 
   <script>
-    const products = [
-      { id: 1, title: 'Beras Premium 5kg', price: 75000, category: 'Karbohidrat', supplier: 'PT Tani Makmur', rating: 4.8, reviews: 124, badge: 'Terlaris', isAvailable: true, img: 'https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=600', desc: 'Beras putih pulen kualitas super dari petani Cianjur. Tanpa pemutih dan pengawet tambahan.', stock: '500+ Karung', origin: 'Cianjur, Jawa Barat' },
-      { id: 2, title: 'Minyak Goreng 2L', price: 38000, category: 'Minyak', supplier: 'PT Sawit Sejahtera', rating: 4.5, reviews: 89, isAvailable: true, img: 'https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?auto=format&fit=crop&q=80&w=600', desc: 'Minyak kelapa sawit pilihan yang jernih dan sehat. Cocok untuk menggoreng pada suhu tinggi.', stock: '120 Dus', origin: 'Medan, Sumatera Utara' },
-      { id: 3, title: 'Telur Ayam 1kg', price: 28000, category: 'Protein', supplier: 'Farm Segar Blitar', rating: 4.9, reviews: 256, badge: 'Segar', isAvailable: false, img: 'https://images.unsplash.com/photo-1516106366711-237ebfeef681?auto=format&fit=crop&q=80&w=600', desc: 'Telur ayam negeri segar pilihan, langsung dari peternakan. Isi 15-16 butir per kg.', stock: '0 Peti', origin: 'Blitar, Jawa Timur' },
-      { id: 4, title: 'Daging Sapi Lokal 1kg', price: 145000, category: 'Protein', supplier: 'RPH Berkah Jaya', rating: 4.7, reviews: 56, isAvailable: true, img: 'https://images.unsplash.com/photo-1588168333986-5078d3ae3976?auto=format&fit=crop&q=80&w=600', desc: 'Daging sapi segar potongan paha belakang (knuckle). Rendah lemak dan tekstur lembut.', stock: '25 Kg', origin: 'Boyolali, Jawa Tengah' },
-      { id: 5, title: 'Gula Pasir 1kg', price: 16500, category: 'Bumbu', supplier: 'PG Gula Manis', rating: 4.6, reviews: 92, isAvailable: true, img: 'https://images.unsplash.com/photo-1622484210811-39e763136746?auto=format&fit=crop&q=80&w=600', desc: 'Gula kristal putih murni dari tebu pilihan. Butiran halus dan mudah larut.', stock: '300 Kg', origin: 'Lampung' },
-      { id: 6, title: 'Tepung Terigu 1kg', price: 13000, category: 'Karbohidrat', supplier: 'PT Pangan Mandiri', rating: 4.4, reviews: 45, isAvailable: true, img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&q=80&w=600', desc: 'Tepung terigu protein sedang, cocok untuk aneka kue, donat, dan gorengan.', stock: '150 Kg', origin: 'Jakarta' },
-      { id: 7, title: 'Bawang Merah 1kg', price: 35000, category: 'Sayuran', supplier: 'Bawang Brebes Lestari', rating: 4.8, reviews: 112, isAvailable: true, img: 'https://images.unsplash.com/photo-1580201092675-a0a6a6cafbb1?auto=format&fit=crop&q=80&w=600', desc: 'Bawang merah Brebes ukuran sedang-besar. Aroma kuat dan tahan lama disimpan.', stock: '80 Kg', origin: 'Brebes, Jawa Tengah' },
-      { id: 8, title: 'Bawang Putih 1kg', price: 42000, category: 'Sayuran', supplier: 'Bawang Brebes Lestari', rating: 4.7, reviews: 78, isAvailable: false, img: 'https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=600', desc: 'Bawang putih kating premium. Siung besar, padat, dan sangat aromatik.', stock: '0 Kg', origin: 'Impor Grade A' },
-      { id: 10, title: 'Susu Cair Fresh 1L', price: 19000, category: 'Lainnya', supplier: 'Lembang Dairy Farm', rating: 4.9, reviews: 167, isAvailable: true, img: 'https://images.unsplash.com/photo-1550583724-125581cc255b?auto=format&fit=crop&q=80&w=600', desc: 'Susu sapi murni yang telah dipasteurisasi. Tanpa tambahan gula dan pengawet.', stock: '40 Liter', origin: 'Lembang, Jawa Barat' },
-      { id: 11, title: 'Cabai Rawit 1kg', price: 55000, category: 'Sayuran', supplier: 'Sayur Kita Official', rating: 4.5, reviews: 65, isAvailable: true, img: 'https://images.unsplash.com/photo-1588252303782-cb80119cb665?auto=format&fit=crop&q=80&w=600', desc: 'Cabai rawit merah petik segar. Pedas maksimal dan kualitas terbaik.', stock: '20 Kg', origin: 'Garut, Jawa Barat' },
-      { id: 12, title: 'Ayam Potong 1kg', price: 42000, category: 'Protein', supplier: 'Unggas Prima Sentosa', rating: 4.8, reviews: 203, badge: 'Diskon', isAvailable: true, img: 'https://images.unsplash.com/photo-1604503468506-a8da13d82791?auto=format&fit=crop&q=80&w=600', desc: 'Ayam broiler potong higienis. Tanpa suntikan hormon dan antibiotik.', stock: '35 Kg', origin: 'Bogor, Jawa Barat' }
-    ];
-
-    let cart = [];
+    let products = [];
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
@@ -320,14 +306,14 @@
           card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.05}s`;
           
           card.innerHTML = `
-            <div class="h-56 bg-slate-100 relative overflow-hidden cursor-pointer" onclick="openProductModal(${p.id})">
+            <div class="h-56 bg-slate-100 relative overflow-hidden cursor-pointer" onclick="openProductModal('${p.id}')">
               <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
               
               <div class="absolute top-4 left-4 flex flex-col gap-2">
                 ${p.badge ? `<span class="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-xl">${p.badge}</span>` : ''}
               </div>
 
-              <button onclick="toggleLike(${p.id}); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all">
+              <button onclick="toggleLike('${p.id}'); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all">
                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
                 </svg>
@@ -346,7 +332,7 @@
                     <p class="text-slate-900 font-black text-xl">${formatRupiah(p.price)}</p>
                 </div>
                 <button 
-                    onclick="addToCart(${p.id}); event.stopPropagation();" 
+                    onclick="addToCart('${p.id}'); event.stopPropagation();" 
                     ${isOutOfStock ? 'disabled' : ''}
                     class="w-12 h-12 rounded-2xl transition-all shadow-sm flex items-center justify-center 
                     ${isOutOfStock ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-100'}">
@@ -450,8 +436,13 @@
             <h4 class="font-bold text-slate-900 text-sm">${item.title}</h4>
             <p class="text-[10px] text-slate-400 font-bold mb-2">${item.supplier}</p>
             <div class="flex items-center justify-between">
-                <p class="text-sm font-black text-slate-900">${formatRupiah(item.price)} <span class="text-xs text-slate-300 font-normal">x${item.qty}</span></p>
-                <button onclick="removeFromCart(${item.id})" class="text-slate-300 hover:text-red-500 transition-colors">
+                <p class="text-sm font-black text-slate-900">${formatRupiah(item.price)}</p>
+                <div class="flex items-center gap-2 bg-slate-100 rounded-full px-2 py-1">
+                    <button onclick="updateQty('${item.id}', -1)" class="w-6 h-6 rounded-full bg-white text-slate-600 hover:text-slate-900 shadow-sm flex items-center justify-center font-bold">-</button>
+                    <span class="text-xs font-bold text-slate-700 min-w-[1rem] text-center">${item.qty}</span>
+                    <button onclick="updateQty('${item.id}', 1)" class="w-6 h-6 rounded-full bg-white text-slate-600 hover:text-slate-900 shadow-sm flex items-center justify-center font-bold">+</button>
+                </div>
+                <button onclick="removeFromCart('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
                 </button>
             </div>
@@ -464,9 +455,56 @@
 
     function removeFromCart(id) { cart = cart.filter(i => i.id !== id); renderCart(); updateBadge(); }
     
-    function openCheckout() {
-      showToast("Mengarahkan ke pembayaran...");
-      setTimeout(() => { alert("Simulasi: Pesanan telah dibuat dan diteruskan ke Supplier."); cart = []; updateBadge(); toggleCart(); }, 1000);
+    function updateQty(id, delta) {
+        const item = cart.find(x => x.id === id);
+        if(item) {
+            item.qty += delta;
+            if(item.qty <= 0) {
+                removeFromCart(id);
+                return;
+            }
+            renderCart();
+            updateBadge();
+        }
+    }
+
+    async function openCheckout() {
+      const session = JSON.parse(localStorage.getItem('user_session') || '{}');
+      if (!session.token || session.role !== 'user') {
+          showToast("Harap login sebagai UMKM untuk memproses pembayaran!");
+          setTimeout(() => window.location.href = 'Login/login.html', 1500);
+          return;
+      }
+
+      const checkoutBtn = document.getElementById('checkoutBtn');
+      checkoutBtn.disabled = true;
+      checkoutBtn.innerText = "Memproses...";
+
+      try {
+          const res = await fetch('http://localhost:8080/api/user/orders', {
+              method: 'POST',
+              headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': 'Bearer ' + session.token
+              },
+              body: JSON.stringify(cart)
+          });
+          
+          const data = await res.json();
+          if (res.ok) {
+              showToast("Pesanan berhasil dibuat!");
+              cart = [];
+              updateBadge();
+              toggleCart();
+          } else {
+              showToast("Gagal: " + (data.error || 'Terjadi kesalahan'));
+          }
+      } catch (e) {
+          showToast("Gagal terhubung ke server");
+      } finally {
+          checkoutBtn.disabled = false;
+          checkoutBtn.innerText = "Lanjut ke Pembayaran";
+      }
     }
 
     function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
@@ -479,7 +517,39 @@
       setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
     }
 
-    window.onload = () => { initCategories(); renderProducts(); };
+    async function fetchCatalog() {
+      try {
+        const res = await fetch('http://localhost:8080/api/catalog');
+        if (res.ok) {
+          const data = await res.json();
+          products = data.map(p => ({
+            id: p.id,
+            title: p.name,
+            price: p.price,
+            category: p.category || 'Lainnya',
+            supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
+            supplier_id: p.supplier_id,
+            rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
+            reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
+            badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
+            isAvailable: p.stock > 0,
+            img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
+            desc: p.description || 'Tidak ada deskripsi.',
+            stock: p.stock + ' Unit',
+            origin: p.location || p.supplier?.region || 'Indonesia'
+          }));
+          initCategories();
+          renderProducts();
+        } else {
+          showToast("Gagal mengambil data dari server");
+        }
+      } catch (err) {
+        console.error("Gagal terhubung ke server backend:", err);
+        showToast("Gagal terhubung ke database. Pastikan server berjalan.");
+      }
+    }
+
+    window.onload = () => { fetchCatalog(); };
   </script>
 </body>
 </html>

@@ -40,6 +40,7 @@ type User struct {
 type Product struct {
 	ID          string    `gorm:"type:varchar(36);primaryKey" json:"id"`
 	SupplierID  string    `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
+	Supplier    User      `gorm:"foreignKey:SupplierID" json:"supplier"`
 	Name        string    `gorm:"type:varchar(255);not null" json:"name"`
 	Category    string    `gorm:"type:varchar(100)" json:"category"`
 	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
@@ -69,6 +70,7 @@ type Order struct {
 	UmkmID     string      `gorm:"type:varchar(36);not null;index" json:"umkm_id"`
 	SupplierID string      `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
 	TotalPrice float64     `gorm:"type:numeric(15,2);not null" json:"total_price"`
+	OrderItems string      `gorm:"type:text" json:"items"` // JSON berisi rincian barang, harga, qty
 	Status     OrderStatus `gorm:"type:varchar(20);default:'pending'" json:"status"`
 	CreatedAt  time.Time   `json:"created_at"`
 	UpdatedAt  time.Time   `json:"updated_at"`
