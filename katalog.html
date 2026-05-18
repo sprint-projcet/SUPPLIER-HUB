@@ -257,14 +257,49 @@
 
   <script>
     let products = [];
+    let cart = [];
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
 
+    async function fetchCatalog() {
+      try {
+        const res = await fetch('http://localhost:8080/api/catalog');
+        if (res.ok) {
+          const data = await res.json();
+          products = data.map(p => ({
+            id: p.id,
+            title: p.name,
+            price: p.price,
+            category: p.category || 'Lainnya',
+            supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
+            supplier_id: p.supplier_id,
+            rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
+            reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
+            badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
+            isAvailable: p.stock > 0,
+            img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
+            desc: p.description || 'Tidak ada deskripsi.',
+            stock: p.stock + ' Unit',
+            origin: p.location || p.supplier?.region || 'Indonesia'
+          }));
+          initCategories();
+          renderProducts();
+        } else {
+          showToast("Gagal mengambil data dari server");
+        }
+      } catch (err) {
+        console.error("Gagal terhubung ke server backend:", err);
+        showToast("Gagal terhubung ke database. Pastikan server berjalan.");
+      }
+    }
+
     function initCategories() {
       const container = document.getElementById('categoryContainer');
+      container.innerHTML = `<button onclick="setCategory('All')" id="cat-All" class="category-chip active px-6 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm">Semua</button>`;
       const uniqueCategories = [...new Set(products.map(p => p.category))];
       uniqueCategories.forEach(cat => {
+        if (!cat) return;
         const btn = document.createElement('button');
         btn.id = `cat-${cat}`;
         btn.className = 'category-chip px-6 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm hover:border-green-500';
@@ -277,7 +312,8 @@
     function setCategory(cat) {
       currentCategory = cat;
       document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
-      document.getElementById(`cat-${cat}`).classList.add('active');
+      const activeBtn = document.getElementById(`cat-${cat}`);
+      if(activeBtn) activeBtn.classList.add('active');
       renderProducts();
     }
 
@@ -412,6 +448,19 @@
       showToast(`${p.title} ditambahkan`);
     }
 
+    function updateQty(id, delta) {
+        const item = cart.find(x => x.id === id);
+        if(item) {
+            item.qty += delta;
+            if(item.qty <= 0) {
+                removeFromCart(id);
+                return;
+            }
+            renderCart();
+            updateBadge();
+        }
+    }
+
     function updateBadge() {
       const count = cart.reduce((s, i) => s + i.qty, 0);
       const b = document.getElementById('cartBadge');
@@ -455,19 +504,6 @@
 
     function removeFromCart(id) { cart = cart.filter(i => i.id !== id); renderCart(); updateBadge(); }
     
-    function updateQty(id, delta) {
-        const item = cart.find(x => x.id === id);
-        if(item) {
-            item.qty += delta;
-            if(item.qty <= 0) {
-                removeFromCart(id);
-                return;
-            }
-            renderCart();
-            updateBadge();
-        }
-    }
-
     async function openCheckout() {
       const session = JSON.parse(localStorage.getItem('user_session') || '{}');
       if (!session.token || session.role !== 'user') {
@@ -515,38 +551,6 @@
       msg.innerText = m;
       t.classList.remove('translate-y-20', 'opacity-0');
       setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
-    }
-
-    async function fetchCatalog() {
-      try {
-        const res = await fetch('http://localhost:8080/api/catalog');
-        if (res.ok) {
-          const data = await res.json();
-          products = data.map(p => ({
-            id: p.id,
-            title: p.name,
-            price: p.price,
-            category: p.category || 'Lainnya',
-            supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
-            supplier_id: p.supplier_id,
-            rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
-            reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
-            badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
-            isAvailable: p.stock > 0,
-            img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
-            desc: p.description || 'Tidak ada deskripsi.',
-            stock: p.stock + ' Unit',
-            origin: p.location || p.supplier?.region || 'Indonesia'
-          }));
-          initCategories();
-          renderProducts();
-        } else {
-          showToast("Gagal mengambil data dari server");
-        }
-      } catch (err) {
-        console.error("Gagal terhubung ke server backend:", err);
-        showToast("Gagal terhubung ke database. Pastikan server berjalan.");
-      }
     }
 
     window.onload = () => { fetchCatalog(); };
