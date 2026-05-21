@@ -7,10 +7,6 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
-    :root {
-      scroll-behavior: smooth;
-    }
-
     body {
       font-family: 'Inter', sans-serif;
       background-color: #f8fafc; /* Latar belakang abu-abu sangat muda yang bersih */
@@ -122,7 +118,10 @@
           <span class="text-slate-500 font-medium">Subtotal</span>
           <span id="cartTotal" class="text-2xl font-bold text-slate-900">Rp 0</span>
         </div>
-        <button onclick="openCheckout()" id="checkoutBtn" disabled class="w-full py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg shadow-green-100 disabled:opacity-50 disabled:shadow-none hover:bg-green-700 transition-all">
+        <button onclick="openPaymentModal()" id="paymentConfirmBtn" class="w-full mb-3 py-3 bg-white border border-slate-100 text-slate-700 rounded-2xl font-semibold hover:bg-slate-50 transition-all">
+          Konfirmasi Pembayaran
+        </button>
+        <button onclick="openCheckoutUI()" id="checkoutBtn" disabled class="w-full py-4 bg-green-600 text-white font-bold rounded-2xl shadow-lg shadow-green-100 disabled:opacity-50 disabled:shadow-none hover:bg-green-700 transition-all">
           Lanjut ke Pembayaran
         </button>
       </div>
@@ -255,9 +254,84 @@
     <span id="toastMessage" class="font-bold text-sm"></span>
   </div>
 
+  <!-- Modal Konfirmasi Pembayaran -->
+  <div id="paymentModal" class="fixed inset-0 z-[110] hidden items-center justify-center p-6">
+    <div class="absolute inset-0 bg-slate-900/50" onclick="closePaymentModal()"></div>
+    <div class="bg-white rounded-2xl w-full max-w-xl p-6 relative shadow-2xl">
+      <div class="mb-4">
+        <h3 class="text-lg font-bold text-slate-900">Konfirmasi Pembayaran</h3>
+        <p class="text-sm text-slate-500">Pilih metode pembayaran untuk melihat instruksi transfer atau alternatif lain.</p>
+      </div>
+
+      <div class="space-y-3">
+        <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer" onclick="selectPaymentMethod('bank')">
+          <input type="radio" name="paymethod" id="pay-bank" class="w-4 h-4" onchange="selectPaymentMethod('bank')">
+          <div class="flex-1">
+            <div class="font-semibold">Transfer Bank</div>
+            <div class="text-xs text-slate-400">Rekening Bank BCA / Mandiri</div>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer" onclick="selectPaymentMethod('ewallet')">
+          <input type="radio" name="paymethod" id="pay-ewallet" class="w-4 h-4" onchange="selectPaymentMethod('ewallet')">
+          <div class="flex-1">
+            <div class="font-semibold">E-Wallet</div>
+            <div class="text-xs text-slate-400">OVO / GoPay / DANA</div>
+          </div>
+        </label>
+
+        <label class="flex items-center gap-3 p-3 border rounded-lg cursor-pointer" onclick="selectPaymentMethod('cod')">
+          <input type="radio" name="paymethod" id="pay-cod" class="w-4 h-4" onchange="selectPaymentMethod('cod')">
+          <div class="flex-1">
+            <div class="font-semibold">Bayar di Tempat (COD)</div>
+            <div class="text-xs text-slate-400">Bayar saat barang diterima</div>
+          </div>
+        </label>
+
+        <div class="flex items-center justify-between gap-3">
+          <div id="paymentInstructions" class="flex-1 p-3 bg-slate-50 rounded-lg text-sm text-slate-600">Silakan pilih metode pembayaran untuk melihat instruksi.</div>
+          <button id="copyPaymentBtn" onclick="copyPaymentInstructions()" disabled class="px-4 py-3 border border-slate-200 rounded-xl text-slate-600 hover:bg-slate-100 transition-all">Salin</button>
+        </div>
+
+        <div class="flex gap-3 mt-4">
+          <button onclick="closePaymentModal()" class="flex-1 py-3 border rounded-xl text-slate-600">Tutup</button>
+          <button id="payContinueBtn" onclick="finalizePayment()" disabled class="flex-1 py-3 bg-green-600 text-white rounded-xl disabled:opacity-50">Selesai</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- Modal Checkout -->
+  <div id="checkoutModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4">
+    <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeCheckout()"></div>
+    <div class="bg-white rounded-3xl w-full max-w-lg p-8 relative shadow-2xl overflow-hidden">
+      <div class="text-center mb-6">
+        <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+        </div>
+        <h2 class="text-2xl font-bold text-slate-900">Konfirmasi Pesanan</h2>
+        <p class="text-slate-500">Pastikan daftar bahan pangan sudah sesuai.</p>
+      </div>
+      
+      <div id="checkoutSummary" class="max-h-60 overflow-y-auto mb-6 border-y border-slate-100 py-4 space-y-2"></div>
+
+      <div class="flex justify-between mb-8">
+        <span class="text-slate-500 font-medium">Total Bayar:</span>
+        <span id="finalTotal" class="text-2xl font-bold text-green-brand">Rp 0</span>
+      </div>
+
+      <div class="flex gap-3">
+        <button onclick="closeCheckout()" class="flex-1 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50">Tinjau Lagi</button>
+        <button onclick="submitOrder()" class="flex-1 py-3 bg-green-brand text-white rounded-xl font-semibold hover-bg-green transition-all shadow-lg shadow-green-100">Kirim Order</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     let products = [];
     let cart = [];
+    let selectedPaymentMethod = '';
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
@@ -504,7 +578,7 @@
 
     function removeFromCart(id) { cart = cart.filter(i => i.id !== id); renderCart(); updateBadge(); }
     
-    async function openCheckout() {
+    async function submitOrder() {
       const session = JSON.parse(localStorage.getItem('user_session') || '{}');
       if (!session.token || session.role !== 'user') {
           showToast("Harap login sebagai UMKM untuk memproses pembayaran!");
@@ -527,11 +601,27 @@
           });
           
           const data = await res.json();
-          if (res.ok) {
+              if (res.ok) {
+              const order = {
+                  id: 'order-' + Date.now(),
+                  status: 'BELUM BAYAR',
+                  supplier: 'Supplier Terverifikasi',
+                  paymentMethod: selectedPaymentMethod || 'Transfer Bank',
+                  items: cart.map(item => ({ title: item.title, qty: item.qty, price: item.price })),
+                  total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
+                  createdAt: new Date().toISOString()
+              };
+              const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
+              savedOrders.unshift(order);
+              localStorage.setItem('orders', JSON.stringify(savedOrders));
+
               showToast("Pesanan berhasil dibuat!");
               cart = [];
               updateBadge();
               toggleCart();
+              setTimeout(() => {
+                window.location.href = 'dashboard/umkm_pesanan_saya.html';
+              }, 1200);
           } else {
               showToast("Gagal: " + (data.error || 'Terjadi kesalahan'));
           }
@@ -542,6 +632,114 @@
           checkoutBtn.innerText = "Lanjut ke Pembayaran";
       }
     }
+
+    // Payment confirmation modal handlers (UI only, tidak mengubah alur server)
+    function openPaymentModal() {
+      selectedPaymentMethod = '';
+      document.querySelectorAll('input[name="paymethod"]').forEach(i => i.checked = false);
+      document.getElementById('paymentInstructions').innerText = 'Silakan pilih metode pembayaran untuk melihat instruksi.';
+      document.getElementById('payContinueBtn').disabled = true;
+      document.getElementById('copyPaymentBtn').disabled = true;
+      document.getElementById('paymentModal').classList.remove('hidden');
+      document.getElementById('paymentModal').classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closePaymentModal() {
+      document.getElementById('paymentModal').classList.add('hidden');
+      document.getElementById('paymentModal').classList.remove('flex');
+      document.body.style.overflow = 'auto';
+    }
+
+    function selectPaymentMethod(method) {
+      const instr = document.getElementById('paymentInstructions');
+      const btn = document.getElementById('payContinueBtn');
+      const copyBtn = document.getElementById('copyPaymentBtn');
+      document.querySelectorAll('input[name="paymethod"]').forEach(i => i.checked = false);
+      selectedPaymentMethod = method;
+      let text = '';
+      if (method === 'bank') {
+        document.getElementById('pay-bank').checked = true;
+        text = '<strong>Transfer Bank:</strong> Transfer ke BCA 123-456-789 a.n. SupplierHub. Cantumkan ID Pesanan sebagai berita transfer.';
+      }
+      if (method === 'ewallet') {
+        document.getElementById('pay-ewallet').checked = true;
+        text = '<strong>E-Wallet:</strong> Gunakan aplikasi OVO/Gopay/DANA, pindai kode merchant SupplierHub dan lakukan pembayaran sesuai total.';
+      }
+      if (method === 'cod') {
+        document.getElementById('pay-cod').checked = true;
+        text = '<strong>COD:</strong> Bayar langsung kepada kurir saat pesanan diterima. Pastikan alamat tujuan benar.';
+      }
+      instr.innerHTML = text;
+      btn.disabled = false;
+      copyBtn.disabled = false;
+    }
+
+    function copyPaymentInstructions() {
+      const instr = document.getElementById('paymentInstructions').innerText.trim();
+      if (!instr) {
+        showToast('Pilih metode pembayaran terlebih dahulu.');
+        return;
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(instr).then(() => {
+          showToast('Instruksi pembayaran berhasil disalin');
+        }).catch(() => {
+          fallbackCopyText(instr);
+        });
+      } else {
+        fallbackCopyText(instr);
+      }
+    }
+
+    function fallbackCopyText(text) {
+      const textarea = document.createElement('textarea');
+      textarea.value = text;
+      textarea.setAttribute('readonly', '');
+      textarea.style.position = 'absolute';
+      textarea.style.left = '-9999px';
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        document.execCommand('copy');
+        showToast('Instruksi pembayaran berhasil disalin');
+      } catch (err) {
+        showToast('Gagal menyalin instruksi');
+      }
+      document.body.removeChild(textarea);
+    }
+
+    function finalizePayment() {
+      // Tutup payment modal, lalu tampilkan popup konfirmasi pesanan (UI)
+      closePaymentModal();
+      openCheckoutUI();
+    }
+
+    function openCheckoutUI() {
+      const modal = document.getElementById('checkoutModal');
+      const summary = document.getElementById('checkoutSummary');
+      const finalTotal = document.getElementById('finalTotal');
+      summary.innerHTML = '';
+      let total = 0;
+      if (!cart || cart.length === 0) {
+        summary.innerHTML = '<div class="text-center py-8 text-slate-500">Keranjang kosong</div>';
+      } else {
+        cart.forEach(item => {
+          const subtotal = item.price * item.qty;
+          total += subtotal;
+          const row = document.createElement('div');
+          row.className = 'flex justify-between text-xs py-1.5';
+          row.innerHTML = `<span class="text-slate-600">${item.title} (x${item.qty})</span> <span class="font-bold text-slate-800">${formatRupiah(subtotal)}</span>`;
+          summary.appendChild(row);
+        });
+      }
+      finalTotal.innerText = formatRupiah(total);
+      modal.classList.remove('hidden');
+      modal.classList.add('flex');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeCheckout() { document.getElementById('checkoutModal').classList.add('hidden'); document.getElementById('checkoutModal').classList.remove('flex'); document.body.style.overflow = 'auto'; }
 
     function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
 
