@@ -514,6 +514,10 @@
                                 <i data-lucide="map-pin" class="w-3 h-3"></i> ${p.location || "-"}
                             </div>
                         </div>
+                        <div class="mt-3 pt-3 border-t border-slate-50 flex items-center justify-end gap-2">
+                            <button onclick="openAddProductModal('${p.id}')" class="p-1.5 text-blue-500 hover:bg-blue-50 rounded transition-colors" title="Edit Produk"><i data-lucide="edit" class="w-4 h-4"></i></button>
+                            <button onclick="deleteProduct('${p.id}')" class="p-1.5 text-red-500 hover:bg-red-50 rounded transition-colors" title="Hapus Produk"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
                     </div>
                 </div>
                 `;
