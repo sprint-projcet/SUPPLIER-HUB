@@ -77,7 +77,7 @@
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
         <div class="w-10 h-10 flex items-center justify-center">
-                   <img src="assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain"> 
+                   <img src="../assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain"> 
 
         </div>
         <span class="text-xl font-bold text-slate-900 tracking-tight">SUPPLIER<span class="text-green-brand">HUB</span></span>
@@ -91,7 +91,7 @@
           <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden border-2 border-white">0</span>
         </button>
 
-        <button onclick="window.location.href='dashboard.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200">
+        <button onclick="window.location.href='../dashboard.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200">
           Dashboard
         </button>
       </div>
@@ -582,7 +582,7 @@
       const session = JSON.parse(localStorage.getItem('user_session') || '{}');
       if (!session.token || session.role !== 'user') {
           showToast("Harap login sebagai UMKM untuk memproses pembayaran!");
-          setTimeout(() => window.location.href = 'Login/login.html', 1500);
+          setTimeout(() => window.location.href = '../Login/login.html', 1500);
           return;
       }
 
@@ -620,7 +620,7 @@
               updateBadge();
               toggleCart();
               setTimeout(() => {
-                window.location.href = 'dashboard/umkm_pesanan_saya.html';
+                window.location.href = 'umkm_pesanan_saya.html';
               }, 1200);
           } else {
               showToast("Gagal: " + (data.error || 'Terjadi kesalahan'));
