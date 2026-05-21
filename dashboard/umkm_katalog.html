@@ -355,6 +355,32 @@
       </footer>
     </main>
 
+    <!-- Modal Checkout (Konfirmasi Pembayaran) -->
+    <div id="checkoutModal" class="fixed inset-0 z-[100] hidden items-center justify-center p-4">
+      <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onclick="closeCheckout()"></div>
+      <div class="bg-white rounded-3xl w-full max-w-lg p-8 relative shadow-2xl overflow-hidden modal-enter">
+        <div class="text-center mb-6">
+          <div class="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>
+          </div>
+          <h2 class="text-2xl font-bold text-slate-900">Konfirmasi Pesanan</h2>
+          <p class="text-slate-500">Pastikan daftar bahan pangan sudah sesuai.</p>
+        </div>
+        
+        <div id="checkoutSummary" class="max-h-60 overflow-y-auto mb-6 border-y border-slate-100 py-4 space-y-2"></div>
+
+        <div class="flex justify-between mb-8">
+          <span class="text-slate-500 font-medium">Total Bayar:</span>
+          <span id="finalTotal" class="text-2xl font-bold text-green-brand">Rp 0</span>
+        </div>
+
+        <div class="flex gap-3">
+          <button onclick="closeCheckout()" class="flex-1 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50">Tinjau Lagi</button>
+          <button id="confirmOrderBtn" onclick="confirmPurchase()" class="flex-1 py-3 bg-green-brand text-white rounded-xl font-semibold hover-bg-green transition-all shadow-lg shadow-green-100">Kirim Order</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Modal Detail Produk -->
     <div
       id="productModal"
@@ -801,7 +827,42 @@
         updateBadge();
       }
 
-      async function openCheckout() {
+      function openCheckout() {
+        if (cart.length === 0) return;
+        const user = getStoredUserSession();
+        const token = user ? user.token : null;
+
+        if (!token) {
+          window.location.href = "../Login/login.html";
+          return;
+        }
+
+        const modal = document.getElementById("checkoutModal");
+        const summary = document.getElementById("checkoutSummary");
+        const finalTotal = document.getElementById("finalTotal");
+        summary.innerHTML = "";
+        let total = 0;
+        cart.forEach(item => {
+          const subtotal = item.price * item.qty;
+          total += subtotal;
+          const row = document.createElement("div");
+          row.className = "flex justify-between text-xs py-1.5";
+          row.innerHTML = `<span class="text-slate-600">${item.title} (x${item.qty})</span> <span class="font-bold text-slate-800">${formatRupiah(subtotal)}</span>`;
+          summary.appendChild(row);
+        });
+        finalTotal.innerText = formatRupiah(total);
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.style.overflow = "hidden";
+      }
+
+      function closeCheckout() {
+        document.getElementById("checkoutModal").classList.add("hidden");
+        document.getElementById("checkoutModal").classList.remove("flex");
+        document.body.style.overflow = "auto";
+      }
+
+      async function confirmPurchase() {
         if (cart.length === 0) return;
         const user = getStoredUserSession();
         const token = user ? user.token : null;
@@ -812,7 +873,7 @@
         }
 
         showToast("Memproses pesanan...");
-        const btn = document.getElementById("checkoutBtn");
+        const btn = document.getElementById("confirmOrderBtn");
         btn.disabled = true;
         btn.innerText = "Memproses...";
 
@@ -837,12 +898,13 @@
         }
 
         btn.disabled = false;
-        btn.innerText = "Lanjut ke Pembayaran";
+        btn.innerText = "Kirim Order";
 
         if (successCount > 0) {
           showToast(`${successCount} pesanan berhasil dibuat!`);
           cart = [];
           updateBadge();
+          closeCheckout();
           toggleCart();
         } else {
           showToast("Gagal membuat pesanan");

@@ -83,6 +83,93 @@ func CreateProduct(c *gin.Context) {
 	})
 }
 
+func UpdateProduct(c *gin.Context) {
+	supplierID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	productID := c.Param("id")
+	var product models.Product
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan atau Anda tidak berwenang"})
+		return
+	}
+
+	name := c.PostForm("name")
+	category := c.PostForm("category")
+	priceStr := c.PostForm("price")
+	stockStr := c.PostForm("stock")
+	description := c.PostForm("description")
+	location := c.PostForm("location")
+
+	if name != "" {
+		product.Name = name
+	}
+	if category != "" {
+		product.Category = category
+	}
+	if priceStr != "" {
+		price, _ := strconv.ParseFloat(priceStr, 64)
+		product.Price = price
+	}
+	if stockStr != "" {
+		stock, _ := strconv.Atoi(stockStr)
+		product.Stock = stock
+	}
+	if description != "" {
+		product.Description = description
+	}
+	if location != "" {
+		product.Location = location
+	}
+
+	// File Upload Handling
+	file, err := c.FormFile("image")
+	if err == nil {
+		filename := uuid.New().String() + filepath.Ext(file.Filename)
+		uploadPath := "uploads/" + filename
+		if err := c.SaveUploadedFile(file, uploadPath); err == nil {
+			product.ImageURL = config.PublicURL(uploadPath)
+		}
+	}
+
+	if err := config.DB.Save(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui produk: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Produk berhasil diperbarui",
+		"data":    product,
+	})
+}
+
+func DeleteProduct(c *gin.Context) {
+	supplierID, exists := c.Get("user_id")
+	if !exists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+		return
+	}
+
+	productID := c.Param("id")
+	var product models.Product
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan atau Anda tidak berwenang"})
+		return
+	}
+
+	if err := config.DB.Delete(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus produk: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Produk berhasil dihapus",
+	})
+}
+
 func GetSupplierOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Melihat pesanan masuk dari UMKM ke Supplier ini"})
 }
