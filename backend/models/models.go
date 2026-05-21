@@ -40,6 +40,7 @@ type User struct {
 type Product struct {
 	ID          string    `gorm:"type:varchar(36);primaryKey" json:"id"`
 	SupplierID  string    `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
+	Supplier    User      `gorm:"foreignKey:SupplierID" json:"supplier"`
 	Name        string    `gorm:"type:varchar(255);not null" json:"name"`
 	Category    string    `gorm:"type:varchar(100)" json:"category"`
 	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
