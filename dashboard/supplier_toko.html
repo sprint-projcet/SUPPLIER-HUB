@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Supplier Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/supplier_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -92,6 +94,13 @@
               class="group-hover:text-emerald-400"
             ></i>
             <span class="font-semibold text-sm">Daftar Pesanan</span>
+          </a>
+          <a
+            href="supplier_notifikasi.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i data-lucide="bell-ring" class="group-hover:text-emerald-400"></i>
+            <span class="font-semibold text-sm">Notifikasi</span>
           </a>
           <a
             href="supplier_analitik.html"
@@ -153,7 +162,7 @@
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
                 type="text"
-                placeholder="Cari Pesanan..."
+                placeholder="Cari Menu..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
               />
             </div>
@@ -201,94 +210,142 @@
 
           <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div class="lg:col-span-1">
-              <div
-                class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center"
-              >
-                <div
-                  class="w-32 h-32 rounded-full bg-slate-100 mb-6 flex items-center justify-center relative border-4 border-white shadow-lg overflow-hidden group"
-                >
-                  <img
-                    src="https://images.unsplash.com/photo-1556742049-0cfed4f6a45d?auto=format&fit=crop&q=80&w=200"
-                    class="w-full h-full object-cover"
-                  />
-                  <div
-                    class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
-                  >
-                    <i data-lucide="camera" class="text-white w-8 h-8"></i>
-                  </div>
+              <div class="bg-white rounded-[2.5rem] p-8 shadow-sm border border-slate-100 flex flex-col items-center text-center">
+                <div class="w-32 h-32 rounded-full bg-emerald-50 text-emerald-700 mb-6 flex items-center justify-center border-4 border-white shadow-lg ring-1 ring-slate-100">
+                  <span id="store-initials" class="text-4xl font-black">SH</span>
                 </div>
-                <h3 class="text-xl font-bold text-slate-900">PT Maju Mundur</h3>
-                <p class="text-sm text-slate-500 mt-1">Supplier Premium</p>
-                <div
-                  class="w-full mt-6 space-y-3 text-left border-t border-slate-100 pt-6"
-                >
+                <h3 id="store-card-name" class="text-xl font-bold text-slate-900">Memuat toko...</h3>
+                <p id="store-card-status" class="text-sm text-slate-500 mt-1">Status akun</p>
+                <div class="w-full mt-6 space-y-3 text-left border-t border-slate-100 pt-6">
                   <div class="flex items-center gap-3 text-sm text-slate-600">
-                    <i
-                      data-lucide="map-pin"
-                      class="w-4 h-4 text-emerald-600"
-                    ></i>
-                    Jakarta Selatan
+                    <i data-lucide="map-pin" class="w-4 h-4 text-emerald-600"></i>
+                    <span id="store-card-region">-</span>
                   </div>
                   <div class="flex items-center gap-3 text-sm text-slate-600">
-                    <i data-lucide="star" class="w-4 h-4 text-orange-400"></i>
-                    4.8 / 5.0 (124 Ulasan)
+                    <i data-lucide="tag" class="w-4 h-4 text-orange-400"></i>
+                    <span id="store-card-category">-</span>
                   </div>
                   <div class="flex items-center gap-3 text-sm text-slate-600">
                     <i data-lucide="clock" class="w-4 h-4 text-blue-600"></i>
-                    Bergabung Jan 2024
+                    <span id="store-card-joined">-</span>
                   </div>
                 </div>
               </div>
             </div>
 
             <div class="lg:col-span-2">
-              <div
-                class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden p-8"
-              >
-                <h3 class="text-lg font-black text-slate-900 mb-6">
-                  Informasi Dasar Toko
-                </h3>
-
-                <form class="space-y-6">
+              <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden p-8">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-3 mb-6">
                   <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2"
-                      >Nama Toko / Perusahaan</label
-                    >
+                    <h3 class="text-lg font-black text-slate-900">
+                      Informasi Dasar Toko
+                    </h3>
+                    <p class="text-sm text-slate-500 mt-1">
+                      Data ini mengikuti akun supplier yang sedang login.
+                    </p>
+                  </div>
+                  <a
+                    id="store-document-link"
+                    href="#"
+                    target="_blank"
+                    class="hidden text-sm font-bold text-emerald-700 hover:text-emerald-800"
+                  >
+                    Lihat Dokumen Legalitas
+                  </a>
+                </div>
+
+                <form id="storeProfileForm" class="space-y-6">
+                  <div>
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Nama Toko / Perusahaan</label>
                     <input
+                      id="store-name-input"
                       type="text"
-                      value="PT Maju Mundur"
-                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-slate-600"
+                      required
+                      disabled
+                      class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                      placeholder="Nama toko supplier"
                     />
                   </div>
-                  <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2"
-                      >Deskripsi Toko</label
-                    >
-                    <textarea
-                      rows="4"
-                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-slate-600"
-                    >
-Kami adalah supplier terpercaya yang menyediakan berbagai macam bahan baku berkualitas tinggi untuk kebutuhan UMKM Anda.</textarea
-                    >
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Email Akun</label>
+                      <input
+                        id="store-email-input"
+                        type="email"
+                        readonly
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Status Verifikasi</label>
+                      <input
+                        id="store-status-input"
+                        type="text"
+                        readonly
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500"
+                      />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Role</label>
+                      <input
+                        id="store-role-input"
+                        type="text"
+                        readonly
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Tanggal Bergabung</label>
+                      <input
+                        id="store-joined-input"
+                        type="text"
+                        readonly
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500"
+                      />
+                    </div>
+                  </div>
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Kategori Supply</label>
+                      <input
+                        id="store-category-input"
+                        type="text"
+                        disabled
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                        placeholder="Contoh: Bahan Pokok"
+                      />
+                    </div>
+                    <div>
+                      <label class="block text-sm font-bold text-slate-700 mb-2">Wilayah Supply</label>
+                      <input
+                        id="store-region-input"
+                        type="text"
+                        disabled
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all"
+                        placeholder="Contoh: Bandung"
+                      />
+                    </div>
                   </div>
                   <div>
-                    <label class="block text-sm font-bold text-slate-700 mb-2"
-                      >Alamat Lengkap</label
-                    >
+                    <label class="block text-sm font-bold text-slate-700 mb-2">Alamat Lengkap</label>
                     <textarea
-                      rows="2"
-                      class="w-full px-4 py-3 rounded-xl border border-slate-200 focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all text-slate-600"
-                    >
-Jl. Jend. Sudirman Kav 12, Kebayoran Baru, Jakarta Selatan</textarea
-                    >
+                      id="store-address-input"
+                      rows="3"
+                      disabled
+                      class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-slate-50 text-slate-500 cursor-not-allowed focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 outline-none transition-all resize-none"
+                      placeholder="Alamat operasional toko"
+                    ></textarea>
                   </div>
 
                   <div class="pt-4 flex justify-end">
                     <button
-                      type="button"
-                      class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
+                      id="store-save-button"
+                      type="submit"
+                      class="px-6 py-3 bg-emerald-600 text-white rounded-xl font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all disabled:opacity-60"
                     >
-                      Simpan Perubahan
+                      Edit
                     </button>
                   </div>
                 </form>
@@ -300,33 +357,178 @@ Jl. Jend. Sudirman Kav 12, Kebayoran Baru, Jakarta Selatan</textarea
     </div>
 
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
+      let currentSupplierProfile = null;
+      let isStoreEditMode = false;
+      const editableStoreFields = [
+        "store-name-input",
+        "store-category-input",
+        "store-region-input",
+        "store-address-input",
+      ];
+
+      function getInitials(name) {
+        const words = String(name || "Supplier Hub")
+          .trim()
+          .split(/\s+/)
+          .filter(Boolean);
+        return words
+          .slice(0, 2)
+          .map((word) => word.charAt(0).toUpperCase())
+          .join("");
+      }
+
+      function getStatusLabel(status) {
+        const normalized = String(status || "").toLowerCase();
+        const labels = {
+          active: "Terverifikasi",
+          pending: "Menunggu Verifikasi",
+          suspended: "Ditangguhkan",
+        };
+        return labels[normalized] || status || "-";
+      }
+
+      function formatJoinedDate(value) {
+        if (!value) return "-";
+        return new Date(value).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+        });
+      }
+
+      function getDocumentURL(path) {
+        if (!path) return "";
+        if (/^https?:\/\//i.test(path)) return path;
+        return buildApiUrl(path.startsWith("/") ? path : `/${path}`);
+      }
+
+      function renderSupplierProfile(profile) {
+        currentSupplierProfile = profile;
+
+        document.getElementById("store-initials").textContent = getInitials(profile.business_name);
+        document.getElementById("store-card-name").textContent =
+          profile.business_name || "Supplier";
+        document.getElementById("store-card-status").textContent = getStatusLabel(profile.status);
+        document.getElementById("store-card-region").textContent = profile.region || "-";
+        document.getElementById("store-card-category").textContent = profile.category || "-";
+        document.getElementById("store-card-joined").textContent =
+          `Bergabung ${formatJoinedDate(profile.created_at)}`;
+
+        document.getElementById("store-name-input").value = profile.business_name || "";
+        document.getElementById("store-email-input").value = profile.email || "";
+        document.getElementById("store-status-input").value = getStatusLabel(profile.status);
+        document.getElementById("store-role-input").value = profile.role || "supplier";
+        document.getElementById("store-joined-input").value = formatJoinedDate(profile.created_at);
+        document.getElementById("store-category-input").value = profile.category || "";
+        document.getElementById("store-region-input").value = profile.region || "";
+        document.getElementById("store-address-input").value = profile.address || "";
+
+        const documentLink = document.getElementById("store-document-link");
+        const documentURL = getDocumentURL(profile.document_url);
+        documentLink.classList.toggle("hidden", !documentURL);
+        if (documentURL) documentLink.href = documentURL;
+
+        SupplierDashboard.setUserDisplay({
+          ...profile,
+          name: profile.business_name,
+        });
+        setStoreEditMode(false);
+        lucide.createIcons();
+      }
+
+      function setStoreEditMode(enabled) {
+        isStoreEditMode = enabled;
+        editableStoreFields.forEach((fieldID) => {
+          const field = document.getElementById(fieldID);
+          if (!field) return;
+          field.disabled = !enabled;
+          field.classList.toggle("bg-slate-50", !enabled);
+          field.classList.toggle("text-slate-500", !enabled);
+          field.classList.toggle("cursor-not-allowed", !enabled);
+        });
+
+        const saveButton = document.getElementById("store-save-button");
+        saveButton.textContent = enabled ? "Simpan" : "Edit";
+      }
+
+      function validateStorePayload(payload) {
+        if (
+          !payload.business_name ||
+          !payload.category ||
+          !payload.region ||
+          !payload.address
+        ) {
+          SupplierDashboard.notify(
+            "warning",
+            "Nama toko, kategori, wilayah, dan alamat wajib diisi.",
+          );
+          return false;
+        }
+        return true;
+      }
+
+      async function fetchSupplierProfile() {
+        try {
+          const profile = await SupplierDashboard.getProfile();
+          renderSupplierProfile(profile);
+        } catch (error) {
+          SupplierDashboard.notify("danger", error.message || "Gagal memuat profil supplier.");
+        }
+      }
+
+      async function saveSupplierProfile(event) {
+        event.preventDefault();
+
+        if (!isStoreEditMode) {
+          setStoreEditMode(true);
+          document.getElementById("store-name-input").focus();
+          return;
+        }
+
+        const saveButton = document.getElementById("store-save-button");
+        saveButton.disabled = true;
+        saveButton.textContent = "Menyimpan...";
+
+        const payload = {
+          business_name: document.getElementById("store-name-input").value.trim(),
+          category: document.getElementById("store-category-input").value.trim(),
+          region: document.getElementById("store-region-input").value.trim(),
+          address: document.getElementById("store-address-input").value.trim(),
+        };
+
+        if (!validateStorePayload(payload)) {
+          saveButton.disabled = false;
+          saveButton.textContent = "Simpan";
+          return;
+        }
+
+        try {
+          const profile = await SupplierDashboard.updateProfile(payload);
+          SupplierDashboard.updateStoredProfile(profile);
+          renderSupplierProfile(profile);
+          SupplierDashboard.notify("success", "Profil toko berhasil diperbarui.");
+          await fetchSupplierProfile();
+        } catch (error) {
+          SupplierDashboard.notify("danger", error.message || "Gagal menyimpan profil toko.");
+        } finally {
+          saveButton.disabled = false;
+          saveButton.textContent = isStoreEditMode ? "Simpan" : "Edit";
+        }
+      }
+
+      function setupStoreForm() {
+        const form = document.getElementById("storeProfileForm");
+        form.addEventListener("submit", saveSupplierProfile);
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "supplier") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Supplier";
-            const dateEl = document.getElementById("current-date");
-            if (dateEl)
-              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-            document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
-          }
-        }
+        SupplierDashboard.initPage({
+          onReady: async () => {
+            setupStoreForm();
+            setStoreEditMode(false);
+            await fetchSupplierProfile();
+          },
+        });
       });
     </script>
   </body>

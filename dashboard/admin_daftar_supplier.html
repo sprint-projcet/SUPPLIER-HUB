@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Admin Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -34,7 +36,7 @@
   <body
     class="bg-slate-50 text-slate-900 selection:bg-emerald-100 selection:text-emerald-900 overflow-hidden"
   >
-    <div id="app-content" class="min-h-screen flex">
+    <div id="app-content" class="min-h-screen flex invisible">
       <!-- Sidebar - Admin Theme (Navy) -->
       <aside
         id="sidebar"
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -149,6 +151,7 @@
             >
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
+                id="supplier-global-search"
                 type="text"
                 placeholder="Cari Data..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -195,9 +198,10 @@
               </p>
             </div>
             <button
+              onclick="refreshSuppliers()"
               class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
             >
-              <i data-lucide="plus" class="w-4 h-4"></i> Tambah Supplier
+              <i data-lucide="refresh-cw" class="w-4 h-4"></i> Refresh Data
             </button>
           </div>
 
@@ -221,11 +225,15 @@
                 </div>
               </div>
               <div class="flex gap-2">
-                <button
-                  class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2"
+                <select
+                  id="supplier-status-filter"
+                  class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors outline-none"
                 >
-                  <i data-lucide="filter" class="w-4 h-4"></i> Filter
-                </button>
+                  <option value="all">Semua Status</option>
+                  <option value="pending">Menunggu</option>
+                  <option value="active">Aktif</option>
+                  <option value="suspended">Ditangguhkan</option>
+                </select>
               </div>
             </div>
             <div class="overflow-x-auto">
@@ -321,6 +329,8 @@
         tbody.innerHTML = suppliers
           .map((supplier) => {
             const isPending = supplier.status === "pending";
+            const isActive = supplier.status === "active";
+            const isSuspended = supplier.status === "suspended";
             const location = supplier.region || supplier.address || "-";
             const category = supplier.category || "-";
             const verifyButton = isPending
@@ -330,6 +340,26 @@
                   class="px-3 py-2 text-xs font-black rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
                 >
                   Verifikasi
+                </button>
+              `
+              : "";
+            const suspendButton = isActive
+              ? `
+                <button
+                  onclick="updateSupplierStatus('${escapeHTML(supplier.id)}', 'suspended')"
+                  class="px-3 py-2 text-xs font-black rounded-lg bg-red-50 text-red-700 hover:bg-red-100 transition-colors"
+                >
+                  Suspend
+                </button>
+              `
+              : "";
+            const activateButton = isSuspended
+              ? `
+                <button
+                  onclick="updateSupplierStatus('${escapeHTML(supplier.id)}', 'active')"
+                  class="px-3 py-2 text-xs font-black rounded-lg bg-emerald-50 text-emerald-700 hover:bg-emerald-100 transition-colors"
+                >
+                  Aktifkan
                 </button>
               `
               : "";
@@ -363,6 +393,8 @@
                 <td class="px-8 py-5 text-center">
                   <div class="flex items-center justify-center gap-2">
                     ${verifyButton}
+                    ${activateButton}
+                    ${suspendButton}
                     ${documentButton}
                   </div>
                 </td>
@@ -370,7 +402,7 @@
             `;
           })
           .join("");
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
       }
 
       async function fetchSuppliers(search = "") {
@@ -385,11 +417,14 @@
           `;
         }
 
-        const url = search
-          ? buildApiUrl(
-              `/api/admin/suppliers?search=${encodeURIComponent(search)}`,
-            )
-          : buildApiUrl("/api/admin/suppliers");
+        const statusFilter = document.getElementById("supplier-status-filter");
+        const params = new URLSearchParams();
+        if (search) params.set("search", search);
+        if (statusFilter && statusFilter.value !== "all") {
+          params.set("status", statusFilter.value);
+        }
+        const query = params.toString();
+        const url = buildApiUrl(`/api/admin/suppliers${query ? `?${query}` : ""}`);
         const response = await fetch(url, {
           headers: { Authorization: `Bearer ${adminAuthToken}` },
         });
@@ -422,12 +457,49 @@
             throw new Error(result.error || "Gagal memverifikasi supplier");
           }
 
-          alert(result.message || "Supplier berhasil diverifikasi");
+          AdminDashboard.notify("success", result.message || "Supplier berhasil diverifikasi");
           const searchInput = document.getElementById("supplier-search");
           fetchSuppliers(searchInput ? searchInput.value.trim() : "");
         } catch (err) {
-          alert(err.message);
+          AdminDashboard.notify("danger", err.message);
         }
+      }
+
+      async function updateSupplierStatus(supplierID, status) {
+        if (!supplierID || !status) return;
+        const shouldUpdate = confirm(`Ubah status supplier menjadi ${status}?`);
+        if (!shouldUpdate) return;
+
+        try {
+          const response = await fetch(
+            buildApiUrl(`/api/admin/suppliers/${encodeURIComponent(supplierID)}/status`),
+            {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${adminAuthToken}`,
+              },
+              body: JSON.stringify({ status }),
+            },
+          );
+          const result = await response.json();
+          if (!response.ok) {
+            throw new Error(result.error || "Gagal memperbarui status supplier");
+          }
+
+          AdminDashboard.notify("success", result.message || "Status supplier diperbarui");
+          refreshSuppliers();
+        } catch (err) {
+          AdminDashboard.notify("danger", err.message);
+        }
+      }
+
+      function refreshSuppliers() {
+        const searchInput = document.getElementById("supplier-search");
+        return fetchSuppliers(searchInput ? searchInput.value.trim() : "").catch((err) => {
+          console.error("Gagal memuat supplier", err);
+          AdminDashboard.notify("danger", err.message);
+        });
       }
 
       function setupSupplierSearch() {
@@ -443,6 +515,29 @@
             });
           }, 300);
         });
+      }
+
+      function setupSupplierFilters() {
+        const globalSearch = document.getElementById("supplier-global-search");
+        const searchInput = document.getElementById("supplier-search");
+        const statusFilter = document.getElementById("supplier-status-filter");
+        const params = new URLSearchParams(window.location.search);
+        const initialQuery = params.get("q") || "";
+
+        if (searchInput) searchInput.value = initialQuery;
+        if (globalSearch) {
+          globalSearch.value = initialQuery;
+          globalSearch.addEventListener("keydown", (event) => {
+            if (event.key !== "Enter") return;
+            if (searchInput) searchInput.value = globalSearch.value.trim();
+            refreshSuppliers();
+          });
+        }
+        if (statusFilter) {
+          const initialStatus = params.get("status") || "all";
+          statusFilter.value = initialStatus;
+          statusFilter.addEventListener("change", refreshSuppliers);
+        }
       }
 
       window.addEventListener("DOMContentLoaded", () => {
@@ -461,8 +556,12 @@
                 month: "long",
                 year: "numeric",
               });
+            setupSupplierFilters();
             setupSupplierSearch();
-            fetchSuppliers().catch((err) => {
+            document
+              .getElementById("app-content")
+              .classList.remove("invisible");
+            refreshSuppliers().catch((err) => {
               console.error("Gagal memuat supplier", err);
               const tbody = document.getElementById("supplier-table-body");
               if (tbody) {
@@ -475,12 +574,14 @@
                 `;
               }
             });
-            lucide.createIcons();
+            if (window.lucide) lucide.createIcons();
           }
         }
       });
 
       window.verifySupplier = verifySupplier;
+      window.updateSupplierStatus = updateSupplierStatus;
+      window.refreshSuppliers = refreshSuppliers;
     </script>
   </body>
 </html>

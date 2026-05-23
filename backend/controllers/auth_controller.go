@@ -232,6 +232,10 @@ func Login(c *gin.Context) {
 			"id":            user.ID,
 			"business_name": user.BusinessName,
 			"email":         user.Email,
+			"address":       user.Address,
+			"category":      user.Category,
+			"region":        user.Region,
+			"status":        user.Status,
 		},
 	})
 }

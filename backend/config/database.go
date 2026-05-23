@@ -43,6 +43,12 @@ func ConnectDatabase() {
 		&models.User{},
 		&models.Product{},
 		&models.Order{},
+		&models.Payment{},
+		&models.FinanceLog{},
+		&models.RequestLog{},
+		&models.ShipmentLog{},
+		&models.Notification{},
+		&models.Wishlist{},
 		&models.Log{},
 	)
 	if err != nil {

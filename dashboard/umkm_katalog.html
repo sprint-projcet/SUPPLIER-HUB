@@ -3,8 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
   <title>Katalog Bahan Baku - Supplier Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script src="../assets/js/auth.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -77,7 +79,7 @@
     <div class="max-w-7xl mx-auto flex justify-between items-center">
       <div class="flex items-center gap-2">
         <div class="w-10 h-10 flex items-center justify-center">
-                   <img src="../assets/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain"> 
+                   <img src="../assets/img/logo.png" alt="Logo SupplierHub" class="w-12 h-12 object-contain">
 
         </div>
         <span class="text-xl font-bold text-slate-900 tracking-tight">SUPPLIER<span class="text-green-brand">HUB</span></span>
@@ -91,7 +93,7 @@
           <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden border-2 border-white">0</span>
         </button>
 
-        <button onclick="window.location.href='../dashboard.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200">
+        <button onclick="window.location.href='umkm.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200">
           Dashboard
         </button>
       </div>
@@ -323,7 +325,7 @@
 
       <div class="flex gap-3">
         <button onclick="closeCheckout()" class="flex-1 py-3 border border-slate-200 rounded-xl font-semibold text-slate-600 hover:bg-slate-50">Tinjau Lagi</button>
-        <button onclick="submitOrder()" class="flex-1 py-3 bg-green-brand text-white rounded-xl font-semibold hover-bg-green transition-all shadow-lg shadow-green-100">Kirim Order</button>
+        <button id="submitOrderBtn" onclick="submitOrder()" class="flex-1 py-3 bg-green-brand text-white rounded-xl font-semibold hover-bg-green transition-all shadow-lg shadow-green-100">Kirim Order</button>
       </div>
     </div>
   </div>
@@ -335,14 +337,34 @@
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
+    const WISHLIST_STORAGE_KEY = 'umkm_wishlist_ids';
+
+    function loadWishlist() {
+      try {
+        wishlistIds = JSON.parse(localStorage.getItem(WISHLIST_STORAGE_KEY) || '[]').map(String);
+      } catch (error) {
+        wishlistIds = [];
+      }
+    }
+
+    function saveWishlist() {
+      localStorage.setItem(WISHLIST_STORAGE_KEY, JSON.stringify(wishlistIds));
+    }
+
+    function applyCatalogQueryFromUrl() {
+      const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+      searchQuery = initialQuery.trim();
+      document.getElementById('searchInput').value = searchQuery;
+    }
 
     async function fetchCatalog() {
       try {
-        const res = await fetch('http://localhost:8080/api/catalog');
+        const res = await fetch(buildApiUrl('/api/catalog'));
         if (res.ok) {
-          const data = await res.json();
+          const payload = await res.json();
+          const data = Array.isArray(payload) ? payload : payload.data || [];
           products = data.map(p => ({
-            id: p.id,
+            id: String(p.id),
             title: p.name,
             price: p.price,
             category: p.category || 'Lainnya',
@@ -354,6 +376,7 @@
             isAvailable: p.stock > 0,
             img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
             desc: p.description || 'Tidak ada deskripsi.',
+            stockValue: Number(p.stock) || 0,
             stock: p.stock + ' Unit',
             origin: p.location || p.supplier?.region || 'Indonesia'
           }));
@@ -397,7 +420,11 @@
       
       const filtered = products.filter(p => {
         const matchesCat = currentCategory === 'All' || p.category === currentCategory;
-        const matchesSearch = p.title.toLowerCase().includes(searchQuery.toLowerCase()) || p.supplier.toLowerCase().includes(searchQuery.toLowerCase());
+        const normalizedQuery = searchQuery.toLowerCase();
+        const matchesSearch = p.title.toLowerCase().includes(normalizedQuery) ||
+          p.supplier.toLowerCase().includes(normalizedQuery) ||
+          p.category.toLowerCase().includes(normalizedQuery) ||
+          p.origin.toLowerCase().includes(normalizedQuery);
         return matchesCat && matchesSearch;
       });
 
@@ -494,6 +521,7 @@
     function toggleLike(id) {
         const idx = wishlistIds.indexOf(id);
         if (idx === -1) wishlistIds.push(id); else wishlistIds.splice(idx, 1);
+        saveWishlist();
         renderProducts();
     }
 
@@ -517,7 +545,15 @@
       const p = products.find(x => x.id === productId);
       if (!p.isAvailable) return;
       const exists = cart.find(x => x.id === productId);
-      if(exists) exists.qty++; else cart.push({...p, qty: 1});
+      if (exists) {
+        if (exists.qty >= exists.stockValue) {
+          showToast(`Stok ${p.title} hanya ${exists.stockValue} unit`);
+          return;
+        }
+        exists.qty++;
+      } else {
+        cart.push({...p, qty: 1});
+      }
       updateBadge();
       showToast(`${p.title} ditambahkan`);
     }
@@ -525,6 +561,10 @@
     function updateQty(id, delta) {
         const item = cart.find(x => x.id === id);
         if(item) {
+            if (delta > 0 && item.qty >= item.stockValue) {
+                showToast(`Stok ${item.title} hanya ${item.stockValue} unit`);
+                return;
+            }
             item.qty += delta;
             if(item.qty <= 0) {
                 removeFromCart(id);
@@ -563,7 +603,7 @@
                 <div class="flex items-center gap-2 bg-slate-100 rounded-full px-2 py-1">
                     <button onclick="updateQty('${item.id}', -1)" class="w-6 h-6 rounded-full bg-white text-slate-600 hover:text-slate-900 shadow-sm flex items-center justify-center font-bold">-</button>
                     <span class="text-xs font-bold text-slate-700 min-w-[1rem] text-center">${item.qty}</span>
-                    <button onclick="updateQty('${item.id}', 1)" class="w-6 h-6 rounded-full bg-white text-slate-600 hover:text-slate-900 shadow-sm flex items-center justify-center font-bold">+</button>
+                    <button onclick="updateQty('${item.id}', 1)" ${item.qty >= item.stockValue ? 'disabled' : ''} class="w-6 h-6 rounded-full bg-white text-slate-600 hover:text-slate-900 disabled:text-slate-300 disabled:cursor-not-allowed shadow-sm flex items-center justify-center font-bold">+</button>
                 </div>
                 <button onclick="removeFromCart('${item.id}')" class="text-slate-300 hover:text-red-500 transition-colors ml-2">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
@@ -579,56 +619,68 @@
     function removeFromCart(id) { cart = cart.filter(i => i.id !== id); renderCart(); updateBadge(); }
     
     async function submitOrder() {
-      const session = JSON.parse(localStorage.getItem('user_session') || '{}');
-      if (!session.token || session.role !== 'user') {
+      const session = getStoredUserSession();
+      if (!session || !session.token || session.role !== 'user') {
           showToast("Harap login sebagai UMKM untuk memproses pembayaran!");
           setTimeout(() => window.location.href = '../Login/login.html', 1500);
           return;
       }
 
+      const invalidItem = cart.find((item) => item.qty > item.stockValue);
+      if (invalidItem) {
+          showToast(`Jumlah ${invalidItem.title} melebihi stok tersedia (${invalidItem.stockValue} unit).`);
+          return;
+      }
+
       const checkoutBtn = document.getElementById('checkoutBtn');
+      const submitBtn = document.getElementById('submitOrderBtn');
       checkoutBtn.disabled = true;
+      if (submitBtn) submitBtn.disabled = true;
       checkoutBtn.innerText = "Memproses...";
 
       try {
-          const res = await fetch('http://localhost:8080/api/user/orders', {
+          let successCount = 0;
+          let lastError = '';
+
+          for (const item of cart) {
+            const res = await fetch(buildApiUrl('/api/user/orders'), {
               method: 'POST',
               headers: {
                   'Content-Type': 'application/json',
                   'Authorization': 'Bearer ' + session.token
               },
-              body: JSON.stringify(cart)
-          });
-          
-          const data = await res.json();
-              if (res.ok) {
-              const order = {
-                  id: 'order-' + Date.now(),
-                  status: 'BELUM BAYAR',
-                  supplier: 'Supplier Terverifikasi',
-                  paymentMethod: selectedPaymentMethod || 'Transfer Bank',
-                  items: cart.map(item => ({ title: item.title, qty: item.qty, price: item.price })),
-                  total: cart.reduce((sum, item) => sum + item.price * item.qty, 0),
-                  createdAt: new Date().toISOString()
-              };
-              const savedOrders = JSON.parse(localStorage.getItem('orders') || '[]');
-              savedOrders.unshift(order);
-              localStorage.setItem('orders', JSON.stringify(savedOrders));
+              body: JSON.stringify({
+                item_id: item.id,
+                quantity: item.qty
+              })
+            });
 
-              showToast("Pesanan berhasil dibuat!");
+            const data = await res.json().catch(() => ({}));
+            if (res.ok) {
+              successCount++;
+            } else {
+              lastError = data.error || 'Terjadi kesalahan';
+            }
+          }
+
+          if (successCount > 0) {
+              showToast(`${successCount} pesanan berhasil dibuat!`);
               cart = [];
               updateBadge();
+              renderCart();
+              closeCheckout();
               toggleCart();
               setTimeout(() => {
                 window.location.href = 'umkm_pesanan_saya.html';
               }, 1200);
           } else {
-              showToast("Gagal: " + (data.error || 'Terjadi kesalahan'));
+              showToast("Gagal: " + (lastError || 'Terjadi kesalahan'));
           }
       } catch (e) {
           showToast("Gagal terhubung ke server");
       } finally {
           checkoutBtn.disabled = false;
+          if (submitBtn) submitBtn.disabled = false;
           checkoutBtn.innerText = "Lanjut ke Pembayaran";
       }
     }
@@ -722,7 +774,8 @@
       summary.innerHTML = '';
       let total = 0;
       if (!cart || cart.length === 0) {
-        summary.innerHTML = '<div class="text-center py-8 text-slate-500">Keranjang kosong</div>';
+        showToast('Keranjang masih kosong.');
+        return;
       } else {
         cart.forEach(item => {
           const subtotal = item.price * item.qty;
@@ -737,21 +790,22 @@
       modal.classList.remove('hidden');
       modal.classList.add('flex');
       document.body.style.overflow = 'hidden';
+      showToast('Ringkasan pembayaran siap. Periksa pesanan sebelum dikirim.');
     }
 
     function closeCheckout() { document.getElementById('checkoutModal').classList.add('hidden'); document.getElementById('checkoutModal').classList.remove('flex'); document.body.style.overflow = 'auto'; }
 
     function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
 
-    function showToast(m) {
-      const t = document.getElementById('toast');
-      const msg = document.getElementById('toastMessage');
-      msg.innerText = m;
-      t.classList.remove('translate-y-20', 'opacity-0');
-      setTimeout(() => t.classList.add('translate-y-20', 'opacity-0'), 2500);
+    function showToast(type, message) {
+      window.showGlobalToast(type, message);
     }
 
-    window.onload = () => { fetchCatalog(); };
+    window.onload = () => {
+      loadWishlist();
+      applyCatalogQueryFromUrl();
+      fetchCatalog();
+    };
   </script>
 </body>
 </html>

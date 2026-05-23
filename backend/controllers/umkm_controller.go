@@ -7,6 +7,7 @@ import (
 
 	"supplierhub-backend/config"
 	"supplierhub-backend/models"
+	"supplierhub-backend/services"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -39,16 +40,26 @@ func GetUserStats(c *gin.Context) {
 	var shippedOrders int64
 	var completedOrders int64
 	var totalSpending float64
+	pendingStatuses := []models.OrderStatus{
+		models.OrderPending,
+		models.OrderPendingSupplierConfirmation,
+		models.OrderSupplierConfirmed,
+		models.OrderPaymentPending,
+	}
+	shippedStatuses := []models.OrderStatus{
+		models.OrderShipped,
+		models.OrderShipmentCreated,
+	}
 
 	// Hitung total pesanan UMKM
 	config.DB.Model(&models.Order{}).Where("umkm_id = ?", umkmID).Count(&totalOrders)
-	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderPending).Count(&pendingOrders)
+	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status IN ?", umkmID, pendingStatuses).Count(&pendingOrders)
 
 	// Hitung pesanan yang sedang dikirim (shipped)
-	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderShipped).Count(&shippedOrders)
+	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status IN ?", umkmID, shippedStatuses).Count(&shippedOrders)
 	config.DB.Model(&models.Order{}).Where("umkm_id = ? AND status = ?", umkmID, models.OrderCompleted).Count(&completedOrders)
 	config.DB.Model(&models.Order{}).
-		Where("umkm_id = ? AND status IN ?", umkmID, []models.OrderStatus{models.OrderPaid, models.OrderProcessing, models.OrderShipped, models.OrderCompleted}).
+		Where("umkm_id = ? AND status IN ?", umkmID, []models.OrderStatus{models.OrderPaid, models.OrderShipmentCreated, models.OrderProcessing, models.OrderShipped, models.OrderCompleted}).
 		Select("COALESCE(SUM(grand_total), 0)").
 		Scan(&totalSpending)
 
@@ -232,6 +243,10 @@ func GetProducts(c *gin.Context) {
 	})
 }
 
+func GetPublicCatalog(c *gin.Context) {
+	GetProducts(c)
+}
+
 type CreateOrderInput struct {
 	ItemID   string `json:"item_id" binding:"required"`
 	Quantity int    `json:"quantity" binding:"required,min=1"`
@@ -271,7 +286,11 @@ func CreateOrder(c *gin.Context) {
 	}
 
 	if product.Stock < input.Quantity {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Stok produk tidak mencukupi"})
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error":           "Jumlah pesanan melebihi stok tersedia.",
+			"available_stock": product.Stock,
+			"requested_qty":   input.Quantity,
+		})
 		return
 	}
 
@@ -289,14 +308,15 @@ func CreateOrder(c *gin.Context) {
 		TotalBasePrice: totalBasePrice,
 		SystemFee:      systemFee,
 		GrandTotal:     grandTotal,
-		Status:         models.OrderPending,
+		Status:         models.OrderPendingSupplierConfirmation,
+		StockDeducted:  false,
 	}
 
 	if err := config.DB.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&order).Error; err != nil {
 			return err
 		}
-		return tx.Model(&product).Update("stock", product.Stock-input.Quantity).Error
+		return services.CreateFinanceLog(tx, order, nil, "order_created", "Order bahan dibuat melalui endpoint UMKM lama")
 	}); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal membuat pesanan"})
 		return
@@ -322,16 +342,18 @@ func CancelOrder(c *gin.Context) {
 		return
 	}
 
-	if order.Status != models.OrderPending {
+	if order.Status != models.OrderPending && order.Status != models.OrderPendingSupplierConfirmation {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesanan hanya bisa dibatalkan saat status pending"})
 		return
 	}
 
 	if err := config.DB.Transaction(func(tx *gorm.DB) error {
-		if err := tx.Model(&models.Product{}).
-			Where("id = ?", order.ProductID).
-			Update("stock", gorm.Expr("stock + ?", order.Quantity)).Error; err != nil {
-			return err
+		if order.StockDeducted {
+			if err := tx.Model(&models.Product{}).
+				Where("id = ?", order.ProductID).
+				Update("stock", gorm.Expr("stock + ?", order.Quantity)).Error; err != nil {
+				return err
+			}
 		}
 		return tx.Model(&order).Update("status", models.OrderCancelled).Error
 	}); err != nil {
@@ -358,7 +380,7 @@ func CompleteOrder(c *gin.Context) {
 		return
 	}
 
-	if order.Status != models.OrderShipped && order.Status != models.OrderPaid {
+	if order.Status != models.OrderShipped && order.Status != models.OrderShipmentCreated && order.Status != models.OrderPaid {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Pesanan belum dapat dikonfirmasi selesai"})
 		return
 	}

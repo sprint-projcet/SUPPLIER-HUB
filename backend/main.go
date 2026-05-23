@@ -22,7 +22,7 @@ func main() {
 	// (Mengizinkan UI frontend dari port atau origin berbeda untuk memanggil API ini)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true // Boleh diubah ke Origin spesifik UI untuk Production
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization"}
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Internal-Token", "X-Callback-Token"}
 	r.Use(cors.New(corsConfig))
 
 	// Serve folder uploads sebagai static files

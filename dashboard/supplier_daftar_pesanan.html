@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Supplier Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/supplier_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -89,6 +91,13 @@
           >
             <i data-lucide="shopping-cart" class="text-white"></i>
             <span class="font-semibold text-sm">Daftar Pesanan</span>
+          </a>
+          <a
+            href="supplier_notifikasi.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i data-lucide="bell-ring" class="group-hover:text-emerald-400"></i>
+            <span class="font-semibold text-sm">Notifikasi</span>
           </a>
           <a
             href="supplier_analitik.html"
@@ -149,6 +158,7 @@
             >
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
+                id="supplier-order-search"
                 type="text"
                 placeholder="Cari Pesanan..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -196,6 +206,7 @@
             </div>
             <div class="flex gap-2">
               <button
+                onclick="exportOrders()"
                 class="px-4 py-2 text-sm font-semibold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 transition-colors flex items-center gap-2"
               >
                 <i data-lucide="download" class="w-4 h-4"></i> Export
@@ -205,21 +216,29 @@
 
           <div class="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
             <button
+              data-order-filter="all"
+              onclick="setOrderFilter('all')"
               class="px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap"
             >
               Semua Pesanan
             </button>
             <button
+              data-order-filter="needs_process"
+              onclick="setOrderFilter('needs_process')"
               class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
               Perlu Diproses
             </button>
             <button
+              data-order-filter="shipped"
+              onclick="setOrderFilter('shipped')"
               class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
               Sedang Dikirim
             </button>
             <button
+              data-order-filter="completed"
+              onclick="setOrderFilter('completed')"
               class="px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
               Selesai
@@ -242,73 +261,10 @@
                     <th class="px-8 py-5 text-center">Aksi</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5">
-                      <span class="text-xs font-bold text-slate-400 block mb-1"
-                        >ORD-2404-001</span
-                      >
-                      <span
-                        class="text-sm font-bold text-slate-900 block line-clamp-1"
-                        >Tepung Terigu Premium 1Kg (25x)</span
-                      >
-                    </td>
-                    <td class="px-8 py-5">
-                      <span class="text-sm text-slate-900 font-semibold block"
-                        >Toko Roti Makmur</span
-                      >
-                      <span class="text-xs text-slate-500"
-                        >Jakarta Selatan</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-right font-black text-slate-900">
-                      Rp 300,000
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-orange-50 text-orange-600"
-                        >PERLU DIPROSES</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <button
-                        class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm"
-                      >
-                        Kemas
-                      </button>
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5">
-                      <span class="text-xs font-bold text-slate-400 block mb-1"
-                        >ORD-2404-002</span
-                      >
-                      <span
-                        class="text-sm font-bold text-slate-900 block line-clamp-1"
-                        >Kardus Box Polos 20x20 (100x)</span
-                      >
-                    </td>
-                    <td class="px-8 py-5">
-                      <span class="text-sm text-slate-900 font-semibold block"
-                        >Warung Kopi Senja</span
-                      >
-                      <span class="text-xs text-slate-500">Bandung</span>
-                    </td>
-                    <td class="px-8 py-5 text-right font-black text-slate-900">
-                      Rp 250,000
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-blue-50 text-blue-600"
-                        >DIKIRIM</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <button
-                        class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-all shadow-sm"
-                      >
-                        Detail
-                      </button>
+                <tbody id="supplier-orders-body" class="divide-y divide-slate-50">
+                  <tr>
+                    <td colspan="5" class="px-8 py-8 text-center text-sm text-slate-500">
+                      Memuat pesanan...
                     </td>
                   </tr>
                 </tbody>
@@ -320,33 +276,205 @@
     </div>
 
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
+      let supplierOrders = [];
+      let activeOrderFilter = "all";
+
+      function getOrderSearchQuery() {
+        const input = document.getElementById("supplier-order-search");
+        return input ? input.value.trim().toLowerCase() : "";
+      }
+
+      function orderMatchesFilter(order) {
+        const status = String(order.status || "").toLowerCase();
+        if (activeOrderFilter === "all") return true;
+        if (activeOrderFilter === "needs_process") {
+          return [
+            "pending",
+            "pending_supplier_confirmation",
+            "supplier_confirmed",
+            "payment_pending",
+            "paid",
+            "processing",
+            "shipment_created",
+          ].includes(status);
+        }
+        return status === activeOrderFilter;
+      }
+
+      function orderMatchesSearch(order) {
+        const query = getOrderSearchQuery();
+        if (!query) return true;
+
+        return [
+          order.id,
+          order.product?.name,
+          order.umkm?.business_name,
+          order.umkm?.address,
+          order.status,
+        ].some((value) => String(value || "").toLowerCase().includes(query));
+      }
+
+      function getVisibleOrders() {
+        return supplierOrders.filter(
+          (order) => orderMatchesFilter(order) && orderMatchesSearch(order),
+        );
+      }
+
+      function setOrderFilter(status) {
+        activeOrderFilter = status;
+        document.querySelectorAll("[data-order-filter]").forEach((button) => {
+          const isActive = button.dataset.orderFilter === status;
+          button.className = isActive
+            ? "px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap"
+            : "px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap";
+        });
+        renderOrders();
+      }
+
+      function renderOrders() {
+        const tbody = document.getElementById("supplier-orders-body");
+        const orders = getVisibleOrders();
+
+        if (orders.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="5" class="px-8 py-8 text-center text-sm text-slate-500">
+                Tidak ada pesanan untuk filter ini.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = orders
+          .map((order) => {
+            const meta = SupplierDashboard.statusMeta(order.status);
+            const actionButton = meta.nextStatus
+              ? `<button onclick="changeOrderStatus('${SupplierDashboard.escapeHTML(order.id)}', '${meta.nextStatus}')" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm">${meta.actionLabel}</button>`
+              : `<button onclick="showOrderDetail('${SupplierDashboard.escapeHTML(order.id)}')" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-all shadow-sm">Detail</button>`;
+
+            return `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-8 py-5">
+                  <span class="text-xs font-bold text-slate-400 block mb-1">${SupplierDashboard.shortID(order.id)}</span>
+                  <span class="text-sm font-bold text-slate-900 block line-clamp-1">
+                    ${SupplierDashboard.escapeHTML(order.product?.name || "Produk")} (${order.quantity || 0}x)
+                  </span>
+                </td>
+                <td class="px-8 py-5">
+                  <span class="text-sm text-slate-900 font-semibold block">${SupplierDashboard.escapeHTML(order.umkm?.business_name || "UMKM")}</span>
+                  <span class="text-xs text-slate-500">${SupplierDashboard.escapeHTML(order.umkm?.address || "-")}</span>
+                </td>
+                <td class="px-8 py-5 text-right font-black text-slate-900">
+                  ${SupplierDashboard.formatRupiah(order.grand_total)}
+                </td>
+                <td class="px-8 py-5 text-center">
+                  <span class="text-[10px] font-black px-3 py-1 rounded-full ${meta.className}">
+                    ${meta.label}
+                  </span>
+                </td>
+                <td class="px-8 py-5 text-center">${actionButton}</td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      async function fetchOrders() {
+        try {
+          supplierOrders = await SupplierDashboard.getOrders();
+          renderOrders();
+        } catch (error) {
+          document.getElementById("supplier-orders-body").innerHTML = `
+            <tr>
+              <td colspan="5" class="px-8 py-8 text-center text-sm text-red-500">
+                Gagal memuat daftar pesanan.
+              </td>
+            </tr>
+          `;
+        }
+      }
+
+      async function changeOrderStatus(orderID, nextStatus) {
+        try {
+          await SupplierDashboard.updateOrderStatus(orderID, nextStatus);
+          SupplierDashboard.notify("success", "Status pesanan berhasil diperbarui.");
+          await fetchOrders();
+        } catch (error) {
+          SupplierDashboard.notify("danger", error.message || "Gagal memperbarui status pesanan.");
+        }
+      }
+
+      function showOrderDetail(orderID) {
+        const order = supplierOrders.find((item) => String(item.id) === String(orderID));
+        if (!order) return;
+
+        alert(
+          [
+            `Pesanan: ${SupplierDashboard.shortID(order.id)}`,
+            `Produk: ${order.product?.name || "-"}`,
+            `UMKM: ${order.umkm?.business_name || "-"}`,
+            `Status: ${order.status || "-"}`,
+            `Total: ${SupplierDashboard.formatRupiah(order.grand_total)}`,
+          ].join("\n"),
+        );
+      }
+
+      function exportOrders() {
+        const rows = getVisibleOrders();
+        if (rows.length === 0) {
+          SupplierDashboard.notify("warning", "Tidak ada data pesanan untuk diekspor.");
+          return;
+        }
+
+        const header = ["ID", "Produk", "UMKM", "Jumlah", "Total", "Status"];
+        const csvRows = rows.map((order) =>
+          [
+            order.id,
+            order.product?.name || "",
+            order.umkm?.business_name || "",
+            order.quantity || 0,
+            order.grand_total || 0,
+            order.status || "",
+          ]
+            .map((value) => `"${String(value).replace(/"/g, '""')}"`)
+            .join(","),
+        );
+
+        const blob = new Blob([[header.join(","), ...csvRows].join("\n")], {
+          type: "text/csv;charset=utf-8;",
+        });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "pesanan-supplier.csv";
+        link.click();
+        URL.revokeObjectURL(url);
+      }
+
+      function setupOrderSearch() {
+        const input = document.getElementById("supplier-order-search");
+        const params = new URLSearchParams(window.location.search);
+        const initialFilter = params.get("filter") || "all";
+
+        if (document.querySelector(`[data-order-filter="${initialFilter}"]`)) {
+          setOrderFilter(initialFilter);
+        }
+
+        if (!input) return;
+
+        const initialQuery = params.get("q") || "";
+        input.value = initialQuery;
+        input.addEventListener("input", renderOrders);
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "supplier") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Supplier";
-            const dateEl = document.getElementById("current-date");
-            if (dateEl)
-              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-            document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
-          }
-        }
+        SupplierDashboard.initPage({
+          onReady: async () => {
+            setupOrderSearch();
+            await fetchOrders();
+          },
+        });
       });
     </script>
   </body>

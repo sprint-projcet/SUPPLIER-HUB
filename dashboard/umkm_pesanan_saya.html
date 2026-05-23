@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - UMKM Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,7 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +45,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -74,7 +75,7 @@
             <span class="font-semibold text-sm">Dashboard</span>
           </a>
           <a
-            href="katalog.html"
+            href="umkm_katalog.html"
             class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             <i data-lucide="store" class="group-hover:text-emerald-400"></i>
@@ -203,48 +204,123 @@
             </div>
           </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
+            <button
+              type="button"
+              onclick="setOrderFilter('all')"
+              class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all duration-300 text-left"
+            >
+              <div class="flex justify-between items-start mb-6">
+                <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-600">
+                  <i data-lucide="shopping-cart"></i>
+                </div>
+                <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Total</span>
+              </div>
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Semua Pesanan
+              </p>
+              <p id="orders-total-count" class="text-3xl font-black text-slate-900 mt-2">
+                0
+              </p>
+            </button>
+            <button
+              type="button"
+              onclick="setOrderFilter('pending')"
+              class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-amber-500/10 transition-all duration-300 text-left"
+            >
+              <div class="flex justify-between items-start mb-6">
+                <div class="p-4 rounded-2xl bg-amber-50 text-amber-600">
+                  <i data-lucide="clock"></i>
+                </div>
+                <span class="text-[10px] font-black px-2 py-1 rounded-lg text-amber-700 bg-amber-50">Menunggu</span>
+              </div>
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Perlu Diproses
+              </p>
+              <p id="orders-pending-count" class="text-3xl font-black text-slate-900 mt-2">
+                0
+              </p>
+            </button>
+            <button
+              type="button"
+              onclick="setOrderFilter('shipped')"
+              class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-blue-500/10 transition-all duration-300 text-left"
+            >
+              <div class="flex justify-between items-start mb-6">
+                <div class="p-4 rounded-2xl bg-blue-50 text-blue-600">
+                  <i data-lucide="truck"></i>
+                </div>
+                <span class="text-[10px] font-black px-2 py-1 rounded-lg text-blue-700 bg-blue-50">Aktif</span>
+              </div>
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Sedang Dikirim
+              </p>
+              <p id="orders-shipped-count" class="text-3xl font-black text-slate-900 mt-2">
+                0
+              </p>
+            </button>
+            <button
+              type="button"
+              onclick="setOrderFilter('completed')"
+              class="bg-white p-6 rounded-3xl shadow-sm border border-slate-100 hover:shadow-xl hover:-translate-y-0.5 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all duration-300 text-left"
+            >
+              <div class="flex justify-between items-start mb-6">
+                <div class="p-4 rounded-2xl bg-emerald-50 text-emerald-600">
+                  <i data-lucide="check-circle-2"></i>
+                </div>
+                <span class="text-[10px] font-black px-2 py-1 rounded-lg text-emerald-700 bg-emerald-50">Selesai</span>
+              </div>
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">
+                Produk Selesai
+              </p>
+              <p id="orders-completed-count" class="text-3xl font-black text-slate-900 mt-2">
+                0
+              </p>
+            </button>
+          </div>
+
           <div class="flex gap-2 mb-6 overflow-x-auto pb-2 custom-scrollbar">
             <button
               data-status-filter="all"
               onclick="setOrderFilter('all')"
               class="order-filter px-4 py-2 bg-slate-900 text-white rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Semua
+              Semua <span id="filter-count-all" class="ml-2 rounded-lg bg-white/20 px-2 py-0.5 text-[10px]">0</span>
             </button>
             <button
               data-status-filter="pending"
               onclick="setOrderFilter('pending')"
               class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Pending
+              Pending <span id="filter-count-pending" class="ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px]">0</span>
             </button>
             <button
               data-status-filter="processing"
               onclick="setOrderFilter('processing')"
               class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Diproses
+              Diproses <span id="filter-count-processing" class="ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px]">0</span>
             </button>
             <button
               data-status-filter="shipped"
               onclick="setOrderFilter('shipped')"
               class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Dikirim
+              Dikirim <span id="filter-count-shipped" class="ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px]">0</span>
             </button>
             <button
               data-status-filter="completed"
               onclick="setOrderFilter('completed')"
               class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Selesai
+              Selesai <span id="filter-count-completed" class="ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px]">0</span>
             </button>
             <button
               data-status-filter="cancelled"
               onclick="setOrderFilter('cancelled')"
               class="order-filter px-4 py-2 bg-white border border-slate-200 text-slate-600 hover:bg-slate-50 rounded-xl text-sm font-bold whitespace-nowrap"
             >
-              Batal
+              Batal <span id="filter-count-cancelled" class="ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px]">0</span>
             </button>
           </div>
 
@@ -265,6 +341,27 @@
       }
 
       let activeStatusFilter = "all";
+      let allOrders = [];
+
+      const statusFilters = {
+        all: [],
+        pending: [
+          "pending",
+          "pending_supplier_confirmation",
+          "supplier_confirmed",
+          "payment_pending",
+          "payment_request_failed",
+        ],
+        processing: ["paid", "processing"],
+        shipped: ["shipped", "shipment_created"],
+        completed: ["completed"],
+        cancelled: ["cancelled", "rejected_by_supplier", "stock_unavailable"],
+      };
+
+      const filterButtonBaseClass =
+        "order-filter px-4 py-2 rounded-xl text-sm font-bold whitespace-nowrap transition-colors";
+      const filterButtonActiveClass = `${filterButtonBaseClass} bg-slate-900 text-white`;
+      const filterButtonIdleClass = `${filterButtonBaseClass} bg-white border border-slate-200 text-slate-600 hover:bg-slate-50`;
 
       function getSessionToken() {
         const userSession = getStoredUserSession();
@@ -297,6 +394,39 @@
         }).format(Number(value || 0));
       }
 
+      function formatNumber(value) {
+        return new Intl.NumberFormat("id-ID").format(Number(value) || 0);
+      }
+
+      function normalizeStatus(status) {
+        return String(status || "").toLowerCase();
+      }
+
+      function isOrderInFilter(order, filter) {
+        if (filter === "all") return true;
+        return (statusFilters[filter] || []).includes(normalizeStatus(order.status));
+      }
+
+      function filteredOrders() {
+        return allOrders.filter((order) => isOrderInFilter(order, activeStatusFilter));
+      }
+
+      function getOrderCounts() {
+        return {
+          all: allOrders.length,
+          pending: allOrders.filter((order) => isOrderInFilter(order, "pending")).length,
+          processing: allOrders.filter((order) => isOrderInFilter(order, "processing")).length,
+          shipped: allOrders.filter((order) => isOrderInFilter(order, "shipped")).length,
+          completed: allOrders.filter((order) => isOrderInFilter(order, "completed")).length,
+          cancelled: allOrders.filter((order) => isOrderInFilter(order, "cancelled")).length,
+        };
+      }
+
+      function setText(id, value) {
+        const element = document.getElementById(id);
+        if (element) element.textContent = value;
+      }
+
       function getStatusMeta(status) {
         const normalized = String(status || "").toLowerCase();
         const map = {
@@ -304,6 +434,26 @@
             label: "PENDING",
             color: "bg-yellow-50 text-yellow-600",
             icon: "clock",
+          },
+          pending_supplier_confirmation: {
+            label: "MENUNGGU SUPPLIER",
+            color: "bg-orange-50 text-orange-600",
+            icon: "clock",
+          },
+          supplier_confirmed: {
+            label: "STOK DIKONFIRMASI",
+            color: "bg-teal-50 text-teal-600",
+            icon: "package-check",
+          },
+          payment_pending: {
+            label: "MENUNGGU BAYAR",
+            color: "bg-amber-50 text-amber-600",
+            icon: "credit-card",
+          },
+          payment_request_failed: {
+            label: "PAYMENT GAGAL",
+            color: "bg-red-50 text-red-600",
+            icon: "x-circle",
           },
           paid: {
             label: "DIBAYAR",
@@ -320,6 +470,11 @@
             color: "bg-blue-50 text-blue-600",
             icon: "truck",
           },
+          shipment_created: {
+            label: "DIKIRIM",
+            color: "bg-blue-50 text-blue-600",
+            icon: "truck",
+          },
           completed: {
             label: "SELESAI",
             color: "bg-emerald-50 text-emerald-600",
@@ -327,6 +482,16 @@
           },
           cancelled: {
             label: "BATAL",
+            color: "bg-red-50 text-red-600",
+            icon: "x-circle",
+          },
+          rejected_by_supplier: {
+            label: "DITOLAK",
+            color: "bg-red-50 text-red-600",
+            icon: "x-circle",
+          },
+          stock_unavailable: {
+            label: "STOK HABIS",
             color: "bg-red-50 text-red-600",
             icon: "x-circle",
           },
@@ -340,30 +505,49 @@
         );
       }
 
+      function updateOrderSummary() {
+        const counts = getOrderCounts();
+        setText("orders-total-count", formatNumber(counts.all));
+        setText("orders-pending-count", formatNumber(counts.pending));
+        setText("orders-shipped-count", formatNumber(counts.shipped));
+        setText("orders-completed-count", formatNumber(counts.completed));
+
+        Object.entries(counts).forEach(([key, value]) => {
+          setText(`filter-count-${key}`, formatNumber(value));
+        });
+      }
+
+      function updateFilterButtons() {
+        document.querySelectorAll(".order-filter").forEach((btn) => {
+          const active = btn.dataset.statusFilter === activeStatusFilter;
+          btn.className = active ? filterButtonActiveClass : filterButtonIdleClass;
+
+          const countBadge = btn.querySelector("span");
+          if (countBadge) {
+            countBadge.className = active
+              ? "ml-2 rounded-lg bg-white/20 px-2 py-0.5 text-[10px] text-white"
+              : "ml-2 rounded-lg bg-slate-100 px-2 py-0.5 text-[10px] text-slate-600";
+          }
+        });
+      }
+
       function setOrderFilter(status) {
         activeStatusFilter = status;
-        document.querySelectorAll(".order-filter").forEach((btn) => {
-          const active = btn.dataset.statusFilter === status;
-          btn.classList.toggle("bg-slate-900", active);
-          btn.classList.toggle("text-white", active);
-          btn.classList.toggle("bg-white", !active);
-          btn.classList.toggle("text-slate-600", !active);
-          btn.classList.toggle("border", !active);
-          btn.classList.toggle("border-slate-200", !active);
-        });
-        fetchOrders();
+        updateFilterButtons();
+        renderOrders(filteredOrders());
       }
 
       function renderAction(order) {
         const orderID = jsArg(order.id);
-        if (order.status === "pending") {
+        const status = normalizeStatus(order.status);
+        if (["pending", "pending_supplier_confirmation"].includes(status)) {
           return `
                     <div class="flex flex-wrap gap-2 mt-2 justify-end">
                         <button onclick="cancelOrder(${orderID})" class="px-4 py-2 bg-white border border-red-100 text-red-600 rounded-xl text-xs font-bold hover:bg-red-50 transition-colors">Batalkan</button>
                     </div>
                 `;
         }
-        if (order.status === "shipped" || order.status === "paid") {
+        if (["shipped", "shipment_created", "paid"].includes(status)) {
           return `
                     <div class="flex flex-wrap gap-2 mt-2 justify-end">
                         <a href="umkm_lacak_paket.html" class="px-4 py-2 bg-blue-600 text-white rounded-xl text-xs font-bold hover:bg-blue-700 transition-colors shadow-lg shadow-blue-600/20">Lacak Paket</a>
@@ -372,7 +556,7 @@
                 `;
         }
         return `
-                <a href="katalog.html" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
+                        <a href="umkm_katalog.html" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
             `;
       }
 
@@ -382,7 +566,7 @@
 
         if (!orders || orders.length === 0) {
           container.innerHTML =
-            '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Belum ada pesanan untuk filter ini.</p><a href="katalog.html" class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Mulai Belanja</a></div>';
+            '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Belum ada pesanan untuk filter ini.</p><a href="umkm_katalog.html" class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Mulai Belanja</a></div>';
           return;
         }
 
@@ -393,7 +577,7 @@
           const productName = escapeHTML(product.name || "Produk");
           const supplierName = escapeHTML(supplier.business_name || "Supplier");
           const imageURL = escapeHTML(
-            product.image_url || "../assets/logo.png",
+            product.image_url || "../assets/img/logo.png",
           );
           const basePriceFormatted = formatRupiah(product.price);
           const priceFormatted = formatRupiah(order.grand_total);
@@ -439,18 +623,15 @@
         if (!token) return;
 
         try {
-          const url =
-            activeStatusFilter === "all"
-              ? buildApiUrl("/api/user/orders")
-              : buildApiUrl(
-                  `/api/user/orders?status=${encodeURIComponent(activeStatusFilter)}`,
-                );
-          const res = await fetch(url, {
+          const res = await fetch(buildApiUrl("/api/user/orders"), {
             headers: { Authorization: `Bearer ${token}` },
           });
           const result = await res.json();
           if (res.ok) {
-            renderOrders(result.data || []);
+            allOrders = result.data || [];
+            updateOrderSummary();
+            updateFilterButtons();
+            renderOrders(filteredOrders());
           } else {
             throw new Error(result.error || "Gagal memuat pesanan");
           }

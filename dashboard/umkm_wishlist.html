@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - UMKM Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,7 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +45,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -74,7 +75,7 @@
             <span class="font-semibold text-sm">Dashboard</span>
           </a>
           <a
-            href="katalog.html"
+            href="umkm_katalog.html"
             class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             <i data-lucide="store" class="group-hover:text-emerald-400"></i>
@@ -342,7 +343,7 @@
                     </div>
                     <p class="font-bold text-slate-900">Wishlist masih kosong</p>
                     <p class="text-sm text-slate-500 mt-1">Simpan produk dari katalog untuk melihatnya di sini.</p>
-                    <a href="katalog.html" class="inline-block mt-5 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Buka Katalog</a>
+                    <a href="umkm_katalog.html" class="inline-block mt-5 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Buka Katalog</a>
                 </div>
             `;
         lucide.createIcons();
@@ -402,7 +403,7 @@
                                 <p class="text-xs text-slate-500 mt-1">${supplierName}</p>
                                 <div class="flex items-center justify-between mt-3">
                                     <p class="font-black text-emerald-600">${formatRupiah(product.price)}</p>
-                                    <a href="katalog.html?q=${encodeURIComponent(product.name || "")}" class="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"><i data-lucide="shopping-cart" class="w-4 h-4"></i></a>
+                                    <a href="umkm_katalog.html?q=${encodeURIComponent(product.name || "")}" class="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"><i data-lucide="shopping-cart" class="w-4 h-4"></i></a>
                                 </div>
                             </div>
                         </div>

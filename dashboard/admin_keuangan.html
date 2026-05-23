@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Admin Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -146,6 +148,7 @@
             >
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
+                id="finance-search"
                 type="text"
                 placeholder="Cari Data..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -192,6 +195,7 @@
               </p>
             </div>
             <button
+              onclick="exportFinanceReport()"
               class="flex items-center gap-2 px-4 py-2.5 bg-slate-900 text-white rounded-xl text-sm font-bold hover:bg-slate-800 transition-all"
             >
               <i data-lucide="download" class="w-4 h-4"></i> Unduh Laporan
@@ -212,7 +216,7 @@
               >
                 Total Pendapatan
               </p>
-              <p class="text-3xl font-black mt-2">Rp 128.5M</p>
+              <p id="finance-total-revenue" class="text-3xl font-black mt-2">-</p>
             </div>
             <div
               class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
@@ -227,7 +231,7 @@
               >
                 Transaksi Berhasil
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">4,208</p>
+              <p id="finance-success-count" class="text-3xl font-black text-slate-900 mt-2">-</p>
             </div>
             <div
               class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
@@ -242,7 +246,7 @@
               >
                 Menunggu Pembayaran
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">Rp 4.2M</p>
+              <p id="finance-pending-value" class="text-3xl font-black text-slate-900 mt-2">-</p>
             </div>
           </div>
 
@@ -266,39 +270,10 @@
                     <th class="px-8 py-5 text-center">Status</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 font-bold text-sm text-slate-900">
-                      TRX-009182
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-500">
-                      24 Apr 2026
-                    </td>
-                    <td class="px-8 py-5 font-black text-slate-900">
-                      Rp 1,500,000
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600"
-                        >BERHASIL</span
-                      >
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5 font-bold text-sm text-slate-900">
-                      TRX-009183
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-500">
-                      23 Apr 2026
-                    </td>
-                    <td class="px-8 py-5 font-black text-slate-900">
-                      Rp 450,000
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-orange-50 text-orange-600"
-                        >PENDING</span
-                      >
+                <tbody id="finance-table-body" class="divide-y divide-slate-50">
+                  <tr>
+                    <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                      Memuat transaksi...
                     </td>
                   </tr>
                 </tbody>
@@ -310,33 +285,115 @@
     </div>
 
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
+      let financeRows = [];
+      let financeSummary = null;
+
+      function renderFinanceTable(rows) {
+        const tbody = document.getElementById("finance-table-body");
+        if (!tbody) return;
+
+        if (!rows || rows.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                Belum ada transaksi keuangan.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = rows
+          .map((order) => {
+            const [statusLabel, statusClass] = AdminDashboard.orderStatusMeta(order.status);
+            return `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-8 py-5">
+                  <span class="font-bold text-sm text-slate-900 block">${AdminDashboard.shortID("TRX", order.id)}</span>
+                  <span class="text-xs text-slate-400">${AdminDashboard.escapeHTML(order.product?.name || "Transaksi SupplierHub")}</span>
+                </td>
+                <td class="px-8 py-5 text-sm text-slate-500">
+                  ${AdminDashboard.formatDate(order.updated_at || order.created_at)}
+                </td>
+                <td class="px-8 py-5 font-black text-slate-900">
+                  ${AdminDashboard.formatRupiah(order.grand_total)}
+                </td>
+                <td class="px-8 py-5 text-center">
+                  ${AdminDashboard.badge(statusLabel, statusClass)}
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function applyFinanceSearch() {
+        const query = (document.getElementById("finance-search")?.value || "")
+          .trim()
+          .toLowerCase();
+        const rows = financeRows.filter((order) =>
+          [
+            order.id,
+            order.status,
+            order.product?.name,
+            order.supplier?.business_name,
+            order.umkm?.business_name,
+          ].some((value) => String(value || "").toLowerCase().includes(query)),
+        );
+        renderFinanceTable(rows);
+      }
+
+      async function loadFinanceSummary() {
+        financeSummary = await AdminDashboard.apiFetch("/api/admin/finance");
+        financeRows = financeSummary.latest_orders || [];
+
+        document.getElementById("finance-total-revenue").textContent =
+          AdminDashboard.formatRupiah(financeSummary.gross_order_value || 0);
+        document.getElementById("finance-success-count").textContent =
+          AdminDashboard.formatNumber(financeSummary.success_payments || financeSummary.transaction_count || 0);
+        document.getElementById("finance-pending-value").textContent =
+          AdminDashboard.formatRupiah(financeSummary.pending_payment_value || 0);
+        applyFinanceSearch();
+      }
+
+      function exportFinanceReport() {
+        if (!financeSummary) {
+          AdminDashboard.notify("warning", "Data keuangan belum siap diekspor.");
+          return;
+        }
+
+        AdminDashboard.downloadCSV(
+          "laporan-keuangan-supplierhub.csv",
+          ["ID", "Produk", "Supplier", "UMKM", "Total", "Fee", "Status", "Tanggal"],
+          financeRows.map((order) => [
+            order.id,
+            order.product?.name || "",
+            order.supplier?.business_name || "",
+            order.umkm?.business_name || "",
+            order.grand_total || 0,
+            order.system_fee || 0,
+            order.status || "",
+            order.updated_at || order.created_at || "",
+          ]),
+        );
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "admin") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Admin";
-            const dateEl = document.getElementById("current-date");
-            if (dateEl)
-              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-            document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
-          }
-        }
+        AdminDashboard.initPage({
+          onReady: async () => {
+            const search = document.getElementById("finance-search");
+            const initialQuery = new URLSearchParams(window.location.search).get("q") || "";
+            if (search) {
+              search.value = initialQuery;
+              search.addEventListener("input", applyFinanceSearch);
+            }
+            await loadFinanceSummary().catch((err) => {
+              console.error("Gagal memuat keuangan admin", err);
+              AdminDashboard.notify("danger", err.message);
+              renderFinanceTable([]);
+            });
+          },
+        });
       });
     </script>
   </body>

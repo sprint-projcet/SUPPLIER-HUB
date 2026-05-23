@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Admin Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,7 +14,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -46,7 +48,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -148,6 +150,7 @@
             >
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
+                id="admin-global-search"
                 type="text"
                 placeholder="Cari Data..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -194,6 +197,7 @@
               </p>
             </div>
             <button
+              onclick="exportAdminOverview()"
               class="flex items-center gap-2 px-4 py-2.5 bg-emerald-600 text-white rounded-xl text-sm font-bold hover:bg-emerald-700 shadow-lg shadow-emerald-600/20 transition-all"
             >
               <i data-lucide="download" class="w-4 h-4"></i> Export Laporan
@@ -360,45 +364,7 @@
     </div>
 
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
-      }
-
-      function formatRupiah(value) {
-        return new Intl.NumberFormat("id-ID", {
-          style: "currency",
-          currency: "IDR",
-          minimumFractionDigits: 0,
-        }).format(Number(value) || 0);
-      }
-
-      function escapeHTML(value) {
-        return String(value ?? "")
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
-      }
-
-      function renderStatusBadge(status) {
-        const statusMap = {
-          pending: ["PENDING", "bg-yellow-50 text-yellow-600"],
-          paid: ["LUNAS", "bg-emerald-50 text-emerald-600"],
-          processing: ["PROSES", "bg-orange-50 text-orange-600"],
-          shipped: ["DIKIRIM", "bg-blue-50 text-blue-600"],
-          completed: ["SELESAI", "bg-emerald-50 text-emerald-600"],
-          cancelled: ["BATAL", "bg-red-50 text-red-600"],
-        };
-        const [label, classes] = statusMap[status] || [
-          String(status || "-").toUpperCase(),
-          "bg-slate-100 text-slate-600",
-        ];
-
-        return `<span class="text-[10px] font-black px-3 py-1 rounded-full ${classes}">${label}</span>`;
-      }
+      let adminOverviewData = null;
 
       function renderRecentOrders(orders) {
         const tbody = document.getElementById("admin-transactions-body");
@@ -421,42 +387,38 @@
             const productName = order.product
               ? order.product.name
               : "Transaksi SupplierHub";
+            const [statusLabel, statusClass] = AdminDashboard.orderStatusMeta(order.status);
 
             return `
-              <tr class="hover:bg-slate-50 transition-colors">
+              <tr onclick="openAdminOrder('${AdminDashboard.escapeHTML(order.id)}')" class="hover:bg-slate-50 transition-colors cursor-pointer">
                 <td class="px-8 py-5 flex items-center gap-4">
                   <div class="w-10 h-10 bg-slate-100 rounded-xl flex justify-center items-center">
                     <i data-lucide="package" size="18"></i>
                   </div>
                   <div>
-                    <span class="text-sm font-bold block">${escapeHTML(invoiceCode)}</span>
-                    <span class="text-xs text-slate-400">${escapeHTML(productName)}</span>
+                    <span class="text-sm font-bold block">${AdminDashboard.escapeHTML(invoiceCode)}</span>
+                    <span class="text-xs text-slate-400">${AdminDashboard.escapeHTML(productName)}</span>
                   </div>
                 </td>
-                <td class="px-8 py-5">${renderStatusBadge(order.status)}</td>
-                <td class="px-8 py-5 text-right font-black">${formatRupiah(order.grand_total)}</td>
+                <td class="px-8 py-5">${AdminDashboard.badge(statusLabel, statusClass)}</td>
+                <td class="px-8 py-5 text-right font-black">${AdminDashboard.formatRupiah(order.grand_total)}</td>
               </tr>
             `;
           })
           .join("");
-        lucide.createIcons();
+        if (window.lucide) lucide.createIcons();
       }
 
-      async function fetchAdminStats(token) {
-        const response = await fetch(buildApiUrl("/api/admin/stats"), {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        const data = await response.json();
-        if (!response.ok) {
-          throw new Error(data.error || "Gagal memuat statistik admin");
-        }
+      async function fetchAdminStats() {
+        const data = await AdminDashboard.apiFetch("/api/admin/stats");
+        adminOverviewData = data;
 
         document.getElementById("admin-total-suppliers").innerText =
-          data.total_suppliers ?? 0;
+          AdminDashboard.formatNumber(data.total_suppliers ?? 0);
         document.getElementById("admin-total-transactions").innerText =
-          data.total_transactions ?? 0;
+          AdminDashboard.formatNumber(data.total_transactions ?? 0);
         document.getElementById("admin-active-orders").innerText =
-          data.active_orders ?? 0;
+          AdminDashboard.formatNumber(data.active_orders ?? 0);
         document.getElementById("admin-revenue-growth").innerText =
           data.revenue_growth || "0%";
         renderRecentOrders(data.recent_orders || []);
@@ -468,36 +430,58 @@
           tbody.innerHTML = `
             <tr>
               <td colspan="3" class="px-8 py-8 text-center text-red-500 font-semibold">
-                ${escapeHTML(message)}
+                ${AdminDashboard.escapeHTML(message)}
               </td>
             </tr>
           `;
         }
       }
 
-      window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "admin") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Admin";
-            const dateEl = document.getElementById("current-date");
-            if (dateEl)
-              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-            document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
+      function setupAdminSearch() {
+        const input = document.getElementById("admin-global-search");
+        if (!input) return;
 
-            fetchAdminStats(user.token).catch((err) => {
+        input.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter") return;
+          const query = input.value.trim();
+          window.location.href = query
+            ? `admin_daftar_supplier.html?q=${encodeURIComponent(query)}`
+            : "admin_daftar_supplier.html";
+        });
+      }
+
+      function openAdminOrder(orderID) {
+        if (!orderID) return;
+        window.location.href = `admin_keuangan.html?q=${encodeURIComponent(orderID)}`;
+      }
+
+      function exportAdminOverview() {
+        if (!adminOverviewData) {
+          AdminDashboard.notify("warning", "Data overview belum siap diekspor.");
+          return;
+        }
+
+        AdminDashboard.downloadCSV(
+          "laporan-overview-admin.csv",
+          ["Metrik", "Nilai"],
+          [
+            ["Total Supplier", adminOverviewData.total_suppliers || 0],
+            ["Total Transaksi", adminOverviewData.total_transactions || 0],
+            ["Pesanan Aktif", adminOverviewData.active_orders || 0],
+            ["Total Revenue", adminOverviewData.total_revenue || 0],
+            ["Fee Layanan", adminOverviewData.system_fee_revenue || 0],
+          ],
+        );
+      }
+
+      window.addEventListener("DOMContentLoaded", () => {
+        AdminDashboard.initPage({
+          onReady: async () => {
+            setupAdminSearch();
+            await fetchAdminStats().catch((err) => {
               console.error("Gagal memuat dashboard admin", err);
               renderAdminStatsError(err.message);
+              AdminDashboard.notify("danger", err.message);
             });
 
             // Tampilkan Popup Notification menggunakan SweetAlert2
@@ -515,8 +499,8 @@
               });
               sessionStorage.setItem("adminWelcomeShown", "true");
             }
-          }
-        }
+          },
+        });
       });
     </script>
   </body>

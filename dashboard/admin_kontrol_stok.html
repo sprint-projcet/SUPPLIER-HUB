@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Admin Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/admin_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -150,6 +152,7 @@
             >
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
+                id="stock-global-search"
                 type="text"
                 placeholder="Cari Data..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -197,7 +200,7 @@
             </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-8">
             <div
               class="bg-orange-50 border border-orange-100 p-6 rounded-3xl flex items-start gap-4"
             >
@@ -206,9 +209,7 @@
               </div>
               <div>
                 <h4 class="text-sm font-bold text-slate-900">Stok Menipis</h4>
-                <p class="text-xs text-slate-500 mt-1">
-                  15 Produk perlu restock
-                </p>
+                <p id="stock-low-summary" class="text-xs text-slate-500 mt-1">-</p>
               </div>
             </div>
             <div
@@ -219,7 +220,7 @@
               </div>
               <div>
                 <h4 class="text-sm font-bold text-slate-900">Stok Aman</h4>
-                <p class="text-xs text-slate-500 mt-1">1,245 Produk tersedia</p>
+                <p id="stock-safe-summary" class="text-xs text-slate-500 mt-1">-</p>
               </div>
             </div>
             <div
@@ -229,8 +230,19 @@
                 <i data-lucide="refresh-cw"></i>
               </div>
               <div>
-                <h4 class="text-sm font-bold text-slate-900">Restock Proses</h4>
-                <p class="text-xs text-slate-500 mt-1">8 Pengajuan restock</p>
+                <h4 class="text-sm font-bold text-slate-900">Stok Kosong</h4>
+                <p id="stock-empty-summary" class="text-xs text-slate-500 mt-1">-</p>
+              </div>
+            </div>
+            <div
+              class="bg-rose-50 border border-rose-100 p-6 rounded-3xl flex items-start gap-4"
+            >
+              <div class="p-3 bg-rose-100 text-rose-600 rounded-xl">
+                <i data-lucide="bell-ring"></i>
+              </div>
+              <div>
+                <h4 class="text-sm font-bold text-slate-900">Perlu Diingatkan</h4>
+                <p id="stock-reminder-summary" class="text-xs text-slate-500 mt-1">-</p>
               </div>
             </div>
           </div>
@@ -247,6 +259,7 @@
                 >
                   <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
                   <input
+                    id="stock-search"
                     type="text"
                     placeholder="Cari produk..."
                     class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
@@ -264,51 +277,14 @@
                     <th class="px-8 py-5">Supplier</th>
                     <th class="px-8 py-5 text-right">Sisa Stok</th>
                     <th class="px-8 py-5 text-center">Status</th>
+                    <th class="px-8 py-5">Peringatan</th>
+                    <th class="px-8 py-5 text-center">Aksi</th>
                   </tr>
                 </thead>
-                <tbody class="divide-y divide-slate-50">
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5">
-                      <span class="text-sm font-bold text-slate-900 block"
-                        >Tepung Terigu Premium</span
-                      >
-                      <span class="text-xs text-slate-500"
-                        >Kategori: Bahan Baku</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-600 font-semibold">
-                      PT Sejahtera Abadi
-                    </td>
-                    <td class="px-8 py-5 text-right font-black text-slate-900">
-                      450 Kg
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-emerald-50 text-emerald-600"
-                        >AMAN</span
-                      >
-                    </td>
-                  </tr>
-                  <tr class="hover:bg-slate-50 transition-colors">
-                    <td class="px-8 py-5">
-                      <span class="text-sm font-bold text-slate-900 block"
-                        >Plastik Kemasan 10x15</span
-                      >
-                      <span class="text-xs text-slate-500"
-                        >Kategori: Kemasan</span
-                      >
-                    </td>
-                    <td class="px-8 py-5 text-sm text-slate-600 font-semibold">
-                      CV Makmur Sentosa
-                    </td>
-                    <td class="px-8 py-5 text-right font-black text-red-600">
-                      12 Pack
-                    </td>
-                    <td class="px-8 py-5 text-center">
-                      <span
-                        class="text-[10px] font-black px-3 py-1 rounded-full bg-red-50 text-red-600"
-                        >MENIPIS</span
-                      >
+                <tbody id="stock-table-body" class="divide-y divide-slate-50">
+                  <tr>
+                    <td colspan="6" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                      Memuat stok produk...
                     </td>
                   </tr>
                 </tbody>
@@ -319,28 +295,398 @@
       </main>
     </div>
 
+    <div
+      id="stockAdjustModal"
+      class="fixed inset-0 z-[100] hidden items-center justify-center p-6"
+    >
+      <div
+        class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm"
+        onclick="closeStockModal()"
+      ></div>
+      <div
+        class="relative w-full max-w-xl overflow-hidden rounded-[2rem] bg-white shadow-2xl transition-all duration-200"
+      >
+        <div
+          class="flex items-center justify-between border-b border-slate-100 px-7 py-5"
+        >
+          <div>
+            <h3 id="stock-modal-title" class="text-lg font-black text-slate-900">
+              Peringatan Stok Menipis
+            </h3>
+            <p id="stock-modal-subtitle" class="text-sm text-slate-500">
+              Kirim notifikasi agar supplier segera memperbarui stok.
+            </p>
+          </div>
+          <button
+            type="button"
+            onclick="closeStockModal()"
+            class="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+          >
+            <i data-lucide="x" class="h-5 w-5"></i>
+          </button>
+        </div>
+
+        <form id="stockAdjustForm" class="space-y-5 px-7 py-6">
+          <input id="stock-product-id" type="hidden" />
+
+          <div class="rounded-2xl bg-slate-50 p-5">
+            <p class="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
+              Produk
+            </p>
+            <h4 id="stock-modal-product-name" class="mt-2 text-lg font-black text-slate-900">
+              -
+            </h4>
+            <p id="stock-modal-supplier-name" class="mt-1 text-sm font-semibold text-slate-500">
+              -
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
+            <div>
+              <label class="mb-2 block text-sm font-bold text-slate-700">
+                Stok Saat Ini
+              </label>
+              <input
+                id="stock-current-value"
+                type="number"
+                readonly
+                class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 font-bold text-slate-500 outline-none"
+              />
+            </div>
+            <div>
+              <label class="mb-2 block text-sm font-bold text-slate-700">
+                Status Stok
+              </label>
+              <input
+                id="stock-alert-status"
+                type="text"
+                readonly
+                class="w-full rounded-xl border border-orange-100 bg-orange-50 px-4 py-3 font-black text-orange-700 outline-none"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label class="mb-2 block text-sm font-bold text-slate-700">
+              Pesan Notifikasi
+            </label>
+            <textarea
+              id="stock-alert-message"
+              rows="3"
+              placeholder="Pesan untuk supplier"
+              class="w-full resize-none rounded-xl border border-slate-200 px-4 py-3 text-slate-700 outline-none transition-all focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+            ></textarea>
+          </div>
+
+          <div class="flex justify-end gap-3 pt-2">
+            <button
+              type="button"
+              onclick="closeStockModal()"
+              class="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 hover:bg-slate-50"
+            >
+              Batal
+            </button>
+            <button
+              id="stock-submit-button"
+              type="submit"
+              class="rounded-xl bg-emerald-600 px-5 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-600/20 hover:bg-emerald-700 disabled:bg-slate-300 disabled:shadow-none"
+            >
+              Kirim Peringatan
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
+      let stockProducts = [];
+      let selectedStockProduct = null;
+
+      function stockMeta(stock) {
+        const value = Number(stock) || 0;
+        if (value <= 0) return ["KOSONG", "bg-red-50 text-red-600"];
+        if (value <= 10) return ["MENIPIS", "bg-orange-50 text-orange-600"];
+        return ["AMAN", "bg-emerald-50 text-emerald-600"];
+      }
+
+      function formatAlertTime(value) {
+        if (!value) return "-";
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return "-";
+        return date.toLocaleString("id-ID", {
+          day: "2-digit",
+          month: "short",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function stockAlertMeta(product) {
+        const stock = Number(product.stock) || 0;
+        const count = Number(product.stock_alert_count) || 0;
+        const sentText = product.last_stock_alert_at
+          ? `${formatAlertTime(product.last_stock_alert_at)} - ${AdminDashboard.formatNumber(count)}x`
+          : "";
+
+        if (stock > 10) {
+          return {
+            label: "Tidak Perlu",
+            className: "bg-slate-100 text-slate-600",
+            detail: "Stok aman",
+          };
+        }
+
+        if (!product.last_stock_alert_at) {
+          return {
+            label: "Belum Dikirim",
+            className: "bg-slate-100 text-slate-600",
+            detail: "Belum ada peringatan",
+          };
+        }
+
+        if (product.needs_reminder) {
+          return {
+            label: "Belum Direspons",
+            className: "bg-rose-50 text-rose-600",
+            detail: `Terakhir ${sentText}`,
+          };
+        }
+
+        if (product.updated_after_last_alert) {
+          return {
+            label: "Sudah Diubah",
+            className: "bg-emerald-50 text-emerald-600",
+            detail: `Peringatan ${sentText}`,
+          };
+        }
+
+        return {
+          label: "Terkirim",
+          className: "bg-orange-50 text-orange-600",
+          detail: `Terakhir ${sentText}`,
+        };
+      }
+
+      function stockAlertDefaultMessage(product) {
+        const name = product.name || "ini";
+        const stock = Number(product.stock) || 0;
+
+        if (product.needs_reminder) {
+          return `Pengingat: stok produk ${name} masih tersisa ${stock} unit dan belum berubah sejak peringatan terakhir. Mohon segera perbarui stok dari dashboard supplier.`;
+        }
+
+        return stock <= 10
+          ? `Stok produk ${name} tersisa ${stock} unit. Mohon segera perbarui stok dari dashboard supplier.`
+          : `Mohon cek stok produk ${name} di dashboard supplier agar data persediaan tetap terbaru.`;
+      }
+
+      function renderStockRows(products) {
+        const tbody = document.getElementById("stock-table-body");
+        if (!tbody) return;
+
+        if (!products || products.length === 0) {
+          tbody.innerHTML = `
+            <tr>
+              <td colspan="6" class="px-8 py-8 text-center text-slate-400 font-semibold">
+                Tidak ada produk untuk filter ini.
+              </td>
+            </tr>
+          `;
+          return;
+        }
+
+        tbody.innerHTML = products
+          .map((product) => {
+            const [label, className] = stockMeta(product.stock);
+            const alertMeta = stockAlertMeta(product);
+            const actionLabel = product.needs_reminder
+              ? "Kirim Ulang"
+              : Number(product.stock) <= 10
+                ? "Kirim Peringatan"
+                : "Ingatkan Supplier";
+            const actionClass = product.needs_reminder
+              ? "bg-rose-50 text-rose-700 hover:bg-rose-100"
+              : Number(product.stock) <= 10
+                ? "bg-orange-50 text-orange-700 hover:bg-orange-100"
+                : "bg-slate-100 text-slate-600 hover:bg-slate-200";
+            return `
+              <tr class="hover:bg-slate-50 transition-colors">
+                <td class="px-8 py-5">
+                  <span class="text-sm font-bold text-slate-900 block">${AdminDashboard.escapeHTML(product.name || "-")}</span>
+                  <span class="text-xs text-slate-500">Kategori: ${AdminDashboard.escapeHTML(product.category || "-")}</span>
+                </td>
+                <td class="px-8 py-5 text-sm text-slate-600 font-semibold">
+                  ${AdminDashboard.escapeHTML(product.supplier?.business_name || "-")}
+                </td>
+                <td class="px-8 py-5 text-right font-black ${Number(product.stock) <= 10 ? "text-red-600" : "text-slate-900"}">
+                  ${AdminDashboard.formatNumber(product.stock || 0)} Unit
+                </td>
+                <td class="px-8 py-5 text-center">
+                  ${AdminDashboard.badge(label, className)}
+                </td>
+                <td class="px-8 py-5">
+                  <span class="text-[10px] font-black px-3 py-1 rounded-full ${alertMeta.className}">
+                    ${AdminDashboard.escapeHTML(alertMeta.label)}
+                  </span>
+                  <p class="mt-2 text-xs font-semibold text-slate-500">
+                    ${AdminDashboard.escapeHTML(alertMeta.detail)}
+                  </p>
+                </td>
+                <td class="px-8 py-5 text-center">
+                  <button onclick="openStockModal('${AdminDashboard.escapeHTML(product.id)}')" class="px-3 py-2 text-xs font-black rounded-lg ${actionClass} transition-colors">
+                    ${actionLabel}
+                  </button>
+                </td>
+              </tr>
+            `;
+          })
+          .join("");
+      }
+
+      function applyStockSearch() {
+        const query = (document.getElementById("stock-search")?.value || "")
+          .trim()
+          .toLowerCase();
+        const filtered = stockProducts.filter((product) =>
+          [
+            product.name,
+            product.id,
+            product.category,
+            product.location,
+            product.supplier?.business_name,
+          ].some((value) => String(value || "").toLowerCase().includes(query)),
+        );
+        renderStockRows(filtered);
+      }
+
+      async function loadStockSummary() {
+        const data = await AdminDashboard.apiFetch("/api/admin/stocks");
+        stockProducts = data.data || [];
+
+        document.getElementById("stock-low-summary").textContent =
+          `${AdminDashboard.formatNumber(data.low_stock_products || 0)} produk perlu restock`;
+        document.getElementById("stock-safe-summary").textContent =
+          `${AdminDashboard.formatNumber(data.active_products || 0)} produk tersedia`;
+        document.getElementById("stock-empty-summary").textContent =
+          `${AdminDashboard.formatNumber(data.out_of_stock_products || 0)} produk stok kosong`;
+        document.getElementById("stock-reminder-summary").textContent =
+          Number(data.pending_stock_reminders) > 0
+            ? `${AdminDashboard.formatNumber(data.pending_stock_reminders)} produk belum direspons`
+            : "Tidak ada reminder tertunda";
+
+        applyStockSearch();
+      }
+
+      function openStockModal(productID) {
+        const product = stockProducts.find((item) => String(item.id) === String(productID));
+        if (!product) return;
+
+        selectedStockProduct = product;
+        document.getElementById("stock-modal-title").textContent = product.needs_reminder
+          ? "Kirim Ulang Peringatan"
+          : "Peringatan Stok Menipis";
+        document.getElementById("stock-modal-subtitle").textContent = product.needs_reminder
+          ? "Supplier belum mengubah stok sejak peringatan terakhir."
+          : "Kirim notifikasi agar supplier segera memperbarui stok.";
+        document.getElementById("stock-product-id").value = product.id;
+        document.getElementById("stock-modal-product-name").textContent = product.name || "-";
+        document.getElementById("stock-modal-supplier-name").textContent =
+          product.supplier?.business_name || "Supplier";
+        document.getElementById("stock-current-value").value = Number(product.stock) || 0;
+        document.getElementById("stock-alert-status").value =
+          Number(product.stock) <= 0
+            ? "Stok Kosong"
+            : Number(product.stock) <= 10
+              ? "Stok Menipis"
+              : "Stok Aman";
+        document.getElementById("stock-alert-message").value =
+          stockAlertDefaultMessage(product);
+
+        const modal = document.getElementById("stockAdjustModal");
+        modal.classList.remove("hidden");
+        modal.classList.add("flex");
+        document.body.style.overflow = "hidden";
+        setTimeout(() => document.getElementById("stock-alert-message").focus(), 80);
+        if (window.lucide) lucide.createIcons();
+      }
+
+      function closeStockModal() {
+        const modal = document.getElementById("stockAdjustModal");
+        modal.classList.add("hidden");
+        modal.classList.remove("flex");
+        document.body.style.overflow = "auto";
+        selectedStockProduct = null;
+      }
+
+      async function submitStockAlert(event) {
+        event.preventDefault();
+        if (!selectedStockProduct) return;
+
+        const message = document.getElementById("stock-alert-message").value.trim();
+        if (!message) {
+          AdminDashboard.notify("warning", "Pesan notifikasi wajib diisi.");
+          return;
+        }
+
+        const submitButton = document.getElementById("stock-submit-button");
+        submitButton.disabled = true;
+        submitButton.textContent = "Mengirim...";
+
+        try {
+          const result = await AdminDashboard.apiFetch(`/api/admin/products/${encodeURIComponent(selectedStockProduct.id)}/stock-alert`, {
+            method: "POST",
+            body: JSON.stringify({
+              message,
+            }),
+          });
+          AdminDashboard.notify(
+            "success",
+            result.is_reminder
+              ? "Pengingat stok berhasil dikirim ulang ke supplier."
+              : "Peringatan stok berhasil dikirim ke supplier.",
+          );
+          closeStockModal();
+          await loadStockSummary();
+        } catch (error) {
+          AdminDashboard.notify("danger", error.message);
+        } finally {
+          submitButton.disabled = false;
+          submitButton.textContent = "Kirim Peringatan";
+        }
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "admin") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Admin";
+        AdminDashboard.initPage({
+          onReady: async () => {
+            const search = document.getElementById("stock-search");
+            const globalSearch = document.getElementById("stock-global-search");
+            const initialQuery = new URLSearchParams(window.location.search).get("q") || "";
+            if (search) {
+              search.value = initialQuery;
+              search.addEventListener("input", applyStockSearch);
+            }
+            if (globalSearch) {
+              globalSearch.value = initialQuery;
+              globalSearch.addEventListener("keydown", (event) => {
+                if (event.key !== "Enter") return;
+                if (search) search.value = globalSearch.value.trim();
+                applyStockSearch();
+              });
+            }
             document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
+              .getElementById("stockAdjustForm")
+              .addEventListener("submit", submitStockAlert);
+            await loadStockSummary().catch((err) => {
+              console.error("Gagal memuat stok admin", err);
+              AdminDashboard.notify("danger", err.message);
+              renderStockRows([]);
+            });
           }
-        }
+        });
       });
+
+      window.openStockModal = openStockModal;
+      window.closeStockModal = closeStockModal;
     </script>
   </body>
 </html>

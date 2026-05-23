@@ -40,7 +40,6 @@ type User struct {
 type Product struct {
 	ID          string    `gorm:"type:varchar(36);primaryKey" json:"id"`
 	SupplierID  string    `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
-	Supplier    User      `gorm:"foreignKey:SupplierID" json:"supplier"`
 	Name        string    `gorm:"type:varchar(255);not null" json:"name"`
 	Category    string    `gorm:"type:varchar(100)" json:"category"`
 	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
@@ -59,12 +58,20 @@ type Product struct {
 type OrderStatus string
 
 const (
-	OrderPending    OrderStatus = "pending"
-	OrderPaid       OrderStatus = "paid"
-	OrderProcessing OrderStatus = "processing"
-	OrderShipped    OrderStatus = "shipped"
-	OrderCompleted  OrderStatus = "completed"
-	OrderCancelled  OrderStatus = "cancelled"
+	OrderPending                     OrderStatus = "pending"
+	OrderPendingSupplierConfirmation OrderStatus = "pending_supplier_confirmation"
+	OrderRejectedBySupplier          OrderStatus = "rejected_by_supplier"
+	OrderStockUnavailable            OrderStatus = "stock_unavailable"
+	OrderSupplierConfirmed           OrderStatus = "supplier_confirmed"
+	OrderPaymentPending              OrderStatus = "payment_pending"
+	OrderPaymentRequestFailed        OrderStatus = "payment_request_failed"
+	OrderPaid                        OrderStatus = "paid"
+	OrderPaymentFailed               OrderStatus = "payment_failed"
+	OrderShipmentCreated             OrderStatus = "shipment_created"
+	OrderProcessing                  OrderStatus = "processing"
+	OrderShipped                     OrderStatus = "shipped"
+	OrderCompleted                   OrderStatus = "completed"
+	OrderCancelled                   OrderStatus = "cancelled"
 )
 
 // Order merepresentasikan tagihan pembelian antara UMKM dan Supplier
@@ -77,12 +84,130 @@ type Order struct {
 	TotalBasePrice float64     `gorm:"type:numeric(15,2);not null" json:"total_base_price"`
 	SystemFee      float64     `gorm:"type:numeric(15,2);default:0" json:"system_fee"`
 	GrandTotal     float64     `gorm:"type:numeric(15,2);not null" json:"grand_total"`
-	Status         OrderStatus `gorm:"type:varchar(20);default:'pending'" json:"status"`
+	Status         OrderStatus `gorm:"type:varchar(40);default:'pending_supplier_confirmation'" json:"status"`
+	StockDeducted  bool        `gorm:"default:false" json:"stock_deducted"`
 	CreatedAt      time.Time   `json:"created_at"`
 	UpdatedAt      time.Time   `json:"updated_at"`
 
 	// Relations
-	Product Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+	Product  Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+	Umkm     User    `gorm:"foreignKey:UmkmID" json:"umkm,omitempty"`
+	Supplier User    `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
+}
+
+type PaymentStatus string
+
+const (
+	PaymentPending PaymentStatus = "pending"
+	PaymentSuccess PaymentStatus = "success"
+	PaymentFailed  PaymentStatus = "failed"
+)
+
+// Payment menyimpan jejak request pembayaran ke ekosistem SmartBank.
+type Payment struct {
+	ID               string        `gorm:"type:varchar(36);primaryKey" json:"id"`
+	OrderID          string        `gorm:"type:varchar(36);not null;index" json:"order_id"`
+	UserID           string        `gorm:"type:varchar(36);not null;index" json:"user_id"`
+	Amount           float64       `gorm:"type:numeric(15,2);not null" json:"amount"`
+	SupplierFee      float64       `gorm:"type:numeric(15,2);default:0" json:"supplier_fee"`
+	Status           PaymentStatus `gorm:"type:varchar(20);default:'pending'" json:"status"`
+	PaymentMethod    string        `gorm:"type:varchar(50)" json:"payment_method"`
+	VirtualAccount   string        `gorm:"type:varchar(100)" json:"virtual_account"`
+	PaymentReference string        `gorm:"type:varchar(100);index" json:"payment_reference"`
+	ExternalOrderID  string        `gorm:"type:varchar(100);index" json:"external_order_id"`
+	GatewayStatus    string        `gorm:"type:varchar(50)" json:"gateway_status"`
+	CallbackStatus   string        `gorm:"type:varchar(50)" json:"callback_status"`
+	GatewayResponse  string        `gorm:"type:text" json:"gateway_response,omitempty"`
+	PaidAt           *time.Time    `json:"paid_at,omitempty"`
+	CreatedAt        time.Time     `json:"created_at"`
+	UpdatedAt        time.Time     `json:"updated_at"`
+
+	Order Order `gorm:"foreignKey:OrderID" json:"order,omitempty"`
+	User  User  `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+// FinanceLog menyimpan ledger transaksi SupplierHub untuk audit biaya layanan.
+type FinanceLog struct {
+	ID              string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	OrderID         string    `gorm:"type:varchar(36);index" json:"order_id"`
+	PaymentID       *string   `gorm:"type:varchar(36);index" json:"payment_id,omitempty"`
+	UmkmID          string    `gorm:"type:varchar(36);index" json:"umkm_id"`
+	SupplierID      string    `gorm:"type:varchar(36);index" json:"supplier_id"`
+	ProductID       string    `gorm:"type:varchar(36);index" json:"product_id"`
+	Subtotal        float64   `gorm:"type:numeric(15,2);default:0" json:"subtotal"`
+	SupplierFee     float64   `gorm:"type:numeric(15,2);default:0" json:"supplier_fee"`
+	GrandTotal      float64   `gorm:"type:numeric(15,2);default:0" json:"grand_total"`
+	PaymentStatus   string    `gorm:"type:varchar(30)" json:"payment_status"`
+	OrderStatus     string    `gorm:"type:varchar(40)" json:"order_status"`
+	TransactionType string    `gorm:"type:varchar(50);index" json:"transaction_type"`
+	Note            string    `gorm:"type:text" json:"note"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+
+	Order   Order    `gorm:"foreignKey:OrderID" json:"order,omitempty"`
+	Payment *Payment `gorm:"foreignKey:PaymentID" json:"payment,omitempty"`
+}
+
+// RequestLog mencatat request penting untuk kebutuhan audit integrasi.
+type RequestLog struct {
+	ID              string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	UserID          string    `gorm:"type:varchar(36);index" json:"user_id,omitempty"`
+	Role            string    `gorm:"type:varchar(30)" json:"role,omitempty"`
+	Method          string    `gorm:"type:varchar(10)" json:"method"`
+	Path            string    `gorm:"type:varchar(255);index" json:"path"`
+	StatusCode      int       `json:"status_code"`
+	IPAddress       string    `gorm:"type:varchar(100)" json:"ip_address"`
+	UserAgent       string    `gorm:"type:text" json:"user_agent"`
+	RequestBody     string    `gorm:"type:text" json:"request_body,omitempty"`
+	ResponseMessage string    `gorm:"type:text" json:"response_message,omitempty"`
+	LatencyMS       int64     `json:"latency_ms"`
+	CreatedAt       time.Time `json:"created_at"`
+}
+
+// ShipmentLog menyimpan hasil request pengiriman ke LogistiKita.
+type ShipmentLog struct {
+	ID              string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	OrderID         string    `gorm:"type:varchar(36);index" json:"order_id"`
+	SupplierID      string    `gorm:"type:varchar(36);index" json:"supplier_id"`
+	UmkmID          string    `gorm:"type:varchar(36);index" json:"umkm_id"`
+	ProductID       string    `gorm:"type:varchar(36);index" json:"product_id"`
+	ShipmentID      string    `gorm:"type:varchar(100);index" json:"shipment_id"`
+	Status          string    `gorm:"type:varchar(50)" json:"status"`
+	GatewayResponse string    `gorm:"type:text" json:"gateway_response,omitempty"`
+	ErrorMessage    string    `gorm:"type:text" json:"error_message,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
+
+	Order Order `gorm:"foreignKey:OrderID" json:"order,omitempty"`
+}
+
+// Notification menyimpan pesan sistem untuk user tertentu.
+type Notification struct {
+	ID         string     `gorm:"type:varchar(36);primaryKey" json:"id"`
+	UserID     string     `gorm:"type:varchar(36);not null;index" json:"user_id"`
+	Role       string     `gorm:"type:varchar(30);index" json:"role"`
+	Title      string     `gorm:"type:varchar(150);not null" json:"title"`
+	Message    string     `gorm:"type:text;not null" json:"message"`
+	Type       string     `gorm:"type:varchar(50);index" json:"type"`
+	SourceType string     `gorm:"type:varchar(50)" json:"source_type"`
+	SourceID   string     `gorm:"type:varchar(36);index" json:"source_id"`
+	IsRead     bool       `gorm:"default:false;index" json:"is_read"`
+	ReadAt     *time.Time `json:"read_at,omitempty"`
+	CreatedAt  time.Time  `json:"created_at"`
+	UpdatedAt  time.Time  `json:"updated_at"`
+
+	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+// Wishlist menyimpan produk bahan baku favorit milik UMKM di database.
+type Wishlist struct {
+	ID          string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	UserID      string    `gorm:"type:varchar(36);not null;index;uniqueIndex:idx_wishlist_user_product" json:"user_id"`
+	BahanBakuID string    `gorm:"column:bahan_baku_id;type:varchar(36);not null;index;uniqueIndex:idx_wishlist_user_product" json:"bahan_baku_id"`
+	CreatedAt   time.Time `json:"created_at"`
+
+	User    User    `gorm:"foreignKey:UserID" json:"user,omitempty"`
+	Product Product `gorm:"foreignKey:BahanBakuID;references:ID" json:"product,omitempty"`
 }
 
 // Log merepresentasikan rekam jejak aktivitas (Audit) untuk Admin
@@ -112,6 +237,48 @@ func (p *Product) BeforeCreate(tx *gorm.DB) (err error) {
 func (o *Order) BeforeCreate(tx *gorm.DB) (err error) {
 	if o.ID == "" {
 		o.ID = uuid.New().String()
+	}
+	return
+}
+
+func (p *Payment) BeforeCreate(tx *gorm.DB) (err error) {
+	if p.ID == "" {
+		p.ID = uuid.New().String()
+	}
+	return
+}
+
+func (f *FinanceLog) BeforeCreate(tx *gorm.DB) (err error) {
+	if f.ID == "" {
+		f.ID = uuid.New().String()
+	}
+	return
+}
+
+func (r *RequestLog) BeforeCreate(tx *gorm.DB) (err error) {
+	if r.ID == "" {
+		r.ID = uuid.New().String()
+	}
+	return
+}
+
+func (s *ShipmentLog) BeforeCreate(tx *gorm.DB) (err error) {
+	if s.ID == "" {
+		s.ID = uuid.New().String()
+	}
+	return
+}
+
+func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
+	if n.ID == "" {
+		n.ID = uuid.New().String()
+	}
+	return
+}
+
+func (w *Wishlist) BeforeCreate(tx *gorm.DB) (err error) {
+	if w.ID == "" {
+		w.ID = uuid.New().String()
 	}
 	return
 }

@@ -3,10 +3,10 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" href="./assets/logo.png" type="image/x-icon" />
+    <link rel="shortcut icon" href="assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Koneksi Bisnis Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="auth.js"></script>
+    <script src="assets/js/auth.js"></script>
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
@@ -159,7 +159,7 @@
             onclick="window.scrollTo(0, 0)"
           >
             <img
-              src="assets/logo.png"
+              src="assets/img/logo.png"
               alt="Logo SupplierHub"
               class="w-12 h-12 object-contain"
             />
@@ -356,19 +356,19 @@
             >
               <span>Populer:</span>
               <a
-                href="dashboard/katalog.html?q=Tekstil"
+                href="dashboard/umkm_katalog.html?q=Tekstil"
                 data-catalog-query="Tekstil"
                 class="hover:text-green-600 underline"
                 >Tekstil</a
               >
               <a
-                href="dashboard/katalog.html?q=Elektronik"
+                href="dashboard/umkm_katalog.html?q=Elektronik"
                 data-catalog-query="Elektronik"
                 class="hover:text-green-600 underline"
                 >Elektronik</a
               >
               <a
-                href="dashboard/katalog.html?q=Bahan%20Makanan"
+                href="dashboard/umkm_katalog.html?q=Bahan%20Makanan"
                 data-catalog-query="Bahan Makanan"
                 class="hover:text-green-600 underline"
                 >Bahan Makanan</a
@@ -939,7 +939,7 @@
           <div class="col-span-1 md:col-span-1">
             <div class="flex items-center gap-2 mb-4">
               <img
-                src="assets/logo.png"
+                src="assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-10 h-10 object-contain"
               />
@@ -1082,7 +1082,7 @@
       }
 
       function getCatalogUrl(query) {
-        return `dashboard/katalog.html?q=${encodeURIComponent(query)}`;
+        return `dashboard/umkm_katalog.html?q=${encodeURIComponent(query)}`;
       }
 
       function openCatalog(query) {
@@ -1220,16 +1220,8 @@
         });
       }
 
-      function showToast(message) {
-        const toast = getElement(SELECTORS.toast);
-        if (!toast) return;
-
-        toast.innerText = message;
-        toast.classList.add(CLASS_NAMES.toastVisible);
-        setTimeout(
-          () => toast.classList.remove(CLASS_NAMES.toastVisible),
-          TOAST_DURATION,
-        );
+      function showToast(type, message) {
+        window.showGlobalToast(type, message);
       }
 
       function handleSearch() {

@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Supplier Portal</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,8 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/supplier_common.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +46,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -92,6 +94,13 @@
               class="group-hover:text-emerald-400"
             ></i>
             <span class="font-semibold text-sm">Daftar Pesanan</span>
+          </a>
+          <a
+            href="supplier_notifikasi.html"
+            class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
+          >
+            <i data-lucide="bell-ring" class="group-hover:text-emerald-400"></i>
+            <span class="font-semibold text-sm">Notifikasi</span>
           </a>
           <a
             href="supplier_analitik.html"
@@ -150,7 +159,7 @@
               <i data-lucide="search" class="text-slate-400 w-4 h-4"></i>
               <input
                 type="text"
-                placeholder="Cari Pesanan..."
+                placeholder="Cari Data..."
                 class="bg-transparent border-none focus:ring-0 text-sm w-full ml-2 outline-none placeholder:text-slate-400 text-slate-700"
               />
             </div>
@@ -216,7 +225,7 @@
               >
                 Total Penjualan
               </p>
-              <p class="text-3xl font-black mt-2">Rp 45.2M</p>
+              <p id="analytics-sales-value" class="text-3xl font-black mt-2">-</p>
             </div>
             <div
               class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
@@ -235,7 +244,7 @@
               >
                 Produk Terjual
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">1,204</p>
+              <p id="analytics-products-sold" class="text-3xl font-black text-slate-900 mt-2">-</p>
             </div>
             <div
               class="bg-white border border-slate-100 p-6 rounded-3xl shadow-sm"
@@ -248,24 +257,22 @@
               <p
                 class="text-xs font-bold text-slate-400 uppercase tracking-widest"
               >
-                Pengunjung Toko
+                Pesanan Aktif
               </p>
-              <p class="text-3xl font-black text-slate-900 mt-2">8,592</p>
+              <p id="analytics-active-orders" class="text-3xl font-black text-slate-900 mt-2">-</p>
             </div>
           </div>
 
-          <div
-            class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 flex items-center justify-center min-h-[300px]"
-          >
-            <div class="text-center">
-              <i
-                data-lucide="bar-chart"
-                class="w-16 h-16 mx-auto text-slate-200 mb-4"
-              ></i>
-              <h3 class="text-lg font-bold text-slate-700">Grafik Penjualan</h3>
-              <p class="text-slate-500 text-sm mt-2">
-                Data visualisasi sedang dimuat...
-              </p>
+          <div class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 p-8 min-h-[300px]">
+            <div class="flex items-center justify-between mb-8">
+              <div>
+                <h3 class="text-lg font-bold text-slate-700">Ringkasan Status Pesanan</h3>
+                <p class="text-slate-500 text-sm mt-1">Distribusi order berdasarkan status terbaru.</p>
+              </div>
+              <i data-lucide="bar-chart" class="w-8 h-8 text-slate-300"></i>
+            </div>
+            <div id="analytics-chart" class="space-y-5">
+              <div class="text-center py-12 text-slate-500 text-sm">Memuat data analitik...</div>
             </div>
           </div>
         </div>
@@ -273,33 +280,80 @@
     </div>
 
     <script>
-      function toggleSidebar() {
-        document
-          .getElementById("sidebar")
-          .classList.toggle("-translate-x-full");
+      function countByStatus(orders) {
+        return orders.reduce((accumulator, order) => {
+          const status = String(order.status || "unknown").toLowerCase();
+          accumulator[status] = (accumulator[status] || 0) + 1;
+          return accumulator;
+        }, {});
+      }
+
+      function renderStatusChart(orders) {
+        const chart = document.getElementById("analytics-chart");
+        const counts = countByStatus(orders);
+        const entries = Object.entries(counts);
+
+        if (entries.length === 0) {
+          chart.innerHTML = `<div class="text-center py-12 text-slate-500 text-sm">Belum ada pesanan untuk dianalisis.</div>`;
+          return;
+        }
+
+        const maxCount = Math.max(...entries.map(([, count]) => count), 1);
+        chart.innerHTML = entries
+          .map(([status, count]) => {
+            const meta = SupplierDashboard.statusMeta(status);
+            const width = Math.max((count / maxCount) * 100, 8);
+            return `
+              <div>
+                <div class="flex items-center justify-between mb-2">
+                  <span class="text-sm font-bold text-slate-700">${meta.label}</span>
+                  <span class="text-sm font-black text-slate-900">${count}</span>
+                </div>
+                <div class="h-3 rounded-full bg-slate-100 overflow-hidden">
+                  <div class="h-full rounded-full bg-emerald-500" style="width: ${width}%"></div>
+                </div>
+              </div>
+            `;
+          })
+          .join("");
+      }
+
+      function renderAnalytics(stats, orders) {
+        const soldQuantity = orders
+          .filter((order) => String(order.status).toLowerCase() === "completed")
+          .reduce((sum, order) => sum + (Number(order.quantity) || 0), 0);
+        const activeStatuses = ["pending", "paid", "processing", "shipped"];
+        const activeOrders = orders.filter((order) =>
+          activeStatuses.includes(String(order.status || "").toLowerCase()),
+        ).length;
+
+        document.getElementById("analytics-sales-value").textContent =
+          SupplierDashboard.formatRupiah(stats.total_revenue || stats.revenue_rp || 0);
+        document.getElementById("analytics-products-sold").textContent =
+          SupplierDashboard.formatNumber(soldQuantity);
+        document.getElementById("analytics-active-orders").textContent =
+          SupplierDashboard.formatNumber(activeOrders);
+        renderStatusChart(orders);
+      }
+
+      async function fetchAnalytics() {
+        try {
+          const [stats, orders] = await Promise.all([
+            SupplierDashboard.getStats(),
+            SupplierDashboard.getOrders(),
+          ]);
+          renderAnalytics(stats, orders);
+        } catch (error) {
+          SupplierDashboard.notify("danger", "Gagal memuat analitik toko.");
+          document.getElementById("analytics-chart").innerHTML =
+            `<div class="text-center py-12 text-red-500 text-sm">Gagal memuat data analitik.</div>`;
+        }
       }
 
       window.addEventListener("DOMContentLoaded", () => {
-        const user = checkAuth("../Login/login.html");
-        if (user) {
-          if (user.role !== "supplier") {
-            window.location.href = "../Login/login.html";
-          } else {
-            document.getElementById("user-display-name").innerText =
-              user.email || "Supplier";
-            const dateEl = document.getElementById("current-date");
-            if (dateEl)
-              dateEl.innerText = new Date().toLocaleDateString("id-ID", {
-                day: "numeric",
-                month: "long",
-                year: "numeric",
-              });
-            document
-              .getElementById("app-content")
-              .classList.remove("invisible");
-            lucide.createIcons();
-          }
-        }
+        SupplierDashboard.initPage({
+          onReady: fetchAnalytics,
+        });
       });
     </script>
   </body>

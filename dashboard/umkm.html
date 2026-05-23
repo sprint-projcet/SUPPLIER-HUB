@@ -3,6 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - UMKM Dashboard</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -11,7 +12,7 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="../auth.js"></script>
+    <script src="../assets/js/auth.js"></script>
     <style>
       body {
         font-family: "Plus Jakarta Sans", sans-serif;
@@ -44,7 +45,7 @@
           <div class="flex items-center gap-3">
             <div class="w-10 h-10 rounded-xl flex items-center justify-center">
               <img
-                src="../assets/logo.png"
+                src="../assets/img/logo.png"
                 alt="Logo SupplierHub"
                 class="w-12 h-12 object-contain"
               />
@@ -74,7 +75,7 @@
             <span class="font-semibold text-sm">Dashboard</span>
           </a>
           <a
-            href="katalog.html"
+            href="umkm_katalog.html"
             class="w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white"
           >
             <i data-lucide="store" class="group-hover:text-emerald-400"></i>
@@ -476,7 +477,7 @@
             if (dashboardSearch) {
               dashboardSearch.addEventListener("keydown", (event) => {
                 if (event.key === "Enter" && dashboardSearch.value.trim()) {
-                  window.location.href = `katalog.html?q=${encodeURIComponent(dashboardSearch.value.trim())}`;
+                  window.location.href = `umkm_katalog.html?q=${encodeURIComponent(dashboardSearch.value.trim())}`;
                 }
               });
             }
