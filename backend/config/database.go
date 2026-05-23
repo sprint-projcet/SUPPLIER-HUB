@@ -31,7 +31,9 @@ func ConnectDatabase() {
 		dsn = "root:@tcp(127.0.0.1:3306)/supplierhub?charset=utf8mb4&parseTime=True&loc=Local"
 	}
 
-	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{})
+	database, err := gorm.Open(mysql.Open(dsn), &gorm.Config{
+		DisableForeignKeyConstraintWhenMigrating: true,
+	})
 	if err != nil {
 		log.Fatalf("Gagal terhubung ke database MySQL: %v", err)
 	}
@@ -39,6 +41,8 @@ func ConnectDatabase() {
 	log.Println("Database MySQL Terhubung!")
 
 	// Menjalankan Auto Migration (Menyesuaikan skema tabel ke Data Models secara otomatis)
+	// Disabling FK constraint creation here avoids migration failure on legacy
+	// data yang memiliki urutan INSERT / orphaned rows sebelumnya.
 	err = database.AutoMigrate(
 		&models.User{},
 		&models.Product{},

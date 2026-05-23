@@ -20,6 +20,7 @@ func SetupRoutes(router *gin.Engine) {
 		authGroup.GET("/google/callback", controllers.GoogleCallback)
 	}
 
+<<<<<<< HEAD
 	// Public Catalog
 	api.GET("/catalog", controllers.GetPublicCatalog)
 	api.POST("/webhook/payment", controllers.HandleSmartBankCallback)
@@ -84,6 +85,8 @@ func SetupRoutes(router *gin.Engine) {
 		supplierHubGroup.POST("/payment/callback", controllers.HandleSupplierHubPaymentCallback)
 	}
 
+=======
+>>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
 	// Semua rute di bawah ini wajib melampirkan JWT token
 	api.Use(middlewares.RequireAuth())
 

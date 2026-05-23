@@ -280,6 +280,7 @@ func UpdateProduct(c *gin.Context) {
 	if !ok {
 		return
 	}
+<<<<<<< HEAD
 
 	supplierRegion := strings.TrimSpace(supplier.Region)
 	if supplierRegion == "" {
@@ -288,10 +289,18 @@ func UpdateProduct(c *gin.Context) {
 	}
 
 	productID := c.Param("id")
+=======
+>>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
 
+	productID := c.Param("id")
 	var product models.Product
+<<<<<<< HEAD
 	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplier.ID).First(&product).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan"})
+=======
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan atau Anda tidak berwenang"})
+>>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
 		return
 	}
 	oldStock := product.Stock
@@ -304,6 +313,7 @@ func UpdateProduct(c *gin.Context) {
 	stockChanged := false
 
 	if name != "" {
+<<<<<<< HEAD
 		product.Name = strings.TrimSpace(name)
 	}
 	if category != "" {
@@ -327,7 +337,29 @@ func UpdateProduct(c *gin.Context) {
 		product.Description = strings.TrimSpace(description)
 	}
 	product.Location = supplierRegion
+=======
+		product.Name = name
+	}
+	if category != "" {
+		product.Category = category
+	}
+	if priceStr != "" {
+		price, _ := strconv.ParseFloat(priceStr, 64)
+		product.Price = price
+	}
+	if stockStr != "" {
+		stock, _ := strconv.Atoi(stockStr)
+		product.Stock = stock
+	}
+	if description != "" {
+		product.Description = description
+	}
+	if location != "" {
+		product.Location = location
+	}
+>>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
 
+	// File Upload Handling
 	file, err := c.FormFile("image")
 	if err == nil {
 		filename := uuid.New().String() + filepath.Ext(file.Filename)
@@ -338,10 +370,11 @@ func UpdateProduct(c *gin.Context) {
 	}
 
 	if err := config.DB.Save(&product).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengupdate produk"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui produk: " + err.Error()})
 		return
 	}
 
+<<<<<<< HEAD
 	if stockChanged {
 		message := "Supplier " + supplier.BusinessName + " memperbarui stok produk " + product.Name + " dari " + strconv.Itoa(oldStock) + " menjadi " + strconv.Itoa(product.Stock) + " unit."
 		_, _ = services.CreateRoleNotifications(nil, models.RoleAdmin, models.Notification{
@@ -359,6 +392,12 @@ func UpdateProduct(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Produk berhasil diupdate", "data": product})
+=======
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Produk berhasil diperbarui",
+		"data":    product,
+	})
+>>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
 }
 
 func DeleteProduct(c *gin.Context) {
@@ -367,19 +406,22 @@ func DeleteProduct(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
 		return
 	}
+
 	productID := c.Param("id")
-
-	result := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).Delete(&models.Product{})
-	if result.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus produk"})
-		return
-	}
-	if result.RowsAffected == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan"})
+	var product models.Product
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan atau Anda tidak berwenang"})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Produk berhasil dihapus"})
+	if err := config.DB.Delete(&product).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menghapus produk: " + err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Produk berhasil dihapus",
+	})
 }
 
 func GetSupplierNotifications(c *gin.Context) {
