@@ -22,12 +22,8 @@ func main() {
 	// (Mengizinkan UI frontend dari port atau origin berbeda untuk memanggil API ini)
 	corsConfig := cors.DefaultConfig()
 	corsConfig.AllowAllOrigins = true // Boleh diubah ke Origin spesifik UI untuk Production
-<<<<<<< HEAD
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "X-Internal-Token", "X-Callback-Token"}
-=======
 	corsConfig.AllowMethods = []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "HEAD"}
-	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Accept", "X-Requested-With"}
->>>>>>> e27dfc54c240f5a15e5ba081a327ea4c4ceb131c
+	corsConfig.AllowHeaders = []string{"Origin", "Content-Length", "Content-Type", "Authorization", "Accept", "X-Requested-With", "X-Internal-Token", "X-Callback-Token"}
 	r.Use(cors.New(corsConfig))
 
 	// Serve folder uploads sebagai static files

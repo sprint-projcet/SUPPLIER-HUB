@@ -49,6 +49,8 @@ type Product struct {
 	ImageURL    string    `gorm:"type:varchar(255)" json:"image_url"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
+
+	Supplier User `gorm:"foreignKey:SupplierID;references:ID" json:"supplier,omitempty"`
 }
 
 // OrderStatus defines the lifecycle of an order
