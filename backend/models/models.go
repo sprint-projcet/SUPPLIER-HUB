@@ -89,9 +89,10 @@ type Order struct {
 	UpdatedAt      time.Time   `json:"updated_at"`
 
 	// Relations
-	Product  Product `gorm:"foreignKey:ProductID" json:"product,omitempty"`
-	Umkm     User    `gorm:"foreignKey:UmkmID" json:"umkm,omitempty"`
-	Supplier User    `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
+	Product  Product  `gorm:"foreignKey:ProductID" json:"product,omitempty"`
+	Umkm     User     `gorm:"foreignKey:UmkmID" json:"umkm,omitempty"`
+	Supplier User     `gorm:"foreignKey:SupplierID" json:"supplier,omitempty"`
+	Payment  *Payment `gorm:"foreignKey:OrderID" json:"payment,omitempty"`
 }
 
 type PaymentStatus string

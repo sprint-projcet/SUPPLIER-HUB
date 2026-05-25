@@ -441,3 +441,20 @@ function logoutUser(redirectUrl = "../Login/login.html") {
 function getRoleConfig(role) {
   return roleConfig[role] || roleConfig["user"];
 }
+
+// Global dynamic branding listener for UMKM and Admin dashboards
+document.addEventListener("DOMContentLoaded", () => {
+  const user = getStoredUserSession();
+  if (user) {
+    const displayName = user.business_name || user.name || user.email || (user.role === "admin" ? "Admin" : "UMKM");
+    if (user.role === "user") {
+      document.querySelectorAll("[data-umkm-name-display]").forEach((element) => {
+        element.textContent = displayName;
+      });
+    } else if (user.role === "admin") {
+      document.querySelectorAll("[data-admin-name-display]").forEach((element) => {
+        element.textContent = displayName;
+      });
+    }
+  }
+});

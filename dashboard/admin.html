@@ -358,6 +358,41 @@
                 </div>
               </div>
             </div>
+
+            <!-- Logs Activity Section -->
+            <div class="lg:col-span-1">
+              <div
+                class="bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden"
+              >
+                <div
+                  class="p-8 border-b border-slate-50 flex items-center justify-between gap-3 bg-slate-50/30"
+                >
+                  <div>
+                    <h3 class="font-black text-slate-900 text-lg tracking-tight">
+                      Aktivitas Supplier
+                    </h3>
+                    <p class="mt-1 text-xs font-semibold text-slate-400">
+                      Log kegiatan sistem terbaru
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onclick="fetchAdminLogs()"
+                    class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-100 text-slate-500 hover:bg-slate-50 hover:text-emerald-600 transition-all"
+                    title="Refresh logs"
+                  >
+                    <i data-lucide="refresh-cw" class="h-4 w-4"></i>
+                  </button>
+                </div>
+                <div id="admin-logs-body" class="max-h-[30rem] overflow-y-auto p-6 space-y-4 custom-scrollbar">
+                  <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-center">
+                    <p class="text-sm font-bold text-slate-500">
+                      Memuat aktivitas...
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </main>
@@ -424,6 +459,75 @@
         renderRecentOrders(data.recent_orders || []);
       }
 
+      async function fetchAdminLogs() {
+        const body = document.getElementById("admin-logs-body");
+        if (!body) return;
+
+        try {
+          const res = await AdminDashboard.apiFetch("/api/admin/logs");
+          const logs = res.data || [];
+
+          if (logs.length === 0) {
+            body.innerHTML = `
+              <div class="rounded-2xl border border-slate-100 bg-slate-50 p-5 text-center">
+                <p class="text-sm font-bold text-slate-600">Belum ada aktivitas tercatat.</p>
+              </div>
+            `;
+            return;
+          }
+
+          body.innerHTML = logs
+            .map((log) => {
+              const date = new Date(log.created_at).toLocaleString("id-ID", {
+                hour: "2-digit",
+                minute: "2-digit",
+                day: "numeric",
+                month: "short",
+              });
+              let iconBg = "bg-slate-100 text-slate-500";
+              let icon = "activity";
+
+              const action = String(log.action).toUpperCase();
+              if (action.includes("VERIFY") || action.includes("ACTIVE")) {
+                iconBg = "bg-emerald-50 text-emerald-600";
+                icon = "shield-check";
+              } else if (action.includes("STOCK") || action.includes("UPDATE")) {
+                iconBg = "bg-blue-50 text-blue-600";
+                icon = "package";
+              } else if (action.includes("DELETE") || action.includes("SUSPEND")) {
+                iconBg = "bg-red-50 text-red-600";
+                icon = "alert-circle";
+              } else if (action.includes("LOGIN") || action.includes("REGISTER")) {
+                iconBg = "bg-orange-50 text-orange-600";
+                icon = "user-plus";
+              }
+
+              return `
+                <div class="flex gap-3 items-start border-b border-slate-50 pb-3 last:border-0 last:pb-0">
+                  <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${iconBg}">
+                    <i data-lucide="${icon}" class="h-4 w-4"></i>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-xs font-black text-slate-900 uppercase tracking-wider">${AdminDashboard.escapeHTML(log.action)}</p>
+                    <p class="mt-0.5 text-xs text-slate-600 leading-relaxed">${AdminDashboard.escapeHTML(log.description)}</p>
+                    <p class="mt-1 text-[10px] text-slate-400 font-bold">${date}</p>
+                  </div>
+                </div>
+              `;
+            })
+            .join("");
+
+          if (window.lucide) lucide.createIcons();
+        } catch (error) {
+          console.error("Gagal memuat logs", error);
+          body.innerHTML = `
+            <div class="rounded-2xl border border-red-50 bg-red-50 p-5 text-center">
+              <p class="text-sm font-bold text-red-600">Gagal memuat aktivitas.</p>
+            </div>
+          `;
+        }
+      }
+
       function renderAdminStatsError(message) {
         const tbody = document.getElementById("admin-transactions-body");
         if (tbody) {
@@ -478,11 +582,16 @@
         AdminDashboard.initPage({
           onReady: async () => {
             setupAdminSearch();
-            await fetchAdminStats().catch((err) => {
-              console.error("Gagal memuat dashboard admin", err);
-              renderAdminStatsError(err.message);
-              AdminDashboard.notify("danger", err.message);
-            });
+            await Promise.all([
+              fetchAdminStats().catch((err) => {
+                console.error("Gagal memuat dashboard admin stats", err);
+                renderAdminStatsError(err.message);
+                AdminDashboard.notify("danger", err.message);
+              }),
+              fetchAdminLogs().catch((err) => {
+                console.error("Gagal memuat dashboard admin logs", err);
+              })
+            ]);
 
             // Tampilkan Popup Notification menggunakan SweetAlert2
             if (!sessionStorage.getItem("adminWelcomeShown")) {

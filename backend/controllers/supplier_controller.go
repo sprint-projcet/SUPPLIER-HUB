@@ -213,6 +213,11 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
+	if supplier.Status != "active" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akun supplier Anda belum aktif atau belum diverifikasi oleh admin."})
+		return
+	}
+
 	supplierRegion := strings.TrimSpace(supplier.Region)
 	if supplierRegion == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Lengkapi wilayah supply toko terlebih dahulu sebelum menambahkan produk."})
@@ -278,6 +283,11 @@ func CreateProduct(c *gin.Context) {
 func UpdateProduct(c *gin.Context) {
 	supplier, ok := getCurrentSupplier(c)
 	if !ok {
+		return
+	}
+
+	if supplier.Status != "active" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Akun supplier Anda belum aktif atau belum diverifikasi oleh admin."})
 		return
 	}
 

@@ -216,7 +216,7 @@
 
           <section id="page-tracking" class="hidden">
             <div
-              class="mb-8 flex flex-col md:flex-row md:items-center justify-between gap-4"
+              class="mb-8 flex flex-col lg:flex-row lg:items-center justify-between gap-4"
             >
               <div
                 class="bg-white px-5 py-3 rounded-2xl border border-slate-200 flex items-center gap-4 shadow-sm inline-flex"
@@ -237,12 +237,17 @@
                   <i data-lucide="copy" class="w-5 h-5"></i>
                 </button>
               </div>
-              <button
-                onclick="fetchTrackingData()"
-                class="px-5 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
-              >
-                <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
-              </button>
+              <div class="flex flex-wrap items-center gap-3">
+                <select id="select-order-track" onchange="changeTrackedOrder(this.value)" class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-sm font-bold text-slate-700 focus:outline-none focus:ring-4 focus:ring-emerald-500/10 transition-all shadow-sm">
+                  <option value="">-- Pilih Pesanan untuk Dilacak --</option>
+                </select>
+                <button
+                  onclick="fetchTrackingData()"
+                  class="px-5 py-3 bg-white border border-slate-200 rounded-xl font-bold text-sm text-slate-700 hover:bg-slate-50 transition-colors flex items-center gap-2"
+                >
+                  <i data-lucide="refresh-cw" class="w-4 h-4"></i> Segarkan Data
+                </button>
+              </div>
             </div>
 
             <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
@@ -250,37 +255,10 @@
               <div class="xl:col-span-2 space-y-6">
                 <!-- Status Terkini (Highlight) -->
                 <div
+                  id="status-highlight"
                   class="flex flex-col sm:flex-row items-start sm:items-center gap-5 p-6 bg-white rounded-[2rem] border border-slate-100 shadow-sm relative overflow-hidden group"
                 >
-                  <div
-                    class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-100 relative z-10"
-                  >
-                    <i data-lucide="truck" class="w-8 h-8 animate-pulse"></i>
-                  </div>
-                  <div class="relative z-10">
-                    <p
-                      class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5"
-                    >
-                      <span
-                        class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"
-                      ></span>
-                      Status Terkini
-                    </p>
-                    <h4
-                      class="text-xl font-black text-slate-900 tracking-tight"
-                    >
-                      Kurir sedang menuju lokasi Anda
-                    </h4>
-                    <p class="text-sm text-slate-500 mt-1">
-                      Estimasi tiba:
-                      <span class="font-bold text-slate-900"
-                        >Hari ini, 16:45 WIB</span
-                      >
-                    </p>
-                  </div>
-                  <div
-                    class="absolute right-0 top-0 w-32 h-32 bg-emerald-50 rounded-bl-[100px] -z-0 opacity-50"
-                  ></div>
+                  <!-- Content will be rendered dynamically -->
                 </div>
 
                 <div
@@ -293,87 +271,10 @@
                   </h3>
                   <!-- Timeline Vertical -->
                   <div
+                    id="timeline-vertical"
                     class="relative space-y-10 before:absolute before:left-[19px] before:top-2 before:bottom-2 before:w-0.5 before:bg-slate-100"
                   >
-                    <!-- Step 4 (Future) -->
-                    <div class="relative pl-14">
-                      <div
-                        class="absolute left-0 top-1 w-10 h-10 bg-white border-2 border-slate-200 rounded-full flex items-center justify-center z-10 text-slate-300"
-                      >
-                        <i data-lucide="check" class="w-5 h-5"></i>
-                      </div>
-                      <div>
-                        <h5 class="font-bold text-slate-400 text-lg">
-                          Tiba di Tujuan
-                        </h5>
-                        <p class="text-sm text-slate-400 italic mt-1">
-                          Menunggu penerimaan oleh UMKM
-                        </p>
-                      </div>
-                    </div>
-                    <!-- Step 3 (Active) -->
-                    <div class="relative pl-14">
-                      <div
-                        class="absolute left-0 top-1 w-10 h-10 bg-emerald-500 text-white rounded-full flex items-center justify-center z-10 shadow-lg shadow-emerald-500/30 ring-4 ring-white"
-                      >
-                        <i data-lucide="truck" class="w-5 h-5"></i>
-                      </div>
-                      <div>
-                        <h5 class="font-black text-slate-900 text-lg">
-                          Sedang Dikirim
-                        </h5>
-                        <p class="text-sm text-slate-500 mt-1 mb-3">
-                          Kurir: Budi Sudarsono (+62 812-3456-xxx)
-                        </p>
-                        <p
-                          class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block"
-                        >
-                          22 Apr 2024 - 14:20 WIB
-                        </p>
-                      </div>
-                    </div>
-                    <!-- Step 2 (Success) -->
-                    <div class="relative pl-14">
-                      <div
-                        class="absolute left-0 top-1 w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center z-10 border-2 border-emerald-500 ring-4 ring-white"
-                      >
-                        <i data-lucide="package" class="w-5 h-5"></i>
-                      </div>
-                      <div>
-                        <h5 class="font-bold text-slate-900 text-lg">
-                          Diproses di Hub LogistiKita
-                        </h5>
-                        <p class="text-sm text-slate-500 mt-1 mb-3">
-                          Penyortiran barang di Hub Jakarta Selatan
-                        </p>
-                        <p
-                          class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block"
-                        >
-                          22 Apr 2024 - 09:15 WIB
-                        </p>
-                      </div>
-                    </div>
-                    <!-- Step 1 (Success) -->
-                    <div class="relative pl-14">
-                      <div
-                        class="absolute left-0 top-1 w-10 h-10 bg-emerald-50 text-emerald-500 rounded-full flex items-center justify-center z-10 border-2 border-emerald-500 ring-4 ring-white"
-                      >
-                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
-                      </div>
-                      <div>
-                        <h5 class="font-bold text-slate-900 text-lg">
-                          Request Diterima
-                        </h5>
-                        <p class="text-sm text-slate-500 mt-1 mb-3">
-                          Pesanan pengiriman telah dikonfirmasi sistem
-                        </p>
-                        <p
-                          class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block"
-                        >
-                          22 Apr 2024 - 08:00 WIB
-                        </p>
-                      </div>
-                    </div>
+                    <!-- Timeline items will be rendered dynamically -->
                   </div>
                 </div>
               </div>
@@ -470,6 +371,7 @@
           .classList.toggle("-translate-x-full");
       }
       let activeTrackingOrderId = null;
+      let trackableOrders = [];
 
       async function fetchTrackingData() {
         const userSession = getStoredUserSession();
@@ -483,26 +385,60 @@
           const result = await res.json();
 
           if (res.ok && result.data && result.data.length > 0) {
-            // Cari pesanan yang dikirim
-            const shippedOrder = result.data.find(
-              (o) => o.status === "shipped",
+            // Saring pesanan yang dapat dilacak (paid, shipment_created, processing, shipped, completed)
+            const validStatuses = ["paid", "shipment_created", "processing", "shipped", "completed"];
+            trackableOrders = result.data.filter((o) =>
+              validStatuses.includes(String(o.status || "").toLowerCase())
             );
 
-            if (shippedOrder) {
-              activeTrackingOrderId = shippedOrder.id;
-              document
-                .getElementById("page-tracking")
-                .classList.remove("hidden");
+            // Perbarui dropdown
+            const selectEl = document.getElementById("select-order-track");
+            if (selectEl) {
+              selectEl.innerHTML = '<option value="">-- Pilih Pesanan untuk Dilacak --</option>';
+              trackableOrders.forEach((o) => {
+                const shortId = String(o.id).substring(0, 8).toUpperCase();
+                const productName = o.product ? o.product.name : "Produk";
+                const isSelected = activeTrackingOrderId === o.id ? "selected" : "";
+                
+                // Beri label status ramah pembaca
+                let statusLabel = String(o.status).toUpperCase();
+                if (o.status === "paid") statusLabel = "DIBAYAR";
+                if (o.status === "shipment_created") statusLabel = "PENGIRIMAN SIAP";
+                if (o.status === "processing") statusLabel = "DIPROSES";
+                if (o.status === "shipped") statusLabel = "DIKIRIM";
+                if (o.status === "completed") statusLabel = "SELESAI";
+
+                selectEl.innerHTML += `<option value="${o.id}" ${isSelected}>ORD-${shortId} (${productName}) [${statusLabel}]</option>`;
+              });
+            }
+
+            // Jika belum ada activeTrackingOrderId, pilih pesanan pertama yang sedang dikirim (shipped) atau pesanan pertama yang dapat dilacak
+            if (!activeTrackingOrderId && trackableOrders.length > 0) {
+              const defaultOrder = trackableOrders.find((o) => o.status === "shipped") || trackableOrders[0];
+              activeTrackingOrderId = defaultOrder.id;
+              if (selectEl) selectEl.value = activeTrackingOrderId;
+            }
+
+            const activeOrder = trackableOrders.find((o) => o.id === activeTrackingOrderId);
+
+            if (activeOrder) {
+              document.getElementById("page-tracking").classList.remove("hidden");
               document.getElementById("empty-state").classList.add("hidden");
 
-              document.getElementById("tracking-resi").innerText =
-                `LK-${String(shippedOrder.id).substring(0, 10).toUpperCase()}`;
+              const shortResi = String(activeOrder.id).substring(0, 10).toUpperCase();
+              document.getElementById("tracking-resi").innerText = `LK-${shortResi}`;
               document.getElementById("tracking-supplier").innerText =
-                shippedOrder.product.supplier
-                  ? shippedOrder.product.supplier.business_name
-                  : "Supplier";
+                activeOrder.product && activeOrder.product.supplier
+                  ? activeOrder.product.supplier.business_name
+                  : "Supplier Terverifikasi";
               document.getElementById("tracking-items").innerText =
-                `${shippedOrder.quantity}x ${shippedOrder.product.name}`;
+                activeOrder.product
+                  ? `${activeOrder.quantity}x ${activeOrder.product.name}`
+                  : `${activeOrder.quantity}x Barang`;
+
+              // Render Timeline & Status Highlight secara Dinamis!
+              renderStatusHighlight(activeOrder.status);
+              renderTimeline(activeOrder.status, activeOrder.created_at);
             } else {
               activeTrackingOrderId = null;
               document.getElementById("page-tracking").classList.add("hidden");
@@ -514,8 +450,135 @@
             document.getElementById("empty-state").classList.remove("hidden");
           }
         } catch (err) {
-          console.error("Gagal memuat pesanan", err);
+          console.error("Gagal memuat data pelacakan", err);
         }
+      }
+
+      function changeTrackedOrder(orderId) {
+        if (!orderId) return;
+        activeTrackingOrderId = orderId;
+        fetchTrackingData();
+      }
+
+      function renderStatusHighlight(status) {
+        const normalized = String(status || "").toLowerCase();
+        let titleText = "Menunggu pemrosesan";
+        let subText = "Tiket pengiriman siap diproses";
+        let iconClass = "truck";
+
+        if (["paid", "shipment_created"].includes(normalized)) {
+          titleText = "Request pengiriman diterima";
+          subText = "Kurir akan segera melakukan penjemputan barang";
+          iconClass = "clipboard-check";
+        } else if (normalized === "processing") {
+          titleText = "Paket diproses di Hub kurir";
+          subText = "Barang disortir dan siap untuk diberangkatkan";
+          iconClass = "package";
+        } else if (normalized === "shipped") {
+          titleText = "Kurir sedang menuju lokasi Anda";
+          subText = "Estimasi tiba hari ini";
+          iconClass = "truck";
+        } else if (normalized === "completed") {
+          titleText = "Paket berhasil diterima";
+          subText = "Terima kasih telah belanja di SupplierHub";
+          iconClass = "check-circle-2";
+        }
+
+        const highlightContainer = document.getElementById("status-highlight");
+        if (highlightContainer) {
+          highlightContainer.innerHTML = `
+                  <div class="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0 border border-emerald-100 relative z-10">
+                    <i data-lucide="${iconClass}" class="w-8 h-8 ${normalized !== 'completed' ? 'animate-pulse' : ''}"></i>
+                  </div>
+                  <div class="relative z-10">
+                    <p class="text-[10px] text-emerald-600 font-black uppercase tracking-widest mb-1.5 flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-500 ${normalized !== 'completed' ? 'animate-ping' : ''}"></span>
+                      Status Terkini
+                    </p>
+                    <h4 class="text-xl font-black text-slate-900 tracking-tight">${titleText}</h4>
+                    <p class="text-sm text-slate-500 mt-1">${subText}</p>
+                  </div>
+          `;
+          lucide.createIcons();
+        }
+      }
+
+      function renderTimeline(status, orderDate) {
+        const normalized = String(status || "").toLowerCase();
+        
+        const isStep1Active = ["paid", "shipment_created", "processing", "shipped", "completed"].includes(normalized);
+        const isStep2Active = ["processing", "shipped", "completed"].includes(normalized);
+        const isStep3Active = ["shipped", "completed"].includes(normalized);
+        const isStep4Active = ["completed"].includes(normalized);
+
+        const dateFormatted = new Date(orderDate).toLocaleDateString("id-ID", {
+          day: "numeric",
+          month: "short",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit"
+        }) + " WIB";
+
+        const timelineContainer = document.getElementById("timeline-vertical");
+        if (!timelineContainer) return;
+
+        timelineContainer.innerHTML = `
+                    <!-- Step 4 (Tiba di Tujuan) -->
+                    <div class="relative pl-14">
+                      <div class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4 ring-white ${isStep4Active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border-2 border-slate-200 text-slate-300'}">
+                        <i data-lucide="check" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h5 class="font-bold ${isStep4Active ? 'text-slate-900 font-black text-lg' : 'text-slate-400 text-lg'}">Tiba di Tujuan</h5>
+                        <p class="text-sm ${isStep4Active ? 'text-slate-600' : 'text-slate-400 italic'} mt-1">
+                          ${isStep4Active ? 'Pesanan berhasil diterima dan diselesaikan oleh UMKM' : 'Menunggu konfirmasi penerimaan oleh UMKM'}
+                        </p>
+                      </div>
+                    </div>
+
+                    <!-- Step 3 (Sedang Dikirim) -->
+                    <div class="relative pl-14">
+                      <div class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4 ring-white ${isStep3Active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isStep2Active ? 'bg-emerald-50 text-emerald-500 border-2 border-emerald-500' : 'bg-white border-2 border-slate-200 text-slate-300'}">
+                        <i data-lucide="truck" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h5 class="font-bold ${isStep3Active ? 'text-slate-900 font-black text-lg' : 'text-slate-400 text-lg'}">Sedang Dikirim</h5>
+                        <p class="text-sm ${isStep3Active ? 'text-slate-600' : 'text-slate-400 italic'} mt-1">
+                          ${isStep3Active ? 'Kurir LogistiKita sedang membawa paket menuju lokasi Anda' : 'Menunggu penjemputan oleh kurir'}
+                        </p>
+                        ${isStep3Active ? `<p class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block mt-2">${dateFormatted}</p>` : ''}
+                      </div>
+                    </div>
+
+                    <!-- Step 2 (Diproses di Hub LogistiKita) -->
+                    <div class="relative pl-14">
+                      <div class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4 ring-white ${isStep2Active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : isStep1Active ? 'bg-emerald-50 text-emerald-500 border-2 border-emerald-500' : 'bg-white border-2 border-slate-200 text-slate-300'}">
+                        <i data-lucide="package" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h5 class="font-bold ${isStep2Active ? 'text-slate-900 font-black text-lg' : 'text-slate-400 text-lg'}">Diproses di Hub Kurir</h5>
+                        <p class="text-sm ${isStep2Active ? 'text-slate-600' : 'text-slate-400 italic'} mt-1">
+                          ${isStep2Active ? 'Penyortiran barang dan persiapan pengiriman di Hub terdekat' : 'Pesanan sedang disiapkan oleh supplier'}
+                        </p>
+                        ${isStep2Active ? `<p class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block mt-2">${dateFormatted}</p>` : ''}
+                      </div>
+                    </div>
+
+                    <!-- Step 1 (Request Diterima) -->
+                    <div class="relative pl-14">
+                      <div class="absolute left-0 top-1 w-10 h-10 rounded-full flex items-center justify-center z-10 ring-4 ring-white ${isStep1Active ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-white border-2 border-slate-200 text-slate-300'}">
+                        <i data-lucide="clipboard-check" class="w-5 h-5"></i>
+                      </div>
+                      <div>
+                        <h5 class="font-bold ${isStep1Active ? 'text-slate-900 font-black text-lg' : 'text-slate-400 text-lg'}">Request Pengiriman Diterima</h5>
+                        <p class="text-sm ${isStep1Active ? 'text-slate-600' : 'text-slate-400 italic'} mt-1">
+                          ${isStep1Active ? 'Pembayaran lunas. Tiket pengiriman sukses dibuat di LogistiKita.' : 'Menunggu pelunasan pembayaran pesanan'}
+                        </p>
+                        ${isStep1Active ? `<p class="text-[10px] font-bold px-3 py-1.5 bg-slate-100 text-slate-600 rounded-lg inline-block mt-2">${dateFormatted}</p>` : ''}
+                      </div>
+                    </div>
+        `;
+        lucide.createIcons();
       }
 
       async function konfirmasiTerima() {

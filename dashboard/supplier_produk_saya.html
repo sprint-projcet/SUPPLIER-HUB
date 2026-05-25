@@ -200,7 +200,9 @@
               class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8"
             >
               <div>
-                <h1 class="text-2xl font-bold text-gray-900">Produk Saya</h1>
+                <h1 class="text-2xl font-bold text-gray-900">
+                  Produk Saya <span class="text-emerald-600 font-extrabold" data-supplier-name-display>Supplier</span>
+                </h1>
                 <p class="text-gray-500">
                   Kelola dan tambahkan bahan baku yang Anda jual
                 </p>
@@ -553,6 +555,11 @@
       }
 
       function openAddProductModal(productId = null) {
+        if (supplierProfile && supplierProfile.status !== "active") {
+          showToast("danger", "Akun supplier Anda belum aktif atau belum diverifikasi oleh admin.");
+          return;
+        }
+
         if (!productId && !getSupplierRegion()) {
           showToast("warning", regionRequiredMessage);
           return;
@@ -718,7 +725,15 @@
                         </div>
                         <div class="p-4">
                             <p class="text-xs text-emerald-600 font-semibold mb-1 uppercase tracking-wider">${SupplierDashboard.escapeHTML(p.category || "LAINNYA")}</p>
-                            <h3 class="font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-1">${SupplierDashboard.escapeHTML(p.name)}</h3>
+                            <h3 class="font-bold text-slate-900 mb-2 group-hover:text-emerald-600 transition-colors line-clamp-1">${(() => {
+                              let displayName = p.name || '';
+                              if (displayName.includes(" - ")) {
+                                const parts = displayName.split(" - ");
+                                const qty = parts.pop();
+                                displayName = `${parts.join(" - ")} (${qty})`;
+                              }
+                              return SupplierDashboard.escapeHTML(displayName);
+                            })()}</h3>
                             <div class="flex items-baseline gap-1 mb-3">
                                 <span class="text-lg font-bold text-slate-900">${formatRupiah(p.price)}</span>
                             </div>

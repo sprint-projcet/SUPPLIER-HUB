@@ -40,6 +40,9 @@ const SupplierDashboard = (() => {
     setText("#user-display-name", displayName);
     setText("[data-supplier-name]", displayName);
     setText("[data-supplier-email]", user.email || "-");
+    document.querySelectorAll("[data-supplier-name-display]").forEach((element) => {
+      element.textContent = displayName;
+    });
   }
 
   function setCurrentDate() {
@@ -401,6 +404,7 @@ const SupplierDashboard = (() => {
     getOrders,
     getProducts,
     getProfile,
+    getStats,
     getNotifications,
     getUnreadNotifications,
     initPage,

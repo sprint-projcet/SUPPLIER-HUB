@@ -86,7 +86,7 @@
       </div>
       <!-- Sisi Kanan: Keranjang & Profil -->
       <div class="flex items-center gap-4">
-        <button onclick="toggleCart()" class="relative p-2.5 text-slate-600 bg-slate-50 border border-slate-100 rounded-full hover:bg-white hover:shadow-md transition-all">
+        <button id="cartBtn" onclick="toggleCart()" class="relative p-2.5 text-slate-600 bg-slate-50 border border-slate-100 rounded-full hover:bg-white hover:shadow-md transition-all">
           <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
           </svg>
@@ -363,23 +363,31 @@
         if (res.ok) {
           const payload = await res.json();
           const data = Array.isArray(payload) ? payload : payload.data || [];
-          products = data.map(p => ({
-            id: String(p.id),
-            title: p.name,
-            price: p.price,
-            category: p.category || 'Lainnya',
-            supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
-            supplier_id: p.supplier_id,
-            rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
-            reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
-            badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
-            isAvailable: p.stock > 0,
-            img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
-            desc: p.description || 'Tidak ada deskripsi.',
-            stockValue: Number(p.stock) || 0,
-            stock: p.stock + ' Unit',
-            origin: p.location || p.supplier?.region || 'Indonesia'
-          }));
+          products = data.map(p => {
+            let titleName = p.name || '';
+            if (titleName.includes(" - ")) {
+              const parts = titleName.split(" - ");
+              const qty = parts.pop();
+              titleName = `${parts.join(" - ")} (${qty})`;
+            }
+            return {
+              id: String(p.id),
+              title: titleName,
+              price: p.price,
+              category: p.category || 'Lainnya',
+              supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
+              supplier_id: p.supplier_id,
+              rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
+              reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
+              badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
+              isAvailable: p.stock > 0,
+              img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
+              desc: p.description || 'Tidak ada deskripsi.',
+              stockValue: Number(p.stock) || 0,
+              stock: p.stock + ' Unit',
+              origin: p.location || p.supplier?.region || 'Indonesia'
+            };
+          });
           initCategories();
           renderProducts();
         } else {
@@ -469,7 +477,7 @@
                     <p class="text-slate-900 font-black text-xl">${formatRupiah(p.price)}</p>
                 </div>
                 <button 
-                    onclick="addToCart('${p.id}'); event.stopPropagation();" 
+                    onclick="addToCart('${p.id}', event); event.stopPropagation();" 
                     ${isOutOfStock ? 'disabled' : ''}
                     class="w-12 h-12 rounded-2xl transition-all shadow-sm flex items-center justify-center 
                     ${isOutOfStock ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-100'}">
@@ -503,7 +511,7 @@
         const addBtn = document.getElementById('modalAddBtn');
         addBtn.disabled = isOutOfStock;
         addBtn.innerText = isOutOfStock ? "Maaf, Stok Habis" : "Tambah ke Keranjang";
-        addBtn.onclick = () => { addToCart(p.id); closeProductModal(); };
+        addBtn.onclick = (event) => { addToCart(p.id, event); closeProductModal(); };
 
         document.getElementById('modalAvailabilityOverlay').classList.toggle('hidden', !isOutOfStock);
 
@@ -541,7 +549,67 @@
         renderCart(); 
     }
     
-    function addToCart(productId) {
+    function animateFlyToCart(event) {
+      if (!event) return;
+      const target = event.currentTarget || event.target;
+      if (!target) return;
+
+      const cartBtn = document.getElementById('cartBtn');
+      if (!cartBtn) return;
+
+      // Dapatkan posisi tombol asal
+      const rect = target.getBoundingClientRect();
+      const startX = rect.left + rect.width / 2;
+      const startY = rect.top + rect.height / 2;
+
+      // Dapatkan posisi keranjang tujuan
+      const cartRect = cartBtn.getBoundingClientRect();
+      const endX = cartRect.left + cartRect.width / 2;
+      const endY = cartRect.top + cartRect.height / 2;
+
+      // Buat bulatan terbang
+      const flying = document.createElement('div');
+      flying.style.position = 'fixed';
+      flying.style.left = `${startX - 12}px`;
+      flying.style.top = `${startY - 12}px`;
+      flying.style.width = '24px';
+      flying.style.height = '24px';
+      flying.style.borderRadius = '50%';
+      flying.style.backgroundColor = '#16a34a'; // bg-green-brand
+      flying.style.zIndex = '9999';
+      flying.style.pointerEvents = 'none';
+      flying.style.boxShadow = '0 10px 15px -3px rgba(22, 163, 74, 0.5), 0 4px 6px -2px rgba(22, 163, 74, 0.3)';
+      flying.style.transition = 'all 0.8s cubic-bezier(0.25, 1, 0.50, 1)';
+
+      document.body.appendChild(flying);
+
+      // Trigger transisi
+      requestAnimationFrame(() => {
+        flying.style.left = `${endX - 12}px`;
+        flying.style.top = `${endY - 12}px`;
+        flying.style.transform = 'scale(0.3)';
+        flying.style.opacity = '0.2';
+      });
+
+      // Hapus setelah selesai dan berikan efek bounce
+      setTimeout(() => {
+        flying.remove();
+        cartBtn.classList.add('scale-110');
+        // Tambahkan feedback warna hijau emerald lembut pada background keranjang belanja sementara
+        const originalBg = cartBtn.style.backgroundColor;
+        const originalShadow = cartBtn.style.boxShadow;
+        cartBtn.style.backgroundColor = '#dcfce7'; // green-100
+        cartBtn.style.boxShadow = '0 10px 15px -3px rgba(22, 163, 74, 0.2)';
+        
+        setTimeout(() => {
+          cartBtn.classList.remove('scale-110');
+          cartBtn.style.backgroundColor = originalBg;
+          cartBtn.style.boxShadow = originalShadow;
+        }, 300);
+      }, 800);
+    }
+
+    function addToCart(productId, event = null) {
       const p = products.find(x => x.id === productId);
       if (!p.isAvailable) return;
       const exists = cart.find(x => x.id === productId);
@@ -555,6 +623,11 @@
         cart.push({...p, qty: 1});
       }
       updateBadge();
+      
+      if (event) {
+        animateFlyToCart(event);
+      }
+      
       showToast(`${p.title} ditambahkan`);
     }
 

@@ -81,7 +81,7 @@ func GetUserOrders(c *gin.Context) {
 	}
 
 	var orders []models.Order
-	query := config.DB.Preload("Product").Preload("Product.Supplier").Where("umkm_id = ?", umkmID)
+	query := config.DB.Preload("Product").Preload("Product.Supplier").Preload("Payment").Where("umkm_id = ?", umkmID)
 
 	if status := c.Query("status"); status != "" && status != "all" {
 		query = query.Where("status = ?", status)

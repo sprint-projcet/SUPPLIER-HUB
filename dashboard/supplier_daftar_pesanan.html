@@ -1,4 +1,4 @@
-﻿<!doctype html>
+<!doctype html>
 <html lang="id">
   <head>
     <meta charset="UTF-8" />
@@ -198,7 +198,7 @@
           >
             <div>
               <h2 class="text-2xl font-black text-slate-900 tracking-tight">
-                Daftar Pesanan
+                Daftar Pesanan <span class="text-emerald-600 font-extrabold" data-supplier-name-display>Supplier</span>
               </h2>
               <p class="text-slate-500 text-sm">
                 Kelola semua pesanan masuk dari UMKM.
@@ -349,9 +349,19 @@
         tbody.innerHTML = orders
           .map((order) => {
             const meta = SupplierDashboard.statusMeta(order.status);
-            const actionButton = meta.nextStatus
-              ? `<button onclick="changeOrderStatus('${SupplierDashboard.escapeHTML(order.id)}', '${meta.nextStatus}')" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm">${meta.actionLabel}</button>`
-              : `<button onclick="showOrderDetail('${SupplierDashboard.escapeHTML(order.id)}')" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-all shadow-sm">Detail</button>`;
+            let actionButton = `<button onclick="showOrderDetail('${SupplierDashboard.escapeHTML(order.id)}')" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-all shadow-sm">Detail</button>`;
+            if (meta.nextStatus) {
+              if (meta.nextStatus === 'confirm') {
+                actionButton = `
+                  <div class="flex items-center justify-center gap-1.5">
+                    <button onclick="changeOrderStatus('${SupplierDashboard.escapeHTML(order.id)}', 'confirm')" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm">Terima</button>
+                    <button onclick="changeOrderStatus('${SupplierDashboard.escapeHTML(order.id)}', 'reject')" class="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold rounded-lg transition-all shadow-sm">Tolak</button>
+                  </div>
+                `;
+              } else {
+                actionButton = `<button onclick="changeOrderStatus('${SupplierDashboard.escapeHTML(order.id)}', '${meta.nextStatus}')" class="px-3 py-1.5 bg-emerald-600 text-white text-xs font-bold rounded-lg hover:bg-emerald-700 transition-all shadow-sm">${meta.actionLabel}</button>`;
+              }
+            }
 
             return `
               <tr class="hover:bg-slate-50 transition-colors">

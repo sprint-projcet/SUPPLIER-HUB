@@ -196,7 +196,7 @@
           >
             <div>
               <h2 class="text-2xl font-black text-slate-900 tracking-tight">
-                Pesanan Saya
+                Pesanan Saya <span class="text-emerald-600 font-extrabold" data-umkm-name-display>UMKM</span>
               </h2>
               <p class="text-slate-500 text-sm">
                 Pantau status pesanan bahan baku Anda.
@@ -547,6 +547,15 @@
                     </div>
                 `;
         }
+        if (status === "payment_pending" && order.payment) {
+          const ref = jsArg(order.payment.payment_reference);
+          return `
+                    <div class="flex flex-wrap gap-2 mt-2 justify-end">
+                        <button onclick="cancelOrder(${orderID})" class="px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors">Batalkan</button>
+                        <button onclick="simulatePayment(${ref}, ${orderID})" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20">Bayar (Simulasi)</button>
+                    </div>
+                `;
+        }
         if (["shipped", "shipment_created", "paid"].includes(status)) {
           return `
                     <div class="flex flex-wrap gap-2 mt-2 justify-end">
@@ -558,6 +567,36 @@
         return `
                         <a href="umkm_katalog.html" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
             `;
+      }
+
+      async function simulatePayment(paymentReference, orderID) {
+        if (!confirm("Simulasikan pelunasan pembayaran untuk pesanan ini di SmartBank?")) return;
+
+        if (typeof showToast === "function") showToast("info", "Memproses simulasi pembayaran...");
+
+        try {
+          const res = await fetch(buildApiUrl("/smartbank/payment/simulate-callback"), {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+              payment_reference: paymentReference,
+              order_id: orderID,
+              status: "success"
+            })
+          });
+
+          const result = await res.json();
+          if (res.ok && result.success) {
+            alert("Simulasi pembayaran sukses! Status pesanan Anda telah diperbarui menjadi Dibayar & Pengiriman telah dibuat.");
+            fetchOrders();
+          } else {
+            throw new Error(result.error || "Gagal memproses simulasi callback");
+          }
+        } catch (err) {
+          alert("Gagal melakukan simulasi: " + err.message);
+        }
       }
 
       function renderOrders(orders) {
@@ -585,6 +624,22 @@
             .substring(0, 8)
             .toUpperCase();
 
+          let paymentDetailsHtml = "";
+          if (normalizeStatus(order.status) === "payment_pending" && order.payment) {
+            paymentDetailsHtml = `
+              <div class="mt-3 p-3 bg-slate-50 rounded-2xl border border-slate-100 flex flex-col gap-1.5 text-xs text-slate-600">
+                <div class="flex justify-between">
+                  <span class="font-medium text-slate-400">Virtual Account (SmartBank):</span>
+                  <span class="font-bold font-mono text-slate-800 tracking-wider">${escapeHTML(order.payment.virtual_account || "-")}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="font-medium text-slate-400">Ref Pembayaran:</span>
+                  <span class="font-semibold text-slate-800">${escapeHTML(order.payment.payment_reference || "-")}</span>
+                </div>
+              </div>
+            `;
+          }
+
           container.innerHTML += `
                     <div class="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm transition-all hover:shadow-md">
                         <div class="flex justify-between items-center mb-4 pb-4 border-b border-slate-50">
@@ -603,6 +658,7 @@
                                 <p class="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">ORD-${shortId}</p>
                                 <h4 class="font-bold text-slate-900">${productName}</h4>
                                 <p class="text-sm text-slate-500 mt-1">${Number(order.quantity || 0)} x ${basePriceFormatted}</p>
+                                ${paymentDetailsHtml}
                             </div>
                             <div class="text-left md:text-right flex flex-col justify-between md:items-end">
                                 <div>
