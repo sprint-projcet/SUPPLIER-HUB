@@ -5,11 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Supplier-Hub | Autentikasi & Akses</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwindcss.config = {
+        darkMode: 'class'
+      }
+    </script>
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
     <!-- SweetAlert2 CDN -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets/js/auth.js"></script>
+    <script src="../assets/js/darkmode.js"></script>
+    <link rel="stylesheet" href="../assets/css/darkmode.css">
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
     <style>
       @import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap");
 
@@ -26,10 +37,73 @@
         background-color: rgba(2, 195, 154, 0.1);
         color: #02c39a;
       }
+
+      :root.dark body {
+        background-color: #111827;
+        color: #f3f4f6;
+      }
+
+      :root.dark .bg-white {
+        background-color: #1f2937;
+      }
+
+      :root.dark .bg-gray-50 {
+        background-color: #111827;
+      }
+
+      :root.dark .text-gray-800 {
+        color: #f3f4f6;
+      }
+
+      :root.dark .text-gray-900 {
+        color: #f3f4f6;
+      }
+
+      :root.dark .text-gray-500 {
+        color: #9ca3af;
+      }
+
+      :root.dark .text-gray-700 {
+        color: #d1d5db;
+      }
+
+      :root.dark .border-gray-100 {
+        border-color: #374151;
+      }
+
+      :root.dark .border-gray-300 {
+        border-color: #4b5563;
+      }
+
+      :root.dark input {
+        background-color: #374151;
+        color: #f3f4f6;
+      }
+
+      :root.dark select {
+        background-color: #374151;
+        color: #f3f4f6;
+      }
+
+      :root.dark textarea {
+        background-color: #374151;
+        color: #f3f4f6;
+      }
     </style>
   </head>
 
   <body class="bg-gray-50 text-gray-800">
+    <!-- Theme Toggle Button -->
+    <div class="fixed top-4 right-4 z-50">
+      <button 
+        onclick="DarkModeToggle.toggle()"
+        class="theme-toggle-btn"
+        title="Toggle Dark Mode"
+      >
+        <i class="fas fa-moon"></i>
+      </button>
+    </div>
+
     <!-- Konten Utama (Tanpa Navbar) -->
     <main
       class="max-w-6xl mx-auto p-4 flex justify-center items-center min-h-screen py-12"

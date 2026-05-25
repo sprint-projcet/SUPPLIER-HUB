@@ -6,7 +6,14 @@
     <link rel="shortcut icon" href="assets/img/logo.png" type="image/x-icon" />
     <title>Supplier Hub - Koneksi Bisnis Modern</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwindcss.config = {
+        darkMode: 'class'
+      }
+    </script>
     <script src="assets/js/auth.js"></script>
+    <script src="assets/js/darkmode.js"></script>
+    <link rel="stylesheet" href="assets/css/darkmode.css">
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
@@ -27,6 +34,32 @@
         background: rgba(255, 255, 255, 0.85);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+      }
+
+      :root.dark .glass-effect {
+        background: rgba(17, 24, 39, 0.85);
+      }
+
+      :root.dark body {
+        background-color: #111827;
+        color: #f3f4f6;
+      }
+
+      :root.dark #main-nav {
+        background-color: #1f2937;
+        border-bottom-color: #374151;
+      }
+
+      :root.dark .text-slate-600 {
+        color: #d1d5db;
+      }
+
+      :root.dark .text-slate-800 {
+        color: #f3f4f6;
+      }
+
+      :root.dark .bg-white {
+        background-color: #1f2937;
       }
 
       /* Animations */
@@ -194,6 +227,13 @@
 
           <!-- Auth Buttons -->
           <div class="hidden lg:flex items-center gap-4">
+            <button 
+              onclick="DarkModeToggle.toggle()"
+              class="theme-toggle-btn"
+              title="Toggle Dark Mode"
+            >
+              <i class="fas fa-moon"></i>
+            </button>
             <button
               data-auth-guest
               onclick="goToLogin()"
@@ -261,6 +301,13 @@
             >Bantuan</a
           >
           <div class="flex flex-col gap-3 pt-2">
+            <button
+              onclick="DarkModeToggle.toggle()"
+              class="w-full theme-toggle-btn flex justify-center"
+              title="Toggle Dark Mode"
+            >
+              <i class="fas fa-moon"></i>
+            </button>
             <button
               data-auth-guest
               onclick="goToLogin()"

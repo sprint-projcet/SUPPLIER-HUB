@@ -6,7 +6,15 @@
   <link rel="shortcut icon" href="../assets/img/logo.png" type="image/x-icon" />
   <title>Katalog Bahan Baku - Supplier Hub</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwindcss.config = {
+      darkMode: 'class'
+    }
+  </script>
   <script src="../assets/js/auth.js"></script>
+  <script src="../assets/js/darkmode.js"></script>
+  <link rel="stylesheet" href="../assets/css/darkmode.css">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
   <style>
     body {
@@ -71,6 +79,57 @@
     /* Hilangkan scrollbar untuk kontainer kategori */
     .no-scrollbar::-webkit-scrollbar { display: none; }
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+    :root.dark body {
+      background-color: #111827;
+      color: #f3f4f6;
+    }
+
+    :root.dark .glass-effect {
+      background: rgba(17, 24, 39, 0.85);
+      border-bottom-color: #374151;
+    }
+
+    :root.dark .bg-slate-50 {
+      background-color: #374151;
+    }
+
+    :root.dark .bg-white {
+      background-color: #1f2937;
+    }
+
+    :root.dark .text-slate-800 {
+      color: #f3f4f6;
+    }
+
+    :root.dark .text-slate-600 {
+      color: #d1d5db;
+    }
+
+    :root.dark .border-green-100 {
+      border-color: #374151;
+    }
+
+    :root.dark .border-slate-100 {
+      border-color: #374151;
+    }
+
+    :root.dark input {
+      background-color: #374151;
+      color: #f3f4f6;
+    }
+
+    :root.dark input::placeholder {
+      color: #9ca3af;
+    }
+
+    :root.dark .card-hover {
+      background-color: #1f2937;
+    }
+
+    :root.dark .text-slate-900 {
+      color: #f3f4f6;
+    }
   </style>
 </head>
 <body class="text-slate-800 antialiased">

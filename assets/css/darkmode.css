@@ -1,0 +1,85 @@
+/* Dark Mode Styles */
+
+/* Moon Icon Animation */
+.theme-toggle-btn {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background-color: #f3f4f6;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.3s ease;
+  color: #374151;
+}
+
+.theme-toggle-btn:hover {
+  background-color: #e5e7eb;
+  transform: scale(1.05);
+}
+
+.theme-toggle-btn i {
+  font-size: 24px;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.theme-toggle-btn:hover i {
+  transform: rotate(20deg);
+}
+
+/* Dark mode theme toggle button */
+:root.dark .theme-toggle-btn {
+  background-color: #374151;
+  color: #fbbf24;
+}
+
+:root.dark .theme-toggle-btn:hover {
+  background-color: #4b5563;
+}
+
+/* Smooth transitions for dark mode */
+:root.dark {
+  color-scheme: dark;
+}
+
+:root.dark * {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Tailwind overrides for dark mode */
+:root.dark {
+  /* Background colors */
+  --color-bg-primary: #111827;
+  --color-bg-secondary: #1f2937;
+  --color-bg-tertiary: #374151;
+  
+  /* Text colors */
+  --color-text-primary: #f3f4f6;
+  --color-text-secondary: #d1d5db;
+}
+
+/* Glass effect in dark mode */
+:root.dark .glass-effect {
+  background: rgba(17, 24, 39, 0.85);
+}
+
+/* Scrollbar dark mode */
+:root.dark .custom-scrollbar::-webkit-scrollbar-track {
+  background: #1f2937;
+}
+
+:root.dark .custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+:root.dark .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
+}
+
+/* Border colors for dark mode */
+:root.dark {
+  --color-border: #4b5563;
+}
