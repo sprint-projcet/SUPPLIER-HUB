@@ -163,50 +163,59 @@ const AdminDashboard = (() => {
     const panel = document.createElement("div");
     panel.id = "admin-notification-panel";
     panel.className =
-      "fixed right-5 top-24 z-[120] w-[calc(100%-2.5rem)] max-w-md space-y-3";
+      "fixed left-1/2 transform -translate-x-1/2 top-24 z-[120] w-[calc(100%-2rem)] max-w-sm space-y-2";
 
-    notifications.slice(0, 5).forEach((notification) => {
+    notifications.slice(0, 5).forEach((notification, index) => {
       const card = document.createElement("div");
       card.className =
-        "rounded-2xl border border-emerald-100 bg-white p-4 shadow-2xl shadow-slate-900/10";
+        "notification-toast flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-slate-200 shadow-md backdrop-blur-sm animate-slide-in";
+      card.style.animationDelay = `${index * 100}ms`;
 
       const title = escapeHTML(notification.title || "Notifikasi Admin");
       const message = escapeHTML(notification.message || "-");
       card.innerHTML = `
-        <div class="flex items-start gap-3">
-          <div class="mt-1 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-            <i data-lucide="bell-ring" class="h-5 w-5"></i>
-          </div>
-          <div class="min-w-0 flex-1">
-            <p class="text-sm font-black text-slate-900">${title}</p>
-            <p class="mt-1 text-sm leading-5 text-slate-600">${message}</p>
-            <div class="mt-3 flex flex-wrap gap-2">
-              <button type="button" data-action="open-stock" class="rounded-lg bg-slate-900 px-3 py-2 text-xs font-bold text-white hover:bg-slate-800">
-                Buka Kontrol Stok
-              </button>
-              <button type="button" data-action="read" class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-bold text-slate-600 hover:bg-slate-50">
-                Tandai Dibaca
-              </button>
-            </div>
-          </div>
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+          <i data-lucide="check-circle" class="h-4 w-4"></i>
         </div>
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-semibold text-slate-900">${title}</p>
+          <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${message}</p>
+        </div>
+        <button type="button" data-action="close" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
+          <i data-lucide="x" class="h-4 w-4"></i>
+        </button>
       `;
 
-      card.querySelector('[data-action="open-stock"]').addEventListener("click", () => {
+      card.querySelector('[data-action="close"]').addEventListener("click", async () => {
+        card.classList.add("animate-slide-out");
+        setTimeout(() => {
+          card.remove();
+          if (!panel.children.length) panel.remove();
+        }, 300);
+        try {
+          await markNotificationRead(notification.id);
+        } catch (error) {
+          console.error("Gagal menandai notifikasi", error);
+        }
+      });
+
+      card.addEventListener("click", (e) => {
+        if (e.target.closest('[data-action="close"]')) return;
         const query = notification.source_id
           ? `?q=${encodeURIComponent(notification.source_id)}`
           : "";
         window.location.href = `admin_kontrol_stok.html${query}`;
       });
-      card.querySelector('[data-action="read"]').addEventListener("click", async () => {
-        try {
-          await markNotificationRead(notification.id);
+
+      const autoHideTimer = setTimeout(() => {
+        card.classList.add("animate-slide-out");
+        setTimeout(() => {
           card.remove();
           if (!panel.children.length) panel.remove();
-        } catch (error) {
-          notify("danger", error.message || "Gagal menandai notifikasi admin");
-        }
-      });
+        }, 300);
+      }, 5000);
+
+      card.addEventListener("mouseenter", () => clearTimeout(autoHideTimer));
 
       panel.appendChild(card);
     });

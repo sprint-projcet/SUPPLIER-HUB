@@ -57,11 +57,11 @@ function ensureToastContainer() {
   let container = document.getElementById("toast-container");
   if (container) return container;
 
-  // Wadah induk global untuk stacking toast di pojok kanan atas.
+  // Wadah induk global untuk stacking toast di tengah atas agar tidak menutup area aksi kanan.
   container = document.createElement("div");
   container.id = "toast-container";
   container.className =
-    "fixed right-4 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm flex-col gap-3 pointer-events-none sm:right-6 sm:top-6";
+    "fixed left-1/2 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-3 pointer-events-none sm:top-6";
   document.body.appendChild(container);
   return container;
 }
@@ -78,8 +78,8 @@ function normalizeToast(type, message) {
 }
 
 function removeToast(toast) {
-  toast.classList.add("translate-x-8", "opacity-0", "scale-95");
-  toast.classList.remove("translate-x-0", "opacity-100", "scale-100");
+  toast.classList.add("translate-y-3", "opacity-0", "scale-95");
+  toast.classList.remove("translate-y-0", "opacity-100", "scale-100");
   setTimeout(() => toast.remove(), 320);
 }
 
@@ -93,7 +93,7 @@ function showToast(type, message) {
   toast.className = [
     "pointer-events-auto relative overflow-hidden rounded-xl border",
     "bg-white/80 p-4 pr-10 shadow-xl shadow-slate-900/10 backdrop-blur-md",
-    "transition-all duration-300 ease-out translate-x-8 opacity-0 scale-95",
+    "transition-all duration-300 ease-out translate-y-3 opacity-0 scale-95",
     config.accent,
   ].join(" ");
 
@@ -139,10 +139,10 @@ function showToast(type, message) {
   toast.append(content, closeButton, progress);
   container.appendChild(toast);
 
-  // Animasi masuk: toast meluncur dari kanan lalu menjadi solid.
+  // Animasi masuk: toast turun halus dari atas lalu menjadi solid.
   requestAnimationFrame(() => {
-    toast.classList.remove("translate-x-8", "opacity-0", "scale-95");
-    toast.classList.add("translate-x-0", "opacity-100", "scale-100");
+    toast.classList.remove("translate-y-3", "opacity-0", "scale-95");
+    toast.classList.add("translate-y-0", "opacity-100", "scale-100");
     progress.style.width = "0%";
   });
 
