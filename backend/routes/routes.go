@@ -91,6 +91,8 @@ func SetupRoutes(router *gin.Engine) {
 	userGroup := api.Group("/user")
 	userGroup.Use(middlewares.RequireRole("user"))
 	{
+		userGroup.GET("/profile", controllers.GetUserProfile)
+		userGroup.PUT("/profile", controllers.UpdateUserProfile)
 		userGroup.GET("/stats", controllers.GetUserStats)
 		userGroup.GET("/orders", controllers.GetUserOrders)
 		// Produk katalog (umkm viewing products)

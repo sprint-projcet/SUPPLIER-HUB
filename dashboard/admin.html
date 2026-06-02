@@ -17,8 +17,6 @@
       rel="stylesheet"
     />
     <script src="https://unpkg.com/lucide@latest"></script>
-    <!-- SweetAlert2 CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
@@ -690,22 +688,6 @@
                 console.error("Gagal memuat dashboard admin logs", err);
               })
             ]);
-
-            // Tampilkan Popup Notification menggunakan SweetAlert2
-            if (!sessionStorage.getItem("adminWelcomeShown")) {
-              Swal.fire({
-                icon: "success",
-                title: "Login Berhasil!",
-                text: "Selamat! Anda berhasil masuk ke dashboard admin.",
-                showConfirmButton: false,
-                timer: 3000,
-                timerProgressBar: true,
-                width: "450px",
-                padding: "2em",
-                backdrop: "rgba(0,0,0,0.4)",
-              });
-              sessionStorage.setItem("adminWelcomeShown", "true");
-            }
           },
         });
       });

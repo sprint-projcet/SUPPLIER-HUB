@@ -235,6 +235,8 @@ func Login(c *gin.Context) {
 			"address":       user.Address,
 			"category":      user.Category,
 			"region":        user.Region,
+			"pic_name":      user.PICName,
+			"phone":         user.Phone,
 			"status":        user.Status,
 		},
 	})
@@ -403,6 +405,12 @@ func GoogleCallback(c *gin.Context) {
 			"id":            user.ID,
 			"business_name": user.BusinessName,
 			"email":         user.Email,
+			"address":       user.Address,
+			"category":      user.Category,
+			"region":        user.Region,
+			"pic_name":      user.PICName,
+			"phone":         user.Phone,
+			"status":        user.Status,
 		},
 	})
 }

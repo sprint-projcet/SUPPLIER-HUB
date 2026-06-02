@@ -1,8 +1,10 @@
 package config
 
 import (
+	"database/sql"
 	"log"
 	"os"
+	"time"
 
 	"supplierhub-backend/models"
 
@@ -38,6 +40,19 @@ func ConnectDatabase() {
 		log.Fatalf("Gagal terhubung ke database MySQL: %v", err)
 	}
 
+	sqlDB, err := database.DB()
+	if err != nil {
+		log.Fatalf("Gagal menyiapkan koneksi database MySQL: %v", err)
+	}
+
+	sqlDB.SetMaxIdleConns(10)
+	sqlDB.SetMaxOpenConns(25)
+	sqlDB.SetConnMaxLifetime(30 * time.Minute)
+
+	if err := pingDatabase(sqlDB); err != nil {
+		log.Fatalf("Gagal memverifikasi koneksi database MySQL: %v. Pastikan MySQL/XAMPP berjalan di 127.0.0.1:3306 dan database supplierhub sudah ada.", err)
+	}
+
 	log.Println("Database MySQL Terhubung!")
 
 	// Menjalankan Auto Migration (Menyesuaikan skema tabel ke Data Models secara otomatis)
@@ -63,6 +78,17 @@ func ConnectDatabase() {
 
 	// SEEDER: Membuat akun Admin default jika belum ada
 	seedAdmin()
+}
+
+func pingDatabase(sqlDB *sql.DB) error {
+	var err error
+	for attempt := 1; attempt <= 5; attempt++ {
+		if err = sqlDB.Ping(); err == nil {
+			return nil
+		}
+		time.Sleep(time.Duration(attempt) * time.Second)
+	}
+	return err
 }
 
 func seedAdmin() {

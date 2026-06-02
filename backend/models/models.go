@@ -25,6 +25,8 @@ type User struct {
 	Address      string    `gorm:"type:text" json:"address"`
 	Category     string    `gorm:"type:varchar(100)" json:"category"`                // Untuk Kategori Bahan Supplier
 	Region       string    `gorm:"type:varchar(100)" json:"region"`                  // Untuk Wilayah Supply
+	PICName      string    `gorm:"type:varchar(255)" json:"pic_name"`                // Penanggung jawab akun bisnis
+	Phone        string    `gorm:"type:varchar(30)" json:"phone"`                    // Nomor kontak utama
 	DocumentURL  string    `gorm:"type:varchar(255)" json:"document_url"`            // Opsional untuk UMKM, Wajib bagi Supplier
 	Status       string    `gorm:"type:varchar(20);default:'pending'" json:"status"` // pending, active, suspended
 	CreatedAt    time.Time `json:"created_at"`

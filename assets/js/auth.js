@@ -10,7 +10,7 @@ function buildApiUrl(path) {
   return `${API_BASE_URL}${normalizedPath}`;
 }
 
-const SUPPLIER_HUB_TOAST_DURATION = 3500;
+const SUPPLIER_HUB_TOAST_DURATION = 2500;
 const SUPPLIER_HUB_TOAST_QUEUE_KEY = "supplierhub_pending_toast";
 
 const toastMessages = {
@@ -57,11 +57,11 @@ function ensureToastContainer() {
   let container = document.getElementById("toast-container");
   if (container) return container;
 
-  // Wadah induk global untuk stacking toast di tengah atas agar tidak menutup area aksi kanan.
+  // Wadah induk global untuk stacking toast di tengah atas agar konsisten di semua halaman.
   container = document.createElement("div");
   container.id = "toast-container";
   container.className =
-    "fixed left-1/2 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col gap-3 pointer-events-none sm:top-6";
+    "fixed left-1/2 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col items-stretch gap-3 pointer-events-none sm:top-6";
   document.body.appendChild(container);
   return container;
 }
@@ -78,6 +78,8 @@ function normalizeToast(type, message) {
 }
 
 function removeToast(toast) {
+  if (!toast || toast.dataset.removing === "true") return;
+  toast.dataset.removing = "true";
   toast.classList.add("translate-y-3", "opacity-0", "scale-95");
   toast.classList.remove("translate-y-0", "opacity-100", "scale-100");
   setTimeout(() => toast.remove(), 320);
@@ -146,14 +148,25 @@ function showToast(type, message) {
     progress.style.width = "0%";
   });
 
-  const dismissTimer = setTimeout(
-    () => removeToast(toast),
-    SUPPLIER_HUB_TOAST_DURATION,
-  );
-  closeButton.addEventListener("click", () => {
+  let dismissTimer;
+  const dismiss = () => {
     clearTimeout(dismissTimer);
+    document.removeEventListener("pointerdown", handleOutsideClick, true);
     removeToast(toast);
+  };
+  const handleOutsideClick = (event) => {
+    if (!toast.contains(event.target)) dismiss();
+  };
+
+  dismissTimer = setTimeout(dismiss, SUPPLIER_HUB_TOAST_DURATION);
+  closeButton.addEventListener("click", (event) => {
+    event.stopPropagation();
+    dismiss();
   });
+  toast.addEventListener("pointerdown", (event) => event.stopPropagation());
+  setTimeout(() => {
+    document.addEventListener("pointerdown", handleOutsideClick, true);
+  }, 0);
 
   return toast;
 }
@@ -335,6 +348,8 @@ function createUserSession(data, fallbackRole = "user") {
     address: user.address || "",
     category: user.category || "",
     region: user.region || "",
+    pic_name: user.pic_name || "",
+    phone: user.phone || "",
     status: user.status || "",
     lastLogin: new Date().toISOString(),
   };

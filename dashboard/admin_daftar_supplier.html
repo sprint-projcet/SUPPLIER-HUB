@@ -370,6 +370,7 @@
 
       let supplierSearchTimeout;
       let adminAuthToken = "";
+      let activeSupplierConfirmation = null;
 
       function escapeHTML(value) {
         return String(value ?? "")
@@ -498,6 +499,118 @@
         if (window.lucide) lucide.createIcons();
       }
 
+      function askSupplierActionConfirmation(message, options = {}) {
+        const toneMap = {
+          success: {
+            icon: "shield-check",
+            iconClass: "bg-emerald-50 text-emerald-600",
+            buttonClass: "bg-emerald-600 text-white hover:bg-emerald-700",
+          },
+          danger: {
+            icon: "ban",
+            iconClass: "bg-red-50 text-red-600",
+            buttonClass: "bg-red-600 text-white hover:bg-red-700",
+          },
+        };
+        const meta = toneMap[options.tone] || toneMap.success;
+        const confirmLabel = options.confirmLabel || "Lanjutkan";
+
+        if (activeSupplierConfirmation) {
+          activeSupplierConfirmation(false);
+        }
+
+        return new Promise((resolve) => {
+          const panel = document.createElement("div");
+	          panel.id = "supplier-action-confirmation";
+	          panel.className = [
+	            "fixed left-1/2 top-4 z-[9999] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 sm:top-6",
+	            "rounded-lg border border-slate-200 bg-white/95 p-4 shadow-xl shadow-slate-900/10 backdrop-blur-md",
+	            "transition-all duration-200 ease-out translate-y-2 opacity-0 scale-95",
+	          ].join(" ");
+          panel.innerHTML = `
+            <div class="flex items-start gap-3">
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${meta.iconClass}">
+                <i data-lucide="${meta.icon}" class="h-5 w-5"></i>
+              </div>
+              <div class="min-w-0 flex-1">
+                <p class="text-sm font-black text-slate-900">Konfirmasi Aksi</p>
+                <p class="mt-1 text-sm leading-5 text-slate-600">${escapeHTML(message)}</p>
+                <div class="mt-3 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    data-action="cancel"
+                    class="rounded-lg border border-slate-200 px-3 py-2 text-xs font-black text-slate-600 transition-colors hover:bg-slate-50"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="button"
+                    data-action="confirm"
+                    class="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-black transition-colors ${meta.buttonClass}"
+                  >
+                    <i data-lucide="check" class="h-3.5 w-3.5"></i>
+                    ${escapeHTML(confirmLabel)}
+                  </button>
+                </div>
+              </div>
+            </div>
+          `;
+
+          let isSettled = false;
+          let autoDismissTimer;
+
+          function cleanup(result) {
+            if (isSettled) return;
+            isSettled = true;
+            if (activeSupplierConfirmation === cleanup) {
+              activeSupplierConfirmation = null;
+            }
+            clearTimeout(autoDismissTimer);
+            document.removeEventListener("pointerdown", handleOutsideClick, true);
+            document.removeEventListener("keydown", handleEscape);
+            panel.classList.add("translate-y-2", "opacity-0", "scale-95");
+            panel.classList.remove("translate-y-0", "opacity-100", "scale-100");
+            setTimeout(() => panel.remove(), 220);
+            resolve(result);
+          }
+
+          function handleOutsideClick(event) {
+            if (!panel.contains(event.target)) cleanup(false);
+          }
+
+          function handleEscape(event) {
+            if (event.key === "Escape") cleanup(false);
+          }
+
+          panel
+            .querySelector('[data-action="cancel"]')
+            .addEventListener("click", (event) => {
+              event.stopPropagation();
+              cleanup(false);
+            });
+          panel
+            .querySelector('[data-action="confirm"]')
+            .addEventListener("click", (event) => {
+              event.stopPropagation();
+              cleanup(true);
+            });
+          panel.addEventListener("pointerdown", (event) => event.stopPropagation());
+
+          document.body.appendChild(panel);
+          activeSupplierConfirmation = cleanup;
+          requestAnimationFrame(() => {
+            panel.classList.remove("translate-y-2", "opacity-0", "scale-95");
+            panel.classList.add("translate-y-0", "opacity-100", "scale-100");
+          });
+          autoDismissTimer = setTimeout(() => cleanup(false), 5500);
+          setTimeout(() => {
+            document.addEventListener("pointerdown", handleOutsideClick, true);
+          }, 0);
+          document.addEventListener("keydown", handleEscape);
+          if (window.lucide) lucide.createIcons();
+        });
+      }
+
       async function fetchSuppliers(search = "") {
         const tbody = document.getElementById("supplier-table-body");
         if (tbody) {
@@ -532,7 +645,10 @@
 
       async function verifySupplier(supplierID) {
         if (!supplierID) return;
-        const shouldVerify = confirm("Verifikasi supplier ini?");
+        const shouldVerify = await askSupplierActionConfirmation(
+          "Verifikasi supplier ini?",
+          { confirmLabel: "Verifikasi", tone: "success" },
+        );
         if (!shouldVerify) return;
 
         try {
@@ -560,7 +676,16 @@
 
       async function updateSupplierStatus(supplierID, status) {
         if (!supplierID || !status) return;
-        const shouldUpdate = confirm(`Ubah status supplier menjadi ${status}?`);
+        const isSuspending = status === "suspended";
+        const shouldUpdate = await askSupplierActionConfirmation(
+          isSuspending
+            ? "Tangguhkan supplier ini?"
+            : "Aktifkan kembali supplier ini?",
+          {
+            confirmLabel: isSuspending ? "Suspend" : "Aktifkan",
+            tone: isSuspending ? "danger" : "success",
+          },
+        );
         if (!shouldUpdate) return;
 
         try {

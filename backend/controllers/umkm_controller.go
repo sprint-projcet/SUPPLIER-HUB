@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
 	"sort"
 	"strings"
@@ -12,6 +13,15 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
+
+type userProfileInput struct {
+	BusinessName string `json:"business_name" binding:"required"`
+	Email        string `json:"email" binding:"required,email"`
+	Address      string `json:"address" binding:"required"`
+	Category     string `json:"category" binding:"required"`
+	PICName      string `json:"pic_name" binding:"required"`
+	Phone        string `json:"phone" binding:"required"`
+}
 
 func getAuthenticatedUserID(c *gin.Context) (string, bool) {
 	userID, exists := c.Get("user_id")
@@ -96,6 +106,114 @@ func GetUserOrders(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data":   orders,
+	})
+}
+
+func userProfilePayload(user models.User) gin.H {
+	return gin.H{
+		"id":            user.ID,
+		"business_name": user.BusinessName,
+		"email":         user.Email,
+		"role":          user.Role,
+		"address":       user.Address,
+		"category":      user.Category,
+		"region":        user.Region,
+		"pic_name":      user.PICName,
+		"phone":         user.Phone,
+		"status":        user.Status,
+		"created_at":    user.CreatedAt,
+		"updated_at":    user.UpdatedAt,
+	}
+}
+
+func getCurrentUMKM(c *gin.Context) (models.User, bool) {
+	var user models.User
+
+	umkmID, ok := getAuthenticatedUserID(c)
+	if !ok {
+		return user, false
+	}
+
+	if err := config.DB.Where("id = ? AND role = ?", umkmID, models.RoleUser).First(&user).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Profil UMKM tidak ditemukan"})
+			return user, false
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil profil UMKM"})
+		return user, false
+	}
+
+	return user, true
+}
+
+func GetUserProfile(c *gin.Context) {
+	user, ok := getCurrentUMKM(c)
+	if !ok {
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   userProfilePayload(user),
+	})
+}
+
+func UpdateUserProfile(c *gin.Context) {
+	user, ok := getCurrentUMKM(c)
+	if !ok {
+		return
+	}
+
+	var input userProfileInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama UMKM, email, kategori, PIC, nomor HP, dan alamat wajib diisi"})
+		return
+	}
+
+	businessName := strings.TrimSpace(input.BusinessName)
+	email := strings.ToLower(strings.TrimSpace(input.Email))
+	category := strings.TrimSpace(input.Category)
+	picName := strings.TrimSpace(input.PICName)
+	phone := strings.TrimSpace(input.Phone)
+	address := strings.TrimSpace(input.Address)
+
+	if businessName == "" || email == "" || category == "" || picName == "" || phone == "" || address == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Nama UMKM, email, kategori, PIC, nomor HP, dan alamat wajib diisi"})
+		return
+	}
+
+	var existing models.User
+	if err := config.DB.Where("email = ? AND id <> ?", email, user.ID).First(&existing).Error; err == nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "Email sudah digunakan akun lain"})
+		return
+	} else if !errors.Is(err, gorm.ErrRecordNotFound) {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memvalidasi email"})
+		return
+	}
+
+	updates := map[string]interface{}{
+		"business_name": businessName,
+		"email":         email,
+		"address":       address,
+		"category":      category,
+		"pic_name":      picName,
+		"phone":         phone,
+	}
+
+	if err := config.DB.Model(&user).Updates(updates).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memperbarui profil UMKM"})
+		return
+	}
+
+	if err := config.DB.Where("id = ?", user.ID).First(&user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat ulang profil UMKM"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status":  "success",
+		"message": "Profil UMKM berhasil diperbarui",
+		"data":    userProfilePayload(user),
 	})
 }
 
