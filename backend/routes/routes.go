@@ -22,6 +22,7 @@ func SetupRoutes(router *gin.Engine) {
 
 	// Public Catalog
 	api.GET("/catalog", controllers.GetPublicCatalog)
+	api.GET("/catalog/products/:id/reviews", controllers.GetProductReviews)
 	api.POST("/webhook/payment", controllers.HandleSmartBankCallback)
 
 	// Mock services for local integration testing.
@@ -100,6 +101,7 @@ func SetupRoutes(router *gin.Engine) {
 		userGroup.POST("/orders", controllers.CreateOrder)
 		userGroup.PUT("/orders/:id/cancel", controllers.CancelOrder)
 		userGroup.PUT("/orders/:id/complete", controllers.CompleteOrder)
+		userGroup.POST("/reviews", controllers.CreateReview)
 	}
 
 	wishlistGroup := api.Group("/wishlist")

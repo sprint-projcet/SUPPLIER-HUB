@@ -592,10 +592,10 @@
         const result = await res.json();
         if (!res.ok)
           throw new Error(result.error || "Gagal mengonfirmasi penerimaan");
-        alert("Paket berhasil dikonfirmasi diterima.");
+        showToast("success", "Paket berhasil dikonfirmasi diterima.");
         fetchTrackingData();
       } catch (err) {
-        alert(err.message);
+        showToast("danger", err.message);
       }
     }
 

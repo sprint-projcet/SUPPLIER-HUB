@@ -507,14 +507,14 @@
         const order = supplierOrders.find((item) => String(item.id) === String(orderID));
         if (!order) return;
 
-        alert(
+        showAlert(
           [
             `Pesanan: ${SupplierDashboard.shortID(order.id)}`,
             `Produk: ${order.product?.name || "-"}`,
             `UMKM: ${order.umkm?.business_name || "-"}`,
             `Status: ${order.status || "-"}`,
             `Total: ${SupplierDashboard.formatRupiah(order.grand_total)}`,
-          ].join("\n"),
+          ].join("\n")
         );
       }
 

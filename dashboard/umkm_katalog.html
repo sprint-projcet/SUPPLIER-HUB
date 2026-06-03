@@ -291,6 +291,13 @@
                             <p id="modalOrigin" class="font-bold text-slate-900 text-sm"></p>
                         </div>
                     </div>
+
+                    <div class="mt-8 pt-8 border-t border-slate-100">
+                        <h4 class="text-sm font-black text-slate-900 uppercase tracking-wider mb-4">Ulasan Pengguna</h4>
+                        <div id="modalReviewsList" class="space-y-4 max-h-48 overflow-y-auto cart-scroll pr-2">
+                            <p class="text-xs text-slate-400 italic">Memuat ulasan...</p>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="pt-8 border-t border-slate-100 flex items-center justify-between gap-6">
@@ -436,8 +443,8 @@
               category: p.category || 'Lainnya',
               supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
               supplier_id: p.supplier_id,
-              rating: (Math.random() * (5.0 - 4.0) + 4.0).toFixed(1), // Dummy rating
-              reviews: Math.floor(Math.random() * 200) + 10, // Dummy review count
+              rating: p.rating_average > 0 ? Number(p.rating_average).toFixed(1) : 'Baru',
+              reviews: Number(p.review_count) || 0,
               badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
               isAvailable: p.stock > 0,
               img: p.image_url || 'https://images.unsplash.com/photo-1509482560494-4126f8225994?auto=format&fit=crop&q=80&w=600', // Default image
@@ -551,7 +558,7 @@
       document.getElementById('productCountLabel').innerText = `${filtered.length} Produk Terdaftar`;
     }
 
-    function openProductModal(id) {
+    async function openProductModal(id) {
         const p = products.find(x => x.id === id);
         if (!p) return;
         const isOutOfStock = !p.isAvailable;
@@ -568,11 +575,59 @@
         document.getElementById('modalOrigin').innerText = p.origin;
         
         const addBtn = document.getElementById('modalAddBtn');
-        addBtn.disabled = isOutOfStock;
-        addBtn.innerText = isOutOfStock ? "Maaf, Stok Habis" : "Tambah ke Keranjang";
-        addBtn.onclick = (event) => { addToCart(p.id, event); closeProductModal(); };
+        if (addBtn) {
+            addBtn.disabled = isOutOfStock;
+            addBtn.onclick = (e) => {
+                addToCart(p.id, e);
+                closeProductModal();
+            };
+            addBtn.innerText = isOutOfStock ? 'Stok Habis' : 'Tambah ke Keranjang';
+        }
 
-        document.getElementById('modalAvailabilityOverlay').classList.toggle('hidden', !isOutOfStock);
+        const overlay = document.getElementById('modalAvailabilityOverlay');
+        if (overlay) {
+            if (isOutOfStock) overlay.classList.remove('hidden');
+            else overlay.classList.add('hidden');
+        }
+
+        // Pemuatan Ulasan Nyata dari API
+        const reviewsContainer = document.getElementById('modalReviewsList');
+        reviewsContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Memuat ulasan...</p>';
+
+        try {
+            const res = await fetch(buildApiUrl(`/api/catalog/products/${p.id}/reviews`));
+            if (res.ok) {
+                const payload = await res.json();
+                const reviews = payload.data || [];
+                if (reviews.length === 0) {
+                    reviewsContainer.innerHTML = '<p class="text-xs text-slate-400 italic">Belum ada ulasan untuk produk ini.</p>';
+                } else {
+                    reviewsContainer.innerHTML = '';
+                    reviews.forEach(r => {
+                        let starsHtml = '';
+                        for (let i = 1; i <= 5; i++) {
+                            starsHtml += `<svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 ${i <= r.rating ? 'text-yellow-400' : 'text-slate-200'} fill-current inline" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>`;
+                        }
+                        const rCard = document.createElement('div');
+                        rCard.className = 'p-4 bg-slate-100/70 dark:bg-slate-800/60 rounded-2xl border border-slate-200/50 dark:border-slate-700/40 shadow-sm mb-3';
+                        rCard.innerHTML = `
+                            <div class="flex justify-between items-center mb-1.5">
+                                <span class="font-bold text-xs text-slate-800 dark:text-slate-100">${escapeHTML(r.umkm_name)}</span>
+                                <span class="text-[10px] text-slate-500 dark:text-slate-400 font-medium">${r.created_at}</span>
+                            </div>
+                            <div class="flex items-center gap-0.5 mb-1.5">${starsHtml}</div>
+                            <p class="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">${escapeHTML(r.comment || 'Puas dengan produk ini.')}</p>
+                        `;
+                        reviewsContainer.appendChild(rCard);
+                    });
+                }
+            } else {
+                reviewsContainer.innerHTML = '<p class="text-xs text-red-500 italic">Gagal memuat ulasan.</p>';
+            }
+        } catch (err) {
+            console.error(err);
+            reviewsContainer.innerHTML = '<p class="text-xs text-red-500 italic">Gagal memuat ulasan.</p>';
+        }
 
         const modal = document.getElementById('productModal');
         modal.classList.remove('hidden');
@@ -928,6 +983,16 @@
     function closeCheckout() { document.getElementById('checkoutModal').classList.add('hidden'); document.getElementById('checkoutModal').classList.remove('flex'); document.body.style.overflow = 'auto'; }
 
     function formatRupiah(n) { return new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(n); }
+
+    function escapeHTML(str) {
+      return String(str || '').replace(/[&<>"']/g, m => ({
+        '&': '&amp;',
+        '<': '&lt;',
+        '>': '&gt;',
+        '"': '&quot;',
+        "'": '&#039;'
+      })[m]);
+    }
 
     function showToast(type, message) {
       window.showGlobalToast(type, message);

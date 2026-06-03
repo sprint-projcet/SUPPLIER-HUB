@@ -411,6 +411,7 @@
                   <option value="Sayuran">Sayuran</option>
                   <option value="Daging">Daging</option>
                   <option value="Bumbu">Bumbu</option>
+                  <option value="Minuman">Minuman</option>
                   <option value="Lainnya">Lainnya</option>
                 </select>
               </div>
@@ -573,6 +574,7 @@
                   <option value="Sayuran">Sayuran</option>
                   <option value="Daging">Daging</option>
                   <option value="Bumbu">Bumbu</option>
+                  <option value="Minuman">Minuman</option>
                   <option value="Lainnya">Lainnya</option>
                 </select>
               </div>
@@ -1087,7 +1089,7 @@
           showToast("danger", toastMessages.actionFailed);
           return;
         }
-        if (!confirm("Hapus produk ini?")) return;
+        if (!await showConfirm("Apakah Anda yakin ingin menghapus produk ini?")) return;
 
         try {
           const res = await fetch(

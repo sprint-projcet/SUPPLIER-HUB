@@ -40,17 +40,19 @@ type User struct {
 
 // Product merepresentasikan barang yang dijual oleh Supplier
 type Product struct {
-	ID          string    `gorm:"type:varchar(36);primaryKey" json:"id"`
-	SupplierID  string    `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
-	Name        string    `gorm:"type:varchar(255);not null" json:"name"`
-	Category    string    `gorm:"type:varchar(100)" json:"category"`
-	Price       float64   `gorm:"type:numeric(15,2);not null" json:"price"`
-	Stock       int       `gorm:"type:int;default:0" json:"stock"`
-	Description string    `gorm:"type:text" json:"description"`
-	Location    string    `gorm:"type:varchar(255)" json:"location"`
-	ImageURL    string    `gorm:"type:varchar(255)" json:"image_url"`
-	CreatedAt   time.Time `json:"created_at"`
-	UpdatedAt   time.Time `json:"updated_at"`
+	ID            string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	SupplierID    string    `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
+	Name          string    `gorm:"type:varchar(255);not null" json:"name"`
+	Category      string    `gorm:"type:varchar(100)" json:"category"`
+	Price         float64   `gorm:"type:numeric(15,2);not null" json:"price"`
+	Stock         int       `gorm:"type:int;default:0" json:"stock"`
+	Description   string    `gorm:"type:text" json:"description"`
+	Location      string    `gorm:"type:varchar(255)" json:"location"`
+	ImageURL      string    `gorm:"type:varchar(255)" json:"image_url"`
+	RatingAverage float64   `gorm:"-" json:"rating_average"`
+	ReviewCount   int       `gorm:"-" json:"review_count"`
+	CreatedAt     time.Time `json:"created_at"`
+	UpdatedAt     time.Time `json:"updated_at"`
 
 	Supplier User `gorm:"foreignKey:SupplierID;references:ID" json:"supplier,omitempty"`
 }
@@ -87,6 +89,7 @@ type Order struct {
 	GrandTotal     float64     `gorm:"type:numeric(15,2);not null" json:"grand_total"`
 	Status         OrderStatus `gorm:"type:varchar(40);default:'pending_supplier_confirmation'" json:"status"`
 	StockDeducted  bool        `gorm:"default:false" json:"stock_deducted"`
+	IsReviewed     bool        `gorm:"-" json:"is_reviewed"`
 	CreatedAt      time.Time   `json:"created_at"`
 	UpdatedAt      time.Time   `json:"updated_at"`
 
@@ -281,6 +284,27 @@ func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
 func (w *Wishlist) BeforeCreate(tx *gorm.DB) (err error) {
 	if w.ID == "" {
 		w.ID = uuid.New().String()
+	}
+	return
+}
+
+// Review menyimpan penilaian bintang dan komentar dari UMKM untuk produk tertentu
+type Review struct {
+	ID        string    `gorm:"type:varchar(36);primaryKey" json:"id"`
+	OrderID   string    `gorm:"type:varchar(36);not null;index" json:"order_id"`
+	ProductID string    `gorm:"type:varchar(36);not null;index" json:"product_id"`
+	UmkmID    string    `gorm:"type:varchar(36);not null;index" json:"umkm_id"`
+	Rating    int       `gorm:"not null" json:"rating"` // 1 - 5
+	Comment   string    `gorm:"type:text" json:"comment"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
+
+	Umkm User `gorm:"foreignKey:UmkmID;references:ID" json:"umkm,omitempty"`
+}
+
+func (r *Review) BeforeCreate(tx *gorm.DB) (err error) {
+	if r.ID == "" {
+		r.ID = uuid.New().String()
 	}
 	return
 }

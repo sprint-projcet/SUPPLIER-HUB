@@ -181,6 +181,14 @@ func GetSupplierStats(c *gin.Context) {
 		return
 	}
 
+	// Hitung rata-rata rating nyata milik supplier ini
+	var avgRating float64
+	config.DB.Model(&models.Review{}).
+		Joins("JOIN products ON reviews.product_id = products.id").
+		Where("products.supplier_id = ?", supplierID).
+		Select("COALESCE(AVG(reviews.rating), 0)").
+		Scan(&avgRating)
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":           "success",
 		"total_revenue":    supplierRevenue,
@@ -191,7 +199,7 @@ func GetSupplierStats(c *gin.Context) {
 		"stock":            activeProducts,  // kompatibel dengan dashboard lama
 		"new_orders":       pendingOrders,   // kompatibel dengan dashboard lama
 		"revenue_rp":       supplierRevenue, // kompatibel dengan dashboard lama
-		"rating":           0,
+		"rating":           avgRating,
 	})
 }
 

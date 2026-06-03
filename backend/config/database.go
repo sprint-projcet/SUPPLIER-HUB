@@ -69,6 +69,7 @@ func ConnectDatabase() {
 		&models.Notification{},
 		&models.Wishlist{},
 		&models.Log{},
+		&models.Review{},
 	)
 	if err != nil {
 		log.Fatalf("Gagal menjalankan migrasi schema database: %v", err)

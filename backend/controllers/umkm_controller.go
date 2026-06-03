@@ -103,6 +103,13 @@ func GetUserOrders(c *gin.Context) {
 		return
 	}
 
+	// Cek status review secara dinamis untuk masing-masing pesanan
+	for i := range orders {
+		var count int64
+		config.DB.Model(&models.Review{}).Where("order_id = ?", orders[i].ID).Count(&count)
+		orders[i].IsReviewed = count > 0
+	}
+
 	c.JSON(http.StatusOK, gin.H{
 		"status": "success",
 		"data":   orders,
@@ -324,6 +331,21 @@ func GetProducts(c *gin.Context) {
 	if err := config.DB.Preload("Supplier").Find(&allProducts).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data produk"})
 		return
+	}
+
+	// Hitung rating rata-rata & jumlah ulasan untuk tiap produk secara dinamis
+	for i := range allProducts {
+		var stats struct {
+			Average float64
+			Count   int64
+		}
+		config.DB.Model(&models.Review{}).
+			Where("product_id = ?", allProducts[i].ID).
+			Select("COALESCE(AVG(rating), 0) as average, COUNT(id) as count").
+			Scan(&stats)
+
+		allProducts[i].RatingAverage = stats.Average
+		allProducts[i].ReviewCount = int(stats.Count)
 	}
 
 	// 1. Filtering menggunakan KMP (jika ada query 'search')

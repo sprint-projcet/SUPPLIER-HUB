@@ -351,6 +351,54 @@
     </main>
   </div>
 
+  <!-- Modal Beri Ulasan -->
+  <div id="reviewModal" class="fixed inset-0 z-[110] hidden items-center justify-center p-6">
+    <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-sm" onclick="closeReviewModal()"></div>
+    <div class="bg-white rounded-[2rem] w-full max-w-md p-8 relative shadow-2xl modal-enter dark:bg-slate-800 dark:border dark:border-slate-700">
+      <button onclick="closeReviewModal()" class="absolute top-6 right-6 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200">
+        <i data-lucide="x" class="w-6 h-6"></i>
+      </button>
+      
+      <div class="mb-6">
+        <h3 class="text-xl font-bold text-slate-900 dark:text-slate-100">Beri Ulasan Produk</h3>
+        <p id="reviewProductName" class="text-sm text-slate-500 dark:text-slate-400 mt-1 font-semibold"></p>
+      </div>
+
+      <input type="hidden" id="reviewOrderId">
+      <input type="hidden" id="reviewProductId">
+
+      <div class="mb-6 text-center">
+        <p class="text-xs text-slate-400 uppercase font-black tracking-wider mb-3">Rating Anda</p>
+        <div class="flex items-center justify-center gap-2" id="starRatingContainer">
+          <button type="button" onclick="setRating(1)" class="star-btn text-slate-300 hover:text-yellow-400 transition-colors">
+            <i data-lucide="star" class="w-8 h-8 fill-current"></i>
+          </button>
+          <button type="button" onclick="setRating(2)" class="star-btn text-slate-300 hover:text-yellow-400 transition-colors">
+            <i data-lucide="star" class="w-8 h-8 fill-current"></i>
+          </button>
+          <button type="button" onclick="setRating(3)" class="star-btn text-slate-300 hover:text-yellow-400 transition-colors">
+            <i data-lucide="star" class="w-8 h-8 fill-current"></i>
+          </button>
+          <button type="button" onclick="setRating(4)" class="star-btn text-slate-300 hover:text-yellow-400 transition-colors">
+            <i data-lucide="star" class="w-8 h-8 fill-current"></i>
+          </button>
+          <button type="button" onclick="setRating(5)" class="star-btn text-slate-300 hover:text-yellow-400 transition-colors">
+            <i data-lucide="star" class="w-8 h-8 fill-current"></i>
+          </button>
+        </div>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-xs text-slate-400 uppercase font-black tracking-wider mb-2">Ulasan / Catatan</label>
+        <textarea id="reviewComment" rows="4" class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-50 focus:border-green-500 transition-all text-sm text-slate-700 placeholder:text-slate-400 dark:bg-slate-700 dark:border-slate-600 dark:text-slate-100" placeholder="Tulis pengalaman Anda berbelanja bahan baku ini..."></textarea>
+      </div>
+
+      <button onclick="submitReview()" class="w-full py-4 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-2xl shadow-xl shadow-emerald-100 dark:shadow-none transition-all flex items-center justify-center gap-2">
+        Kirim Ulasan
+      </button>
+    </div>
+  </div>
+
   <script>
     function toggleSidebar() {
       document
@@ -582,13 +630,27 @@
                     </div>
                 `;
       }
+      if (status === "completed") {
+        const productName = order.product ? order.product.name : "Bahan Baku";
+        const prodName = jsArg(productName);
+        const prodID = jsArg(order.product_id);
+        const btnUlasan = order.is_reviewed 
+          ? `<span class="px-4 py-2 bg-slate-100 text-slate-400 dark:bg-slate-700 dark:text-slate-400 rounded-xl text-xs font-bold mt-2 inline-block">Sudah Diulas</span>`
+          : `<button onclick="openReviewModal(${orderID}, ${prodID}, ${prodName})" class="px-4 py-2 bg-emerald-600 text-white rounded-xl text-xs font-bold hover:bg-emerald-700 transition-colors shadow-lg shadow-emerald-600/20 mt-2 inline-block">Beri Ulasan</button>`;
+        return `
+                    <div class="flex flex-wrap gap-2 mt-2 justify-end items-center">
+                        <a href="umkm_katalog.html" class="px-4 py-2 bg-white border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
+                        ${btnUlasan}
+                    </div>
+                `;
+      }
       return `
-                        <a href="umkm_katalog.html" class="px-4 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
+                        <a href="umkm_katalog.html" class="px-4 py-2 bg-white border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 rounded-xl text-xs font-bold hover:bg-slate-50 transition-colors shadow-sm mt-2 inline-block">Beli Lagi</a>
             `;
     }
 
     async function simulatePayment(paymentReference, orderID) {
-      if (!confirm("Simulasikan pelunasan pembayaran untuk pesanan ini di SmartBank?")) return;
+      if (!await showConfirm("Simulasikan pelunasan pembayaran untuk pesanan ini di SmartBank?")) return;
 
       if (typeof showToast === "function") showToast("info", "Memproses simulasi pembayaran...");
 
@@ -607,13 +669,13 @@
 
         const result = await res.json();
         if (res.ok && result.success) {
-          alert("Simulasi pembayaran sukses! Status pesanan Anda telah diperbarui menjadi Dibayar & Pengiriman telah dibuat.");
+          showAlert("Simulasi pembayaran sukses! Status pesanan Anda telah diperbarui menjadi Dibayar & Pengiriman telah dibuat.");
           fetchOrders();
         } else {
           throw new Error(result.error || "Gagal memproses simulasi callback");
         }
       } catch (err) {
-        alert("Gagal melakukan simulasi: " + err.message);
+        showToast("danger", "Gagal melakukan simulasi: " + err.message);
       }
     }
 
@@ -735,21 +797,105 @@
           throw new Error(result.error || "Gagal memperbarui pesanan");
         fetchOrders();
       } catch (err) {
-        alert(err.message);
+        showToast("danger", err.message);
       }
     }
 
-    function cancelOrder(orderID) {
+    async function cancelOrder(orderID) {
       if (
-        confirm("Batalkan pesanan ini? Stok akan dikembalikan ke katalog.")
+        await showConfirm("Batalkan pesanan ini? Stok akan dikembalikan ke katalog.")
       ) {
         updateOrderStatus(orderID, "cancel");
       }
     }
 
-    function completeOrder(orderID) {
-      if (confirm("Konfirmasi paket sudah diterima?")) {
+    async function completeOrder(orderID) {
+      if (await showConfirm("Konfirmasi paket sudah diterima?")) {
         updateOrderStatus(orderID, "complete");
+      }
+    }
+
+    let currentReviewRating = 0;
+
+    function openReviewModal(orderID, productID, productName) {
+      document.getElementById("reviewOrderId").value = orderID;
+      document.getElementById("reviewProductId").value = productID;
+      document.getElementById("reviewProductName").textContent = productName;
+      document.getElementById("reviewComment").value = "";
+      setRating(0); // Reset rating to 0
+      
+      const modal = document.getElementById("reviewModal");
+      modal.classList.remove("hidden");
+      modal.classList.add("flex");
+      lucide.createIcons();
+    }
+
+    function closeReviewModal() {
+      const modal = document.getElementById("reviewModal");
+      modal.classList.remove("flex");
+      modal.classList.add("hidden");
+    }
+
+    function setRating(val) {
+      currentReviewRating = val;
+      const stars = document.querySelectorAll("#starRatingContainer .star-btn");
+      stars.forEach((btn, index) => {
+        const svg = btn.querySelector("svg");
+        if (svg) {
+          if (index < val) {
+            svg.classList.add("text-yellow-400");
+            svg.classList.remove("text-slate-300");
+          } else {
+            svg.classList.remove("text-yellow-400");
+            svg.classList.add("text-slate-300");
+          }
+        }
+      });
+    }
+
+    async function submitReview() {
+      const orderID = document.getElementById("reviewOrderId").value;
+      const productID = document.getElementById("reviewProductId").value;
+      const comment = document.getElementById("reviewComment").value.trim();
+      const token = getSessionToken();
+
+      if (!token) return;
+
+      if (currentReviewRating < 1 || currentReviewRating > 5) {
+        showToast("warning", "Silakan pilih rating bintang terlebih dahulu (1 - 5)");
+        return;
+      }
+
+      try {
+        const res = await fetch(buildApiUrl("/api/user/reviews"), {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            order_id: orderID,
+            rating: currentReviewRating,
+            comment: comment
+          })
+        });
+
+        let result;
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          result = await res.json();
+        }
+
+        if (!res.ok) {
+          const errMsg = (result && result.error) ? result.error : `Gagal mengirim ulasan (Status: ${res.status})`;
+          throw new Error(errMsg);
+        }
+
+        showToast("success", "Ulasan berhasil dikirim!");
+        closeReviewModal();
+        fetchOrders(); // Refresh order list to show "Sudah Diulas"
+      } catch (err) {
+        showToast("danger", err.message);
       }
     }
 
