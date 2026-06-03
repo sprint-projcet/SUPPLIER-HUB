@@ -354,7 +354,7 @@
         </div>
         <div class="p-6">
           <form id="addProductForm" class="space-y-4">
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-4 gap-4">
               <div class="col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 mb-1"
                   >Nama Produk</label
@@ -369,14 +369,33 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1"
-                  >Satuan/Qty</label
+                  >Qty</label
                 >
                 <input
                   type="text"
-                  id="prod-qty"
+                  id="prod-qty-value"
+                  required
                   class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800"
-                  placeholder="Cth: 5kg, 1 bal"
+                  placeholder="Cth: 5"
                 />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1"
+                  >Satuan</label
+                >
+                <select
+                  id="prod-qty-unit"
+                  class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800 bg-white"
+                >
+                  <option value="kg">kg</option>
+                  <option value="gr">gr</option>
+                  <option value="liter">liter</option>
+                  <option value="pcs">pcs</option>
+                  <option value="bal">bal</option>
+                  <option value="pack">pack</option>
+                  <option value="dus">dus</option>
+                  <option value="karung">karung</option>
+                </select>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -497,7 +516,7 @@
         <div class="p-6">
           <form id="editProductForm" class="space-y-4">
             <input type="hidden" id="edit-prod-id" />
-            <div class="grid grid-cols-3 gap-4">
+            <div class="grid grid-cols-4 gap-4">
               <div class="col-span-2">
                 <label class="block text-sm font-semibold text-gray-700 mb-1"
                   >Nama Produk</label
@@ -512,14 +531,33 @@
               </div>
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-1"
-                  >Satuan/Qty</label
+                  >Qty</label
                 >
                 <input
                   type="text"
-                  id="edit-prod-qty"
+                  id="edit-prod-qty-value"
+                  required
                   class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800"
-                  placeholder="Cth: 5kg, 1 bal"
+                  placeholder="Cth: 5"
                 />
+              </div>
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-1"
+                  >Satuan</label
+                >
+                <select
+                  id="edit-prod-qty-unit"
+                  class="w-full border border-gray-200 rounded-lg px-4 py-2 focus:ring-2 focus:ring-emerald-500 outline-none text-gray-800 bg-white"
+                >
+                  <option value="kg">kg</option>
+                  <option value="gr">gr</option>
+                  <option value="liter">liter</option>
+                  <option value="pcs">pcs</option>
+                  <option value="bal">bal</option>
+                  <option value="pack">pack</option>
+                  <option value="dus">dus</option>
+                  <option value="karung">karung</option>
+                </select>
               </div>
             </div>
             <div class="grid grid-cols-2 gap-4">
@@ -642,6 +680,37 @@
         return { name: parts.join(" - "), qty };
       }
 
+      function parseQtyAndUnit(qtyStr) {
+        qtyStr = String(qtyStr || "").trim();
+        if (!qtyStr) return { qty: "", unit: "kg" };
+
+        const match = qtyStr.match(/^([\d.,\s]+)(.*)$/);
+        if (match) {
+          const qtyVal = match[1].trim();
+          let unitVal = match[2].trim().toLowerCase();
+          
+          const validUnits = ["kg", "gr", "liter", "pcs", "bal", "pack", "dus", "karung"];
+          if (!validUnits.includes(unitVal)) {
+            if (!unitVal) {
+              unitVal = "kg";
+            } else {
+              if (unitVal.includes("kg") || unitVal.includes("kilo")) unitVal = "kg";
+              else if (unitVal.includes("gram") || unitVal.includes("gr")) unitVal = "gr";
+              else if (unitVal.includes("liter") || unitVal.includes("ltr")) unitVal = "liter";
+              else if (unitVal.includes("piece") || unitVal.includes("pc")) unitVal = "pcs";
+              else if (unitVal.includes("dus") || unitVal.includes("box")) unitVal = "dus";
+              else if (unitVal.includes("bal")) unitVal = "bal";
+              else if (unitVal.includes("pack")) unitVal = "pack";
+              else if (unitVal.includes("karung")) unitVal = "karung";
+              else unitVal = "kg";
+            }
+          }
+          return { qty: qtyVal, unit: unitVal };
+        }
+
+        return { qty: qtyStr, unit: "kg" };
+      }
+
       function openAddProductModal(productId = null) {
         if (supplierProfile && supplierProfile.status !== "active") {
           showToast("danger", "Akun supplier Anda belum aktif atau belum diverifikasi oleh admin.");
@@ -670,7 +739,11 @@
         if (product) {
           const productName = splitProductName(product.name);
           document.getElementById("prod-name").value = productName.name;
-          document.getElementById("prod-qty").value = productName.qty;
+          
+          const parsed = parseQtyAndUnit(productName.qty);
+          document.getElementById("prod-qty-value").value = parsed.qty;
+          document.getElementById("prod-qty-unit").value = parsed.unit;
+
           document.getElementById("prod-category").value =
             product.category || "Lainnya";
           document.getElementById("prod-stock").value = product.stock || 0;
@@ -865,7 +938,11 @@
         }
 
         document.getElementById("edit-prod-name").value = namePart;
-        document.getElementById("edit-prod-qty").value = qtyPart;
+        
+        const parsed = parseQtyAndUnit(qtyPart);
+        document.getElementById("edit-prod-qty-value").value = parsed.qty;
+        document.getElementById("edit-prod-qty-unit").value = parsed.unit;
+
         document.getElementById("edit-prod-category").value = p.category || "Lainnya";
         document.getElementById("edit-prod-price").value = p.price;
         document.getElementById("edit-prod-stock").value = p.stock;
@@ -899,7 +976,9 @@
           const productId = document.getElementById("edit-prod-id").value;
           const formData = new FormData();
           const nameBase = document.getElementById("edit-prod-name").value;
-          const qty = document.getElementById("edit-prod-qty").value.trim();
+          const qtyVal = document.getElementById("edit-prod-qty-value").value.trim();
+          const qtyUnit = document.getElementById("edit-prod-qty-unit").value;
+          const qty = qtyVal ? `${qtyVal} ${qtyUnit}` : "";
           formData.append("name", qty ? `${nameBase} - ${qty}` : nameBase);
           formData.append(
             "category",
@@ -932,15 +1011,15 @@
             const data = await res.json();
 
             if (res.ok) {
-              alert("Produk berhasil diperbarui!");
+              showToast("success", "Produk berhasil diperbarui!");
               closeEditProductModal();
               e.target.reset();
               fetchProducts(); // Refresh list
             } else {
-              alert("Gagal: " + (data.error || "Terjadi kesalahan"));
+              showToast("danger", data.error || toastMessages.actionFailed);
             }
           } catch (e) {
-            alert("Gagal terhubung ke server");
+            showToast("danger", toastMessages.actionFailed);
           }
         });
 
@@ -956,7 +1035,9 @@
 
           const formData = new FormData();
           const nameBase = document.getElementById("prod-name").value;
-          const qty = document.getElementById("prod-qty").value.trim();
+          const qtyVal = document.getElementById("prod-qty-value").value.trim();
+          const qtyUnit = document.getElementById("prod-qty-unit").value;
+          const qty = qtyVal ? `${qtyVal} ${qtyUnit}` : "";
           formData.append("name", qty ? `${nameBase} - ${qty}` : nameBase);
           formData.append(
             "category",
