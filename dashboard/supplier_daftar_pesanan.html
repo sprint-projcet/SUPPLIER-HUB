@@ -20,6 +20,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/supplier_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -358,6 +359,7 @@
                 </tbody>
               </table>
             </div>
+            <div id="supplier-orders-pagination" class="px-8 pb-6"></div>
           </div>
         </div>
       </main>
@@ -366,6 +368,10 @@
     <script>
       let supplierOrders = [];
       let activeOrderFilter = "all";
+      const ordersPagination = SupplierHubPagination.create({
+        pageSize: 10,
+        itemLabel: "pesanan",
+      });
 
       function getOrderSearchQuery() {
         const input = document.getElementById("supplier-order-search");
@@ -419,9 +425,11 @@
         renderOrders();
       }
 
-      function renderOrders() {
+      function renderOrders(options = {}) {
         const tbody = document.getElementById("supplier-orders-body");
         const orders = getVisibleOrders();
+        if (!options.preservePage) SupplierHubPagination.reset(ordersPagination);
+        const pageData = SupplierHubPagination.getPage(orders, ordersPagination);
 
         if (orders.length === 0) {
           tbody.innerHTML = `
@@ -431,10 +439,13 @@
               </td>
             </tr>
           `;
+          SupplierHubPagination.render("supplier-orders-pagination", ordersPagination, [], {
+            itemLabel: "pesanan",
+          });
           return;
         }
 
-        tbody.innerHTML = orders
+        tbody.innerHTML = pageData.items
           .map((order) => {
             const meta = SupplierDashboard.statusMeta(order.status);
             let actionButton = `<button onclick="showOrderDetail('${SupplierDashboard.escapeHTML(order.id)}')" class="px-3 py-1.5 bg-white border border-slate-200 text-slate-600 text-xs font-bold rounded-lg hover:bg-slate-50 transition-all shadow-sm">Detail</button>`;
@@ -476,6 +487,10 @@
             `;
           })
           .join("");
+        SupplierHubPagination.render("supplier-orders-pagination", ordersPagination, orders, {
+          itemLabel: "pesanan",
+          onPageChange: () => renderOrders({ preservePage: true }),
+        });
       }
 
       async function fetchOrders() {
@@ -490,6 +505,9 @@
               </td>
             </tr>
           `;
+          SupplierHubPagination.render("supplier-orders-pagination", ordersPagination, [], {
+            itemLabel: "pesanan",
+          });
         }
       }
 

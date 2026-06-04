@@ -19,6 +19,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -352,6 +353,7 @@
               </div>
             </div>
           </div>
+          <div id="wishlistPagination"></div>
         </div>
       </main>
     </div>
@@ -362,6 +364,12 @@
           .getElementById("sidebar")
           .classList.toggle("-translate-x-full");
       }
+
+      let wishlistProducts = [];
+      const wishlistPagination = SupplierHubPagination.create({
+        pageSize: 8,
+        itemLabel: "produk",
+      });
 
       function escapeHTML(value) {
         return String(value ?? "").replace(
@@ -418,6 +426,61 @@
                     <a href="umkm_katalog.html" class="inline-block mt-5 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Buka Katalog</a>
                 </div>
             `;
+        SupplierHubPagination.render("wishlistPagination", wishlistPagination, [], {
+          itemLabel: "produk",
+        });
+        lucide.createIcons();
+      }
+
+      function renderWishlistProducts(products, options = {}) {
+        const grid = document.getElementById("wishlistGrid");
+        const productList = Array.isArray(products) ? products : [];
+        if (!options.preservePage) SupplierHubPagination.reset(wishlistPagination);
+        const pageData = SupplierHubPagination.getPage(productList, wishlistPagination);
+
+        if (productList.length === 0) {
+          renderEmptyWishlist();
+          return;
+        }
+
+        grid.innerHTML = pageData.items
+          .map((product) => {
+            const productID = jsArg(product.id);
+            const image = escapeHTML(product.image_url || "");
+            const productName = escapeHTML(product.name || "Produk");
+            const supplierName = escapeHTML(
+              product.supplier
+                ? product.supplier.business_name
+                : "Mitra Supplier",
+            );
+            const category = escapeHTML(product.category || "Bahan Baku");
+            return `
+                      <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 relative group">
+                          <button onclick="removeWishlist(${productID})" class="absolute top-6 right-6 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
+                              <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
+                          </button>
+                          <div class="aspect-square bg-slate-100 rounded-2xl mb-4 overflow-hidden flex items-center justify-center">
+                              ${image ? `<img src="${image}" alt="${productName}" class="w-full h-full object-cover">` : '<i data-lucide="image" class="w-12 h-12 text-slate-300"></i>'}
+                          </div>
+                          <div class="px-2">
+                              <div class="flex justify-between items-start mb-1">
+                                  <span class="text-[10px] font-black px-2 py-1 rounded-md bg-emerald-50 text-emerald-600">${category}</span>
+                              </div>
+                              <h3 class="font-bold text-slate-900 line-clamp-1">${productName}</h3>
+                              <p class="text-xs text-slate-500 mt-1">${supplierName}</p>
+                              <div class="flex items-center justify-between mt-3">
+                                  <p class="font-black text-emerald-600">${formatRupiah(product.price)}</p>
+                                  <a href="umkm_katalog.html?q=${encodeURIComponent(product.name || "")}" class="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"><i data-lucide="shopping-cart" class="w-4 h-4"></i></a>
+                              </div>
+                          </div>
+                      </div>
+                  `;
+          })
+          .join("");
+        SupplierHubPagination.render("wishlistPagination", wishlistPagination, productList, {
+          itemLabel: "produk",
+          onPageChange: () => renderWishlistProducts(productList, { preservePage: true }),
+        });
         lucide.createIcons();
       }
 
@@ -440,51 +503,20 @@
           const result = await res.json();
           if (!res.ok) throw new Error(result.error || "Gagal memuat wishlist");
 
-          const products = (result.data || []).filter((product) =>
+          wishlistProducts = (result.data || []).filter((product) =>
             wishlistIDs.includes(String(product.id)),
           );
-          if (products.length === 0) {
+          if (wishlistProducts.length === 0) {
             renderEmptyWishlist();
             return;
           }
 
-          grid.innerHTML = products
-            .map((product) => {
-              const productID = jsArg(product.id);
-              const image = escapeHTML(product.image_url || "");
-              const productName = escapeHTML(product.name || "Produk");
-              const supplierName = escapeHTML(
-                product.supplier
-                  ? product.supplier.business_name
-                  : "Mitra Supplier",
-              );
-              const category = escapeHTML(product.category || "Bahan Baku");
-              return `
-                        <div class="bg-white rounded-3xl p-4 border border-slate-100 shadow-sm hover:shadow-xl transition-all duration-300 relative group">
-                            <button onclick="removeWishlist(${productID})" class="absolute top-6 right-6 z-10 w-8 h-8 bg-white rounded-full shadow-md flex items-center justify-center text-red-500 hover:bg-red-50 transition-colors">
-                                <i data-lucide="heart" class="w-4 h-4 fill-current"></i>
-                            </button>
-                            <div class="aspect-square bg-slate-100 rounded-2xl mb-4 overflow-hidden flex items-center justify-center">
-                                ${image ? `<img src="${image}" alt="${productName}" class="w-full h-full object-cover">` : '<i data-lucide="image" class="w-12 h-12 text-slate-300"></i>'}
-                            </div>
-                            <div class="px-2">
-                                <div class="flex justify-between items-start mb-1">
-                                    <span class="text-[10px] font-black px-2 py-1 rounded-md bg-emerald-50 text-emerald-600">${category}</span>
-                                </div>
-                                <h3 class="font-bold text-slate-900 line-clamp-1">${productName}</h3>
-                                <p class="text-xs text-slate-500 mt-1">${supplierName}</p>
-                                <div class="flex items-center justify-between mt-3">
-                                    <p class="font-black text-emerald-600">${formatRupiah(product.price)}</p>
-                                    <a href="umkm_katalog.html?q=${encodeURIComponent(product.name || "")}" class="p-2 bg-slate-900 text-white rounded-lg hover:bg-slate-800 transition-colors"><i data-lucide="shopping-cart" class="w-4 h-4"></i></a>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-            })
-            .join("");
-          lucide.createIcons();
+          renderWishlistProducts(wishlistProducts);
         } catch (err) {
           grid.innerHTML = `<div class="md:col-span-2 xl:col-span-4 text-center p-8 bg-white rounded-3xl border border-red-100 text-red-500 font-bold">${escapeHTML(err.message)}</div>`;
+          SupplierHubPagination.render("wishlistPagination", wishlistPagination, [], {
+            itemLabel: "produk",
+          });
         }
       }
 

@@ -20,6 +20,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/supplier_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -326,6 +327,7 @@
                 Memuat produk...
               </div>
             </div>
+            <div id="catalog-pagination"></div>
           </section>
         </div>
       </main>
@@ -665,6 +667,10 @@
       let supplierProducts = [];
       let supplierProfile = null;
       let editingProductId = null;
+      const productPagination = SupplierHubPagination.create({
+        pageSize: 8,
+        itemLabel: "produk",
+      });
       const regionRequiredMessage =
         "Lengkapi wilayah supply toko terlebih dahulu sebelum menambahkan produk.";
 
@@ -785,6 +791,9 @@
         const colorClass = tone === "danger" ? "text-red-500" : "text-slate-500";
         document.getElementById("catalog-grid").innerHTML =
           `<div class="col-span-full py-12 text-center ${colorClass}">${message}</div>`;
+        SupplierHubPagination.render("catalog-pagination", productPagination, [], {
+          itemLabel: "produk",
+        });
       }
 
       function getSupplierRegion() {
@@ -850,13 +859,15 @@
         ].some((value) => String(value || "").toLowerCase().includes(query));
       }
 
-      function renderCatalog(products = supplierProducts) {
+      function renderCatalog(products = supplierProducts, options = {}) {
         if (Array.isArray(products)) supplierProducts = products;
 
         const grid = document.getElementById("catalog-grid");
         const visibleProducts = supplierProducts.filter((product) =>
           productMatchesSearch(product, getProductSearchQuery())
         );
+        if (!options.preservePage) SupplierHubPagination.reset(productPagination);
+        const pageData = SupplierHubPagination.getPage(visibleProducts, productPagination);
 
         if (!supplierProducts || supplierProducts.length === 0) {
           renderCatalogMessage("Belum ada produk yang ditambahkan.");
@@ -868,7 +879,7 @@
           return;
         }
 
-        grid.innerHTML = visibleProducts
+        grid.innerHTML = pageData.items
           .map((p) => {
             const isAvailable = p.stock > 0;
             const statusBadge = isAvailable
@@ -922,6 +933,10 @@
                 `;
           })
           .join("");
+        SupplierHubPagination.render("catalog-pagination", productPagination, visibleProducts, {
+          itemLabel: "produk",
+          onPageChange: () => renderCatalog(supplierProducts, { preservePage: true }),
+        });
         lucide.createIcons();
       }
 

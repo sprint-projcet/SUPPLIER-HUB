@@ -18,6 +18,7 @@
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/darkmode.js"></script>
+  <script src="../assets/js/pagination.js"></script>
   <link rel="stylesheet" href="../assets/css/darkmode.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <style>
@@ -347,6 +348,7 @@
             Memuat riwayat pesanan...
           </p>
         </div>
+        <div id="ordersPagination"></div>
       </div>
     </main>
   </div>
@@ -408,6 +410,10 @@
 
     let activeStatusFilter = "all";
     let allOrders = [];
+    const orderPagination = SupplierHubPagination.create({
+      pageSize: 5,
+      itemLabel: "pesanan",
+    });
 
     const statusFilters = {
       all: [],
@@ -679,17 +685,23 @@
       }
     }
 
-    function renderOrders(orders) {
+    function renderOrders(orders, options = {}) {
       const container = document.getElementById("ordersContainer");
       container.innerHTML = "";
+      const orderList = Array.isArray(orders) ? orders : [];
+      if (!options.preservePage) SupplierHubPagination.reset(orderPagination);
+      const pageData = SupplierHubPagination.getPage(orderList, orderPagination);
 
-      if (!orders || orders.length === 0) {
+      if (orderList.length === 0) {
         container.innerHTML =
           '<div class="text-center p-8 bg-white rounded-3xl border border-slate-100"><p class="text-slate-500 font-medium">Belum ada pesanan untuk filter ini.</p><a href="umkm_katalog.html" class="inline-block mt-4 px-6 py-2 bg-emerald-600 text-white rounded-xl font-bold">Mulai Belanja</a></div>';
+        SupplierHubPagination.render("ordersPagination", orderPagination, [], {
+          itemLabel: "pesanan",
+        });
         return;
       }
 
-      orders.forEach((order) => {
+      pageData.items.forEach((order) => {
         const product = order.product || {};
         const supplier = product.supplier || {};
         const statusMeta = getStatusMeta(order.status);
@@ -751,6 +763,10 @@
                     </div>
                 `;
       });
+      SupplierHubPagination.render("ordersPagination", orderPagination, orderList, {
+        itemLabel: "pesanan",
+        onPageChange: () => renderOrders(orderList, { preservePage: true }),
+      });
       lucide.createIcons();
     }
 
@@ -775,6 +791,9 @@
         console.error("Gagal memuat pesanan", err);
         document.getElementById("ordersContainer").innerHTML =
           `<div class="text-center p-8 bg-white rounded-3xl border border-red-100 text-red-500 font-bold">${escapeHTML(err.message)}</div>`;
+        SupplierHubPagination.render("ordersPagination", orderPagination, [], {
+          itemLabel: "pesanan",
+        });
       }
     }
 

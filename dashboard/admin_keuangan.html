@@ -20,6 +20,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -374,6 +375,7 @@
                 </tbody>
               </table>
             </div>
+            <div id="finance-pagination" class="px-8 pb-6"></div>
           </div>
         </div>
       </main>
@@ -382,12 +384,19 @@
     <script>
       let financeRows = [];
       let financeSummary = null;
+      const financePagination = SupplierHubPagination.create({
+        pageSize: 10,
+        itemLabel: "transaksi",
+      });
 
-      function renderFinanceTable(rows) {
+      function renderFinanceTable(rows, options = {}) {
         const tbody = document.getElementById("finance-table-body");
         if (!tbody) return;
+        const rowList = Array.isArray(rows) ? rows : [];
+        if (!options.preservePage) SupplierHubPagination.reset(financePagination);
+        const pageData = SupplierHubPagination.getPage(rowList, financePagination);
 
-        if (!rows || rows.length === 0) {
+        if (rowList.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
@@ -395,10 +404,13 @@
               </td>
             </tr>
           `;
+          SupplierHubPagination.render("finance-pagination", financePagination, [], {
+            itemLabel: "transaksi",
+          });
           return;
         }
 
-        tbody.innerHTML = rows
+        tbody.innerHTML = pageData.items
           .map((order) => {
             const [statusLabel, statusClass] = AdminDashboard.orderStatusMeta(order.status);
             return `
@@ -420,6 +432,10 @@
             `;
           })
           .join("");
+        SupplierHubPagination.render("finance-pagination", financePagination, rowList, {
+          itemLabel: "transaksi",
+          onPageChange: () => renderFinanceTable(rowList, { preservePage: true }),
+        });
       }
 
       function applyFinanceSearch() {

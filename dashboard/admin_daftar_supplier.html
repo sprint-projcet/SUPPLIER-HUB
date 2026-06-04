@@ -20,6 +20,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -356,6 +357,7 @@
                 </tbody>
               </table>
             </div>
+            <div id="supplier-pagination" class="px-8 pb-6"></div>
           </div>
         </div>
       </main>
@@ -371,6 +373,10 @@
       let supplierSearchTimeout;
       let adminAuthToken = "";
       let activeSupplierConfirmation = null;
+      const supplierPagination = SupplierHubPagination.create({
+        pageSize: 8,
+        itemLabel: "supplier",
+      });
 
       function escapeHTML(value) {
         return String(value ?? "")
@@ -405,22 +411,28 @@
         return `<span class="text-[10px] font-black px-3 py-1 rounded-full ${classes}">${label}</span>`;
       }
 
-      function renderSuppliers(suppliers) {
+      function renderSuppliers(suppliers, options = {}) {
         const tbody = document.getElementById("supplier-table-body");
         if (!tbody) return;
+        const supplierList = Array.isArray(suppliers) ? suppliers : [];
+        if (!options.preservePage) SupplierHubPagination.reset(supplierPagination);
+        const pageData = SupplierHubPagination.getPage(supplierList, supplierPagination);
 
-        if (!suppliers || suppliers.length === 0) {
+        if (supplierList.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="4" class="px-8 py-8 text-center text-slate-400 font-semibold">
-                Belum ada supplier terdaftar.
+                Tidak ada supplier untuk filter ini.
               </td>
             </tr>
           `;
+          SupplierHubPagination.render("supplier-pagination", supplierPagination, [], {
+            itemLabel: "supplier",
+          });
           return;
         }
 
-        tbody.innerHTML = suppliers
+        tbody.innerHTML = pageData.items
           .map((supplier) => {
             const isPending = supplier.status === "pending";
             const isActive = supplier.status === "active";
@@ -496,6 +508,10 @@
             `;
           })
           .join("");
+        SupplierHubPagination.render("supplier-pagination", supplierPagination, supplierList, {
+          itemLabel: "supplier",
+          onPageChange: () => renderSuppliers(supplierList, { preservePage: true }),
+        });
         if (window.lucide) lucide.createIcons();
       }
 

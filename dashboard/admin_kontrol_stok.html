@@ -20,6 +20,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/admin_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -385,6 +386,7 @@
                 </tbody>
               </table>
             </div>
+            <div id="stock-pagination" class="px-8 pb-6"></div>
           </div>
         </div>
       </main>
@@ -496,6 +498,10 @@
     <script>
       let stockProducts = [];
       let selectedStockProduct = null;
+      const stockPagination = SupplierHubPagination.create({
+        pageSize: 10,
+        itemLabel: "produk",
+      });
 
       function stockMeta(stock) {
         const value = Number(stock) || 0;
@@ -575,11 +581,14 @@
           : `Mohon cek stok produk ${name} di dashboard supplier agar data persediaan tetap terbaru.`;
       }
 
-      function renderStockRows(products) {
+      function renderStockRows(products, options = {}) {
         const tbody = document.getElementById("stock-table-body");
         if (!tbody) return;
+        const productList = Array.isArray(products) ? products : [];
+        if (!options.preservePage) SupplierHubPagination.reset(stockPagination);
+        const pageData = SupplierHubPagination.getPage(productList, stockPagination);
 
-        if (!products || products.length === 0) {
+        if (productList.length === 0) {
           tbody.innerHTML = `
             <tr>
               <td colspan="6" class="px-8 py-8 text-center text-slate-400 font-semibold">
@@ -587,10 +596,13 @@
               </td>
             </tr>
           `;
+          SupplierHubPagination.render("stock-pagination", stockPagination, [], {
+            itemLabel: "produk",
+          });
           return;
         }
 
-        tbody.innerHTML = products
+        tbody.innerHTML = pageData.items
           .map((product) => {
             const [label, className] = stockMeta(product.stock);
             const alertMeta = stockAlertMeta(product);
@@ -636,6 +648,10 @@
             `;
           })
           .join("");
+        SupplierHubPagination.render("stock-pagination", stockPagination, productList, {
+          itemLabel: "produk",
+          onPageChange: () => renderStockRows(productList, { preservePage: true }),
+        });
       }
 
       function applyStockSearch() {

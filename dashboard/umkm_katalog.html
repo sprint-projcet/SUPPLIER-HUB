@@ -13,6 +13,7 @@
   </script>
   <script src="../assets/js/auth.js"></script>
   <script src="../assets/js/darkmode.js"></script>
+  <script src="../assets/js/pagination.js"></script>
   <link rel="stylesheet" href="../assets/css/darkmode.css">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
@@ -221,6 +222,7 @@
     <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       <!-- Produk diisi oleh JS -->
     </div>
+    <div id="catalogPagination" class="mt-4"></div>
 
     <!-- No Results State -->
     <div id="noResults" class="hidden my-20 text-center py-24 bg-white rounded-[2rem] border border-slate-100 shadow-sm">
@@ -403,6 +405,10 @@
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
+    const catalogPagination = SupplierHubPagination.create({
+      pageSize: 12,
+      itemLabel: 'produk',
+    });
     const WISHLIST_STORAGE_KEY = 'umkm_wishlist_ids';
 
     function loadWishlist() {
@@ -488,7 +494,7 @@
       renderProducts();
     }
 
-    function renderProducts() {
+    function renderProducts(options = {}) {
       const grid = document.getElementById('productGrid');
       grid.innerHTML = '';
       
@@ -501,15 +507,20 @@
           p.origin.toLowerCase().includes(normalizedQuery);
         return matchesCat && matchesSearch;
       });
+      if (!options.preservePage) SupplierHubPagination.reset(catalogPagination);
+      const pageData = SupplierHubPagination.getPage(filtered, catalogPagination);
 
       if (filtered.length === 0) {
         grid.classList.add('hidden');
         document.getElementById('noResults').classList.remove('hidden');
+        SupplierHubPagination.render('catalogPagination', catalogPagination, [], {
+          itemLabel: 'produk',
+        });
       } else {
         grid.classList.remove('hidden');
         document.getElementById('noResults').classList.add('hidden');
         
-        filtered.forEach((p, index) => {
+        pageData.items.forEach((p, index) => {
           const isLiked = wishlistIds.includes(p.id);
           const card = document.createElement('div');
           const isOutOfStock = !p.isAvailable;
@@ -553,6 +564,10 @@
             </div>
           `;
           grid.appendChild(card);
+        });
+        SupplierHubPagination.render('catalogPagination', catalogPagination, filtered, {
+          itemLabel: 'produk',
+          onPageChange: () => renderProducts({ preservePage: true }),
         });
       }
       document.getElementById('productCountLabel').innerText = `${filtered.length} Produk Terdaftar`;
@@ -644,7 +659,7 @@
         const idx = wishlistIds.indexOf(id);
         if (idx === -1) wishlistIds.push(id); else wishlistIds.splice(idx, 1);
         saveWishlist();
-        renderProducts();
+        renderProducts({ preservePage: true });
     }
 
     function resetAll() {

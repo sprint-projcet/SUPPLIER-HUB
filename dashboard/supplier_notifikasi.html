@@ -19,6 +19,7 @@
     <script src="../assets/js/auth.js"></script>
     <script src="../assets/js/supplier_common.js"></script>
     <script src="../assets/js/darkmode.js"></script>
+    <script src="../assets/js/pagination.js"></script>
     <link rel="stylesheet" href="../assets/css/darkmode.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <style>
@@ -400,6 +401,7 @@
                 </p>
               </div>
             </div>
+            <div id="notification-pagination" class="px-6 pb-6"></div>
           </div>
         </div>
       </main>
@@ -408,6 +410,10 @@
     <script>
       let supplierNotifications = [];
       let notificationFilter = "all";
+      const notificationPagination = SupplierHubPagination.create({
+        pageSize: 6,
+        itemLabel: "notifikasi",
+      });
 
       function formatNotificationTime(value) {
         if (!value) return "-";
@@ -524,12 +530,17 @@
         `;
       }
 
-      function renderNotificationHistory() {
+      function renderNotificationHistory(options = {}) {
         renderNotificationStats();
         renderFilterButtons();
 
         const body = document.getElementById("notification-history-body");
         const visibleNotifications = filteredNotifications();
+        if (!options.preservePage) SupplierHubPagination.reset(notificationPagination);
+        const pageData = SupplierHubPagination.getPage(
+          visibleNotifications,
+          notificationPagination,
+        );
         if (visibleNotifications.length === 0) {
           body.innerHTML = `
             <div class="rounded-2xl border border-slate-100 bg-slate-50 p-8 text-center">
@@ -539,13 +550,25 @@
               <p class="text-sm font-bold text-slate-600">Tidak ada notifikasi.</p>
             </div>
           `;
+          SupplierHubPagination.render("notification-pagination", notificationPagination, [], {
+            itemLabel: "notifikasi",
+          });
           if (window.lucide) lucide.createIcons();
           return;
         }
 
-        body.innerHTML = `<div class="space-y-3">${visibleNotifications
+        body.innerHTML = `<div class="space-y-3">${pageData.items
           .map(notificationHistoryCard)
           .join("")}</div>`;
+        SupplierHubPagination.render(
+          "notification-pagination",
+          notificationPagination,
+          visibleNotifications,
+          {
+            itemLabel: "notifikasi",
+            onPageChange: () => renderNotificationHistory({ preservePage: true }),
+          },
+        );
         if (window.lucide) lucide.createIcons();
       }
 
@@ -561,6 +584,9 @@
               <p class="text-sm font-bold text-red-600">Gagal memuat riwayat notifikasi.</p>
             </div>
           `;
+          SupplierHubPagination.render("notification-pagination", notificationPagination, [], {
+            itemLabel: "notifikasi",
+          });
         }
       }
 
@@ -578,7 +604,7 @@
               ? { ...notification, is_read: true, read_at: new Date().toISOString() }
               : notification,
           );
-          renderNotificationHistory();
+          renderNotificationHistory({ preservePage: true });
           SupplierDashboard.notify("success", "Notifikasi sudah ditandai dibaca.");
         } catch (error) {
           SupplierDashboard.notify("danger", error.message || "Gagal menandai notifikasi.");
@@ -601,7 +627,7 @@
           SupplierDashboard.notify("success", "Semua notifikasi sudah ditandai dibaca.");
         } catch (error) {
           SupplierDashboard.notify("danger", error.message || "Gagal menandai semua notifikasi.");
-          renderNotificationHistory();
+          renderNotificationHistory({ preservePage: true });
         }
       }
 
