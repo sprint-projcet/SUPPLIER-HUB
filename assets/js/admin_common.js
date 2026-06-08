@@ -130,6 +130,19 @@ const AdminDashboard = (() => {
     return `<span class="text-[10px] font-black px-3 py-1 rounded-full ${className}">${escapeHTML(label)}</span>`;
   }
 
+  function formatNotificationTime(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   function notify(type, message) {
     if (typeof window.showGlobalToast === "function") {
       window.showGlobalToast(type, message);
@@ -173,6 +186,7 @@ const AdminDashboard = (() => {
 
       const title = escapeHTML(notification.title || "Notifikasi Admin");
       const message = escapeHTML(notification.message || "-");
+      const createdAt = escapeHTML(formatNotificationTime(notification.created_at));
       card.innerHTML = `
         <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
           <i data-lucide="check-circle" class="h-4 w-4"></i>
@@ -180,6 +194,7 @@ const AdminDashboard = (() => {
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold text-slate-900">${title}</p>
           <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${message}</p>
+          <p class="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">${createdAt}</p>
         </div>
         <button type="button" data-action="close" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
           <i data-lucide="x" class="h-4 w-4"></i>

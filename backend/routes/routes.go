@@ -88,6 +88,16 @@ func SetupRoutes(router *gin.Engine) {
 	// Semua rute di bawah ini wajib melampirkan JWT token
 	api.Use(middlewares.RequireAuth())
 
+	chatGroup := api.Group("/chat")
+	chatGroup.Use(middlewares.RequireRole("user", "supplier"))
+	{
+		chatGroup.GET("/conversations", controllers.GetChatConversations)
+		chatGroup.POST("/conversations", controllers.CreateChatConversation)
+		chatGroup.GET("/conversations/:id/messages", controllers.GetChatMessages)
+		chatGroup.POST("/conversations/:id/messages", controllers.SendChatMessage)
+		chatGroup.PUT("/conversations/:id/read", controllers.MarkChatConversationRead)
+	}
+
 	// UMKM (User) Routes
 	userGroup := api.Group("/user")
 	userGroup.Use(middlewares.RequireRole("user"))

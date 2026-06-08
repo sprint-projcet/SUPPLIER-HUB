@@ -67,6 +67,8 @@ func ConnectDatabase() {
 		&models.RequestLog{},
 		&models.ShipmentLog{},
 		&models.Notification{},
+		&models.ChatConversation{},
+		&models.ChatMessage{},
 		&models.Wishlist{},
 		&models.Log{},
 		&models.Review{},

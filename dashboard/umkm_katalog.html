@@ -76,6 +76,10 @@
       fill: #ef4444;
       stroke: #ef4444;
     }
+
+    .product-card-description {
+      min-height: 2.5rem;
+    }
     
     /* Hilangkan scrollbar untuk kontainer kategori */
     .no-scrollbar::-webkit-scrollbar { display: none; }
@@ -200,7 +204,7 @@
       </div>
       
       <div class="relative w-full lg:w-96 flex items-center">
-        <input id="searchInput" type="text" placeholder="Cari bahan baku atau supplier..." class="w-full pl-12 pr-5 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-50 focus:border-green-500 transition-all shadow-sm text-slate-600">
+        <input id="searchInput" type="text" placeholder="Cari bahan baku, supplier, atau toko..." class="w-full pl-12 pr-5 py-4 bg-white border border-slate-200 rounded-2xl focus:outline-none focus:ring-4 focus:ring-green-50 focus:border-green-500 transition-all shadow-sm text-slate-600">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
         </svg>
@@ -219,6 +223,9 @@
     </div>
 
     <!-- Product Grid -->
+    <section id="supplierStoreResults" class="hidden mb-10"></section>
+    <section id="supplierStoreView" class="hidden mb-10"></section>
+
     <div id="productGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
       <!-- Produk diisi oleh JS -->
     </div>
@@ -278,6 +285,7 @@
                         <div>
                             <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Disediakan Oleh</p>
                             <p id="modalSupplier" class="text-sm font-bold text-slate-700"></p>
+                            <p id="modalSupplierDescription" class="text-xs text-slate-400 leading-relaxed mt-1"></p>
                         </div>
                     </div>
 
@@ -405,6 +413,7 @@
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
+    let activeSupplierStoreID = '';
     const catalogPagination = SupplierHubPagination.create({
       pageSize: 12,
       itemLabel: 'produk',
@@ -429,6 +438,37 @@
       document.getElementById('searchInput').value = searchQuery;
     }
 
+    function shortText(value, maxLength = 120) {
+      const text = String(value || '').trim();
+      if (text.length <= maxLength) return text;
+      return `${text.slice(0, maxLength - 1)}...`;
+    }
+
+    function supplierDescriptionFromProduct(product) {
+      const supplier = product.supplier || {};
+      const name = supplier.business_name || 'Supplier Terverifikasi';
+      const category = supplier.category || product.category || 'bahan baku';
+      const region = supplier.region || product.location || 'Indonesia';
+      const address = supplier.address || '';
+
+      if (address) {
+        return `${name} berlokasi di ${address}. Fokus supply: ${category} untuk wilayah ${region}.`;
+      }
+
+      return `${name} menyediakan ${category} dengan wilayah supply ${region}.`;
+    }
+
+    function supplierMatchesQuery(product, normalizedQuery) {
+      if (!normalizedQuery) return false;
+      return [
+        product.supplier,
+        product.supplierCategory,
+        product.supplierRegion,
+        product.supplierAddress,
+        product.supplierDescription,
+      ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
+    }
+
     async function fetchCatalog() {
       try {
         const res = await fetch(buildApiUrl('/api/catalog'));
@@ -436,19 +476,26 @@
           const payload = await res.json();
           const data = Array.isArray(payload) ? payload : payload.data || [];
           products = data.map(p => {
+            const supplier = p.supplier || {};
             let titleName = p.name || '';
             if (titleName.includes(" - ")) {
               const parts = titleName.split(" - ");
               const qty = parts.pop();
               titleName = `${parts.join(" - ")} (${qty})`;
             }
+            const supplierDescription = supplierDescriptionFromProduct(p);
             return {
               id: String(p.id),
               title: titleName,
               price: p.price,
               category: p.category || 'Lainnya',
-              supplier: p.supplier?.business_name || 'Supplier Terverifikasi',
+              supplier: supplier.business_name || 'Supplier Terverifikasi',
               supplier_id: p.supplier_id,
+              supplierEmail: supplier.email || '',
+              supplierAddress: supplier.address || '',
+              supplierCategory: supplier.category || p.category || 'Lainnya',
+              supplierRegion: supplier.region || p.location || 'Indonesia',
+              supplierDescription,
               rating: p.rating_average > 0 ? Number(p.rating_average).toFixed(1) : 'Baru',
               reviews: Number(p.review_count) || 0,
               badge: p.stock < 10 && p.stock > 0 ? 'Stok Menipis' : '',
@@ -457,7 +504,7 @@
               desc: p.description || 'Tidak ada deskripsi.',
               stockValue: Number(p.stock) || 0,
               stock: p.stock + ' Unit',
-              origin: p.location || p.supplier?.region || 'Indonesia'
+              origin: p.location || supplier.region || 'Indonesia'
             };
           });
           initCategories();
@@ -487,6 +534,7 @@
     }
 
     function setCategory(cat) {
+      activeSupplierStoreID = '';
       currentCategory = cat;
       document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
       const activeBtn = document.getElementById(`cat-${cat}`);
@@ -494,83 +542,359 @@
       renderProducts();
     }
 
+    function supplierKey(product) {
+      return String(product.supplier_id || product.supplier || '').trim();
+    }
+
+    function productsBySupplierID(supplierID) {
+      const key = String(supplierID || '').trim();
+      return products.filter((product) => supplierKey(product) === key);
+    }
+
+    function storeFromProducts(storeProducts, fallbackID = '') {
+      const product = storeProducts[0] || {};
+      return {
+        id: fallbackID || supplierKey(product),
+        name: product.supplier || 'Supplier Terverifikasi',
+        category: product.supplierCategory || product.category || 'Supplier',
+        region: product.supplierRegion || product.origin || 'Indonesia',
+        address: product.supplierAddress || '',
+        email: product.supplierEmail || '',
+        description: product.supplierDescription || 'Supplier ini menyediakan bahan baku terverifikasi untuk kebutuhan UMKM.',
+        products: storeProducts,
+      };
+    }
+
+    function groupedSupplierStores(productList, normalizedQuery) {
+      const stores = new Map();
+      productList.forEach((product) => {
+        if (!supplierMatchesQuery(product, normalizedQuery)) return;
+        const supplierID = supplierKey(product);
+        if (!stores.has(supplierID)) {
+          stores.set(supplierID, storeFromProducts([product], supplierID));
+          stores.get(supplierID).products = [];
+        }
+        stores.get(supplierID).products.push(product);
+      });
+      return Array.from(stores.values());
+    }
+
+    function productCardHTML(product, index = 0) {
+      const isLiked = wishlistIds.includes(product.id);
+      const isOutOfStock = !product.isAvailable;
+      const productID = jsArg(product.id);
+
+      return `
+        <article
+          onclick="event.stopPropagation(); openProductModal(${productID})"
+          class="group bg-white rounded-3xl border border-slate-100 overflow-hidden card-hover relative flex flex-col cursor-pointer"
+          style="animation: fadeInUp 0.5s ease forwards ${index * 0.05}s"
+        >
+          <div class="h-48 bg-slate-100 relative overflow-hidden">
+            <img src="${escapeHTML(product.img)}" alt="${escapeHTML(product.title)}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
+
+            <div class="absolute top-4 left-4 flex flex-col gap-2">
+              ${product.badge ? `<span class="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-xl">${escapeHTML(product.badge)}</span>` : ''}
+            </div>
+
+            <button onclick="toggleLike(${productID}); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all" aria-label="Simpan produk">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
+              </svg>
+            </button>
+
+            ${isOutOfStock ? `<div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center"><span class="text-white font-black text-xs border border-white/50 px-4 py-2 rounded-xl">HABIS</span></div>` : ''}
+          </div>
+          <div class="p-5 flex flex-col flex-1">
+            <p class="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">${escapeHTML(product.category)}</p>
+            <h3 class="font-bold text-slate-900 text-base mb-1 leading-tight group-hover:text-green-600 transition-colors">${escapeHTML(product.title)}</h3>
+            <p class="text-xs text-slate-400 font-medium mb-3">${escapeHTML(product.supplier)}</p>
+            <p class="product-card-description text-xs text-slate-500 leading-5 mb-5">${escapeHTML(shortText(product.desc, 96))}</p>
+
+            <div class="mt-auto flex items-center justify-between gap-3">
+              <div>
+                  <p class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Mulai dari</p>
+                  <p class="text-slate-900 font-black text-lg">${formatRupiah(product.price)}</p>
+              </div>
+              <button
+                  onclick="addToCart(${productID}, event); event.stopPropagation();"
+                  ${isOutOfStock ? 'disabled' : ''}
+                  class="w-11 h-11 rounded-2xl transition-all shadow-sm flex items-center justify-center shrink-0
+                  ${isOutOfStock ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-100'}"
+                  aria-label="Tambah ke keranjang">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+              </button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function activateCategoryChip(cat) {
+      document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`cat-${cat}`);
+      if(activeBtn) activeBtn.classList.add('active');
+    }
+
+    function openSupplierStore(supplierID) {
+      activeSupplierStoreID = String(supplierID || '').trim();
+      currentCategory = 'All';
+      searchQuery = '';
+      const searchInput = document.getElementById('searchInput');
+      if (searchInput) searchInput.value = '';
+      activateCategoryChip('All');
+      renderProducts();
+      requestAnimationFrame(() => {
+        document.getElementById('supplierStoreView')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function closeSupplierStore() {
+      activeSupplierStoreID = '';
+      renderProducts();
+      requestAnimationFrame(() => {
+        document.getElementById('productGrid')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+
+    function openChatWithSupplier(supplierID) {
+      const id = String(supplierID || '').trim();
+      if (!id) {
+        showToast('danger', 'ID supplier tidak tersedia untuk chat.');
+        return;
+      }
+
+      const session = getStoredUserSession();
+      if (!session || session.role !== 'user') {
+        queueToast('warning', 'Login sebagai UMKM untuk chat dengan supplier.');
+        window.location.href = '../Login/login.html';
+        return;
+      }
+
+      window.location.href = `umkm_chat.html?supplier_id=${encodeURIComponent(id)}`;
+    }
+
+    function renderSupplierStoreView() {
+      const container = document.getElementById('supplierStoreView');
+      if (!container) return 0;
+
+      if (!activeSupplierStoreID) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return 0;
+      }
+
+      const storeProducts = productsBySupplierID(activeSupplierStoreID);
+      if (storeProducts.length === 0) {
+        activeSupplierStoreID = '';
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return 0;
+      }
+
+      const store = storeFromProducts(storeProducts, activeSupplierStoreID);
+      const storeID = jsArg(store.id);
+      container.classList.remove('hidden');
+      container.innerHTML = `
+        <div class="bg-white rounded-3xl border border-green-100 shadow-sm overflow-hidden">
+          <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-green-50 via-white to-emerald-50">
+            <div class="mb-5 flex flex-wrap gap-3">
+              <button type="button" onclick="closeSupplierStore()" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 hover:border-green-300 hover:text-green-700 transition-all">
+                <i class="fas fa-arrow-left text-[11px]"></i>
+                Kembali ke katalog
+              </button>
+              <button type="button" onclick="openChatWithSupplier(${storeID})" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
+                <i class="fas fa-comments text-[11px]"></i>
+                Chat Supplier
+              </button>
+            </div>
+            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
+              <div class="max-w-3xl">
+                <p class="text-[10px] font-black text-green-600 uppercase tracking-[0.24em] mb-2">${escapeHTML(store.category || 'Supplier')}</p>
+                <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">${escapeHTML(store.name)}</h2>
+                <p class="mt-3 text-sm sm:text-base leading-7 text-slate-600">${escapeHTML(store.description)}</p>
+                <div class="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
+                  <span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(store.region || 'Indonesia')}</span>
+                  ${store.address ? `<span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(shortText(store.address, 70))}</span>` : ''}
+                  ${store.email ? `<span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(store.email)}</span>` : ''}
+                </div>
+              </div>
+              <div class="inline-flex items-center gap-3 rounded-2xl bg-white border border-slate-100 px-4 py-3 shadow-sm self-start lg:self-auto">
+                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+                  <i class="fas fa-store"></i>
+                </div>
+                <div>
+                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Produk Tersedia</p>
+                  <p class="text-xl font-black text-slate-900">${storeProducts.length}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 sm:p-8">
+            <div class="mb-5 flex items-center justify-between gap-4">
+              <h3 class="text-lg font-black text-slate-900">Produk dari ${escapeHTML(store.name)}</h3>
+              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">${storeProducts.length} produk</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+              ${storeProducts.map((product, index) => productCardHTML(product, index)).join('')}
+            </div>
+          </div>
+        </div>
+      `;
+
+      return storeProducts.length;
+    }
+
+    function renderSupplierStoreResults(productList, normalizedQuery) {
+      const container = document.getElementById('supplierStoreResults');
+      if (!container) return 0;
+
+      const stores = groupedSupplierStores(productList, normalizedQuery);
+      if (!normalizedQuery || stores.length === 0) {
+        container.classList.add('hidden');
+        container.innerHTML = '';
+        return 0;
+      }
+
+      container.classList.remove('hidden');
+      container.innerHTML = `
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-xl font-black text-slate-900 tracking-tight">Toko Supplier Ditemukan</h2>
+            <p class="text-sm text-slate-500">Deskripsi toko dan produk yang tersedia dari supplier terkait.</p>
+          </div>
+          <span class="hidden sm:inline-flex rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700">
+            ${stores.length} toko
+          </span>
+        </div>
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+          ${stores
+            .map((store) => {
+              const productsPreview = store.products.slice(0, 4);
+              const storeID = jsArg(store.id);
+              return `
+                <article
+                  onclick="openSupplierStore(${storeID})"
+                  onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openSupplierStore(${storeID}); }"
+                  role="button"
+                  tabindex="0"
+                  class="bg-white rounded-3xl border border-green-100 p-6 shadow-sm cursor-pointer hover:border-green-300 hover:shadow-xl hover:shadow-green-100/40 transition-all"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div class="min-w-0">
+                      <p class="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-2">
+                        ${escapeHTML(store.category || 'Supplier')}
+                      </p>
+                      <h3 class="text-lg font-black text-slate-900">${escapeHTML(store.name || 'Supplier')}</h3>
+                      <p class="mt-2 text-sm leading-6 text-slate-500">${escapeHTML(store.description || '-')}</p>
+                      <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
+                        <span class="rounded-full bg-slate-100 px-3 py-1">${escapeHTML(store.region || 'Indonesia')}</span>
+                        ${store.email ? `<span class="rounded-full bg-slate-100 px-3 py-1">${escapeHTML(store.email)}</span>` : ''}
+                      </div>
+                      <div class="mt-4 flex flex-wrap gap-2">
+                        <button type="button" onclick="event.stopPropagation(); openSupplierStore(${storeID})" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white hover:bg-green-600 transition-all">
+                          <i class="fas fa-arrow-right text-[11px]"></i>
+                          Masuk Toko
+                        </button>
+                        <button type="button" onclick="event.stopPropagation(); openChatWithSupplier(${storeID})" class="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 transition-all">
+                          <i class="fas fa-comments text-[11px]"></i>
+                          Chat
+                        </button>
+                      </div>
+                    </div>
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+                      <i class="fas fa-store"></i>
+                    </div>
+                  </div>
+                  <div class="mt-5 border-t border-slate-100 pt-5">
+                    <div class="flex items-center justify-between gap-4 mb-3">
+                      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                        Produk Toko
+                      </p>
+                      <span class="text-[11px] font-black text-green-700">Klik toko untuk masuk</span>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      ${productsPreview.map((product, index) => productCardHTML(product, index)).join('')}
+                    </div>
+                    ${
+                      store.products.length > productsPreview.length
+                        ? `<p class="mt-3 text-xs font-bold text-slate-400">+${store.products.length - productsPreview.length} produk lain dari toko ini</p>`
+                        : ''
+                    }
+                  </div>
+                </article>
+              `;
+            })
+            .join('')}
+        </div>
+      `;
+      return stores.length;
+    }
+
     function renderProducts(options = {}) {
       const grid = document.getElementById('productGrid');
+      const noResults = document.getElementById('noResults');
+      const paginationContainer = document.getElementById('catalogPagination');
+      const productCountLabel = document.getElementById('productCountLabel');
       grid.innerHTML = '';
+      const activeStoreCount = renderSupplierStoreView();
+
+      if (activeSupplierStoreID) {
+        const supplierResults = document.getElementById('supplierStoreResults');
+        if (supplierResults) {
+          supplierResults.classList.add('hidden');
+          supplierResults.innerHTML = '';
+        }
+        grid.classList.add('hidden');
+        noResults.classList.add('hidden');
+        if (paginationContainer) paginationContainer.innerHTML = '';
+        productCountLabel.innerText = `${activeStoreCount} Produk di Toko`;
+        return;
+      }
+
+      const normalizedQuery = searchQuery.toLowerCase().trim();
       
       const filtered = products.filter(p => {
         const matchesCat = currentCategory === 'All' || p.category === currentCategory;
-        const normalizedQuery = searchQuery.toLowerCase();
-        const matchesSearch = p.title.toLowerCase().includes(normalizedQuery) ||
-          p.supplier.toLowerCase().includes(normalizedQuery) ||
-          p.category.toLowerCase().includes(normalizedQuery) ||
-          p.origin.toLowerCase().includes(normalizedQuery);
+        const matchesSearch = [
+          p.title,
+          p.supplier,
+          p.category,
+          p.origin,
+          p.desc,
+          p.supplierDescription,
+        ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
         return matchesCat && matchesSearch;
       });
+      const storeCount = renderSupplierStoreResults(filtered, normalizedQuery);
+      if (normalizedQuery && storeCount > 0) {
+        grid.classList.add('hidden');
+        noResults.classList.add('hidden');
+        if (paginationContainer) paginationContainer.innerHTML = '';
+        productCountLabel.innerText = `${storeCount} Toko Supplier`;
+        return;
+      }
+
       if (!options.preservePage) SupplierHubPagination.reset(catalogPagination);
       const pageData = SupplierHubPagination.getPage(filtered, catalogPagination);
 
       if (filtered.length === 0) {
         grid.classList.add('hidden');
-        document.getElementById('noResults').classList.remove('hidden');
+        noResults.classList.remove('hidden');
         SupplierHubPagination.render('catalogPagination', catalogPagination, [], {
           itemLabel: 'produk',
         });
       } else {
         grid.classList.remove('hidden');
-        document.getElementById('noResults').classList.add('hidden');
+        noResults.classList.add('hidden');
         
-        pageData.items.forEach((p, index) => {
-          const isLiked = wishlistIds.includes(p.id);
-          const card = document.createElement('div');
-          const isOutOfStock = !p.isAvailable;
-          card.className = `group bg-white rounded-3xl border border-slate-100 overflow-hidden card-hover relative flex flex-col`;
-          card.style.animation = `fadeInUp 0.5s ease forwards ${index * 0.05}s`;
-          
-          card.innerHTML = `
-            <div class="h-56 bg-slate-100 relative overflow-hidden cursor-pointer" onclick="openProductModal('${p.id}')">
-              <img src="${p.img}" alt="${p.title}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110">
-              
-              <div class="absolute top-4 left-4 flex flex-col gap-2">
-                ${p.badge ? `<span class="bg-green-600 text-white text-[10px] font-black px-3 py-1.5 rounded-lg uppercase tracking-wider shadow-xl">${p.badge}</span>` : ''}
-              </div>
-
-              <button onclick="toggleLike('${p.id}'); event.stopPropagation();" class="absolute top-4 right-4 bg-white/90 backdrop-blur w-10 h-10 rounded-full shadow-lg flex items-center justify-center hover:bg-white transition-all">
-                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 ${isLiked ? 'text-red-500 fill-current' : 'text-slate-300'}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                </svg>
-              </button>
-
-              ${isOutOfStock ? `<div class="absolute inset-0 bg-slate-900/40 flex items-center justify-center"><span class="text-white font-black text-xs border border-white/50 px-4 py-2 rounded-xl">HABIS</span></div>` : ''}
-            </div>
-            <div class="p-6 flex flex-col flex-1">
-              <p class="text-[10px] font-black text-green-600 uppercase tracking-widest mb-2">${p.category}</p>
-              <h3 class="font-bold text-slate-900 text-lg mb-1 leading-tight group-hover:text-green-600 transition-colors">${p.title}</h3>
-              <p class="text-xs text-slate-400 font-medium mb-4">${p.supplier}</p>
-              
-              <div class="mt-auto flex items-center justify-between">
-                <div>
-                    <p class="text-[10px] text-slate-400 font-bold uppercase mb-0.5">Mulai dari</p>
-                    <p class="text-slate-900 font-black text-xl">${formatRupiah(p.price)}</p>
-                </div>
-                <button 
-                    onclick="addToCart('${p.id}', event); event.stopPropagation();" 
-                    ${isOutOfStock ? 'disabled' : ''}
-                    class="w-12 h-12 rounded-2xl transition-all shadow-sm flex items-center justify-center 
-                    ${isOutOfStock ? 'bg-slate-100 text-slate-300' : 'bg-slate-900 text-white hover:bg-green-600 hover:shadow-lg hover:shadow-green-100'}">
-                  <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-                </button>
-              </div>
-            </div>
-          `;
-          grid.appendChild(card);
-        });
+        grid.innerHTML = pageData.items.map((p, index) => productCardHTML(p, index)).join('');
         SupplierHubPagination.render('catalogPagination', catalogPagination, filtered, {
           itemLabel: 'produk',
           onPageChange: () => renderProducts({ preservePage: true }),
         });
       }
-      document.getElementById('productCountLabel').innerText = `${filtered.length} Produk Terdaftar`;
+      productCountLabel.innerText = `${filtered.length} Produk Terdaftar`;
     }
 
     async function openProductModal(id) {
@@ -582,6 +906,7 @@
         document.getElementById('modalCategory').innerText = p.category;
         document.getElementById('modalTitle').innerText = p.title;
         document.getElementById('modalSupplier').innerText = p.supplier;
+        document.getElementById('modalSupplierDescription').innerText = p.supplierDescription;
         document.getElementById('modalRating').innerText = p.rating;
         document.getElementById('modalReviews').innerText = `(${p.reviews} ulasan)`;
         document.getElementById('modalDescription').innerText = p.desc;
@@ -663,12 +988,14 @@
     }
 
     function resetAll() {
+      activeSupplierStoreID = '';
       searchQuery = '';
       document.getElementById('searchInput').value = '';
       setCategory('All');
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
+      activeSupplierStoreID = '';
       searchQuery = e.target.value;
       renderProducts();
     });
@@ -1007,6 +1334,10 @@
         '"': '&quot;',
         "'": '&#039;'
       })[m]);
+    }
+
+    function jsArg(value) {
+      return escapeHTML(JSON.stringify(String(value || '')));
     }
 
     function showToast(type, message) {

@@ -57,6 +57,7 @@ const SupplierDashboard = (() => {
   }
 
   function setActiveNavigation() {
+    ensureSupplierChatNavigation();
     const currentPage = window.location.pathname.split("/").pop() || "supplier.html";
 
     document.querySelectorAll("#sidebar nav a[href]").forEach((link) => {
@@ -67,6 +68,25 @@ const SupplierDashboard = (() => {
         icon.className = isActive ? "text-white" : "group-hover:text-emerald-400";
       });
     });
+  }
+
+  function ensureSupplierChatNavigation() {
+    const nav = document.querySelector("#sidebar nav");
+    if (!nav || nav.querySelector('a[href="supplier_chat.html"]')) return;
+
+    const link = document.createElement("a");
+    link.href = "supplier_chat.html";
+    link.className = `${NAV_BASE_CLASS} ${NAV_IDLE_CLASS}`;
+    link.innerHTML = `
+      <i data-lucide="message-circle" class="group-hover:text-emerald-400"></i>
+      <span class="font-semibold text-sm">Chat UMKM</span>
+    `;
+
+    const beforeLink =
+      nav.querySelector('a[href="supplier_notifikasi.html"]') ||
+      nav.querySelector('a[href="supplier_analitik.html"]') ||
+      nav.querySelector('a[href="supplier_toko.html"]');
+    nav.insertBefore(link, beforeLink || null);
   }
 
   function toggleSidebar() {
@@ -273,6 +293,19 @@ const SupplierDashboard = (() => {
     };
   }
 
+  function formatNotificationTime(value) {
+    if (!value) return "-";
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return "-";
+    return date.toLocaleString("id-ID", {
+      day: "2-digit",
+      month: "short",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  }
+
   function notify(type, message) {
     if (typeof window.showGlobalToast === "function") {
       window.showGlobalToast(type, message);
@@ -310,6 +343,8 @@ const SupplierDashboard = (() => {
       "fixed left-1/2 transform -translate-x-1/2 top-24 z-[120] w-[calc(100%-2rem)] max-w-sm space-y-2";
 
     notifications.slice(0, 5).forEach((notification, index) => {
+      const isChatNotification =
+        notification.source_type === "chat" || notification.type === "chat_message";
       const card = document.createElement("div");
       card.className =
         "notification-toast flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-slate-200 shadow-md backdrop-blur-sm animate-slide-in cursor-pointer";
@@ -317,13 +352,15 @@ const SupplierDashboard = (() => {
 
       const title = escapeHTML(notification.title || "Peringatan Stok");
       const message = escapeHTML(notification.message || "-");
+      const createdAt = escapeHTML(formatNotificationTime(notification.created_at));
       card.innerHTML = `
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-orange-600">
-          <i data-lucide="alert-circle" class="h-4 w-4"></i>
+        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${isChatNotification ? "bg-emerald-50 text-emerald-600" : "bg-orange-50 text-orange-600"}">
+          <i data-lucide="${isChatNotification ? "message-circle" : "alert-circle"}" class="h-4 w-4"></i>
         </div>
         <div class="min-w-0 flex-1">
           <p class="text-sm font-semibold text-slate-900">${title}</p>
           <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${message}</p>
+          <p class="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">${createdAt}</p>
         </div>
         <button type="button" data-action="close" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
           <i data-lucide="x" class="h-4 w-4"></i>
@@ -346,6 +383,13 @@ const SupplierDashboard = (() => {
 
       card.addEventListener("click", (e) => {
         if (e.target.closest('[data-action="close"]')) return;
+        if (notification.source_type === "chat") {
+          const query = notification.source_id
+            ? `?conversation_id=${encodeURIComponent(notification.source_id)}`
+            : "";
+          window.location.href = `supplier_chat.html${query}`;
+          return;
+        }
         const query = notification.source_id
           ? `?q=${encodeURIComponent(notification.source_id)}`
           : "";

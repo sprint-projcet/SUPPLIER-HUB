@@ -196,6 +196,167 @@ window.showGlobalToast = showToast;
 window.queueToast = queueToast;
 window.toastMessages = toastMessages;
 
+function ensureUmkmChatNavigation() {
+  const nav = document.querySelector("#sidebar nav");
+  if (!nav || nav.querySelector('a[href="umkm_chat.html"]')) return;
+
+  const link = document.createElement("a");
+  link.href = "umkm_chat.html";
+  link.className =
+    "w-full flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 group text-slate-400 hover:bg-slate-800 hover:text-white";
+  link.innerHTML = `
+    <i data-lucide="message-circle" class="group-hover:text-emerald-400"></i>
+    <span class="font-semibold text-sm">Chat</span>
+  `;
+
+  const beforeLink =
+    nav.querySelector('a[href="umkm_pesanan_saya.html"]') ||
+    nav.querySelector('a[href="umkm_bantuan.html"]');
+  nav.insertBefore(link, beforeLink || null);
+
+  if (window.lucide) lucide.createIcons();
+}
+
+const SUPPLIER_HUB_CHAT_POLL_MS = 8000;
+let supplierHubChatPollTimer = null;
+let supplierHubChatPollInitialized = false;
+
+function chatPageForRole(role) {
+  if (role === "supplier") return "supplier_chat.html";
+  if (role === "user") return "umkm_chat.html";
+  return "";
+}
+
+function chatSnapshotKey(session) {
+  return `supplierhub_chat_snapshot_${session.role}_${session.id || session.email || "guest"}`;
+}
+
+function chatInitialNoticeKey(session) {
+  return `supplierhub_chat_initial_notice_${session.role}_${session.id || session.email || "guest"}`;
+}
+
+function loadChatSnapshot(session) {
+  try {
+    return JSON.parse(localStorage.getItem(chatSnapshotKey(session)) || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function saveChatSnapshot(session, snapshot) {
+  localStorage.setItem(chatSnapshotKey(session), JSON.stringify(snapshot || {}));
+}
+
+function shortChatPreview(value, maxLength = 72) {
+  const text = String(value || "").trim();
+  if (text.length <= maxLength) return text;
+  return `${text.slice(0, maxLength - 3)}...`;
+}
+
+function updateChatNavigationBadge(role, totalUnread) {
+  const page = chatPageForRole(role);
+  if (!page) return;
+
+  document.querySelectorAll(`a[href="${page}"]`).forEach((link) => {
+    let badge = link.querySelector("[data-chat-unread-badge]");
+    if (totalUnread <= 0) {
+      badge?.remove();
+      return;
+    }
+
+    if (!badge) {
+      badge = document.createElement("span");
+      badge.dataset.chatUnreadBadge = "true";
+      badge.className =
+        "ml-auto inline-flex h-5 min-w-5 items-center justify-center rounded-full bg-emerald-500 px-1.5 text-[10px] font-black text-white shadow-sm";
+      link.appendChild(badge);
+    }
+
+    badge.textContent = totalUnread > 99 ? "99+" : String(totalUnread);
+  });
+}
+
+async function fetchChatConversationsForSession(session) {
+  if (!session || !session.token) return [];
+
+  const response = await fetch(buildApiUrl("/api/chat/conversations"), {
+    headers: {
+      Authorization: `Bearer ${session.token}`,
+      Accept: "application/json",
+    },
+  });
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok) throw new Error(data.error || "Gagal mengambil notifikasi chat");
+  return data.data || [];
+}
+
+function handleChatNotificationPoll(session, conversations) {
+  const previousSnapshot = loadChatSnapshot(session);
+  const nextSnapshot = {};
+  const totalUnread = conversations.reduce(
+    (sum, conversation) => sum + Number(conversation.unread_count || 0),
+    0,
+  );
+
+  updateChatNavigationBadge(session.role, totalUnread);
+
+  conversations.forEach((conversation) => {
+    const marker = String(
+      conversation.last_message_at ||
+        conversation.updated_at ||
+        conversation.last_message ||
+        "",
+    );
+    if (!marker) return;
+
+    nextSnapshot[conversation.id] = marker;
+    const isIncoming =
+      conversation.last_sender_id &&
+      conversation.last_sender_id !== session.id &&
+      Number(conversation.unread_count || 0) > 0;
+    const isNew = previousSnapshot[conversation.id] && previousSnapshot[conversation.id] !== marker;
+
+    if (supplierHubChatPollInitialized && isIncoming && isNew) {
+      const name =
+        conversation.counterpart?.business_name ||
+        (session.role === "supplier" ? "UMKM" : "Supplier");
+      showToast(
+        "info",
+        `Pesan baru dari ${name}: ${shortChatPreview(conversation.last_message)}`,
+      );
+    }
+  });
+
+  const initialKey = chatInitialNoticeKey(session);
+  if (!supplierHubChatPollInitialized && totalUnread > 0 && !sessionStorage.getItem(initialKey)) {
+    showToast("info", `Ada ${totalUnread} chat belum dibaca.`);
+    sessionStorage.setItem(initialKey, "true");
+  }
+
+  supplierHubChatPollInitialized = true;
+  saveChatSnapshot(session, nextSnapshot);
+}
+
+function startChatNotificationPolling(session) {
+  if (!session || !["user", "supplier"].includes(session.role)) return;
+  if (document.body?.dataset?.chatRole) return;
+  if (supplierHubChatPollTimer) return;
+
+  const poll = async () => {
+    try {
+      const latestSession = getStoredUserSession();
+      if (!latestSession || latestSession.role !== session.role) return;
+      const conversations = await fetchChatConversationsForSession(latestSession);
+      handleChatNotificationPoll(latestSession, conversations);
+    } catch (error) {
+      console.warn("Gagal mengambil notifikasi chat", error);
+    }
+  };
+
+  poll();
+  supplierHubChatPollTimer = setInterval(poll, SUPPLIER_HUB_CHAT_POLL_MS);
+}
+
 if (document.readyState === "loading") {
   document.addEventListener("DOMContentLoaded", consumeQueuedToast);
 } else {
@@ -281,6 +442,7 @@ const roleConfig = {
       { name: "Dashboard", icon: "layout-dashboard" },
       { name: "Produk Saya", icon: "package" },
       { name: "Daftar Pesanan", icon: "shopping-cart" },
+      { name: "Chat UMKM", icon: "message-circle" },
       { name: "Analitik Toko", icon: "bar-chart-3" },
       { name: "Toko Saya", icon: "settings" },
     ],
@@ -321,6 +483,7 @@ const roleConfig = {
     ],
     nav: [
       { name: "Belanja", icon: "layout-dashboard" },
+      { name: "Chat", icon: "message-circle" },
       { name: "Pesanan Saya", icon: "shopping-cart" },
       { name: "Lacak Paket", icon: "truck" },
       { name: "Wishlist", icon: "heart" },
@@ -463,9 +626,13 @@ document.addEventListener("DOMContentLoaded", () => {
   if (user) {
     const displayName = user.business_name || user.name || user.email || (user.role === "admin" ? "Admin" : "UMKM");
     if (user.role === "user") {
+      ensureUmkmChatNavigation();
       document.querySelectorAll("[data-umkm-name-display]").forEach((element) => {
         element.textContent = displayName;
       });
+      startChatNotificationPolling(user);
+    } else if (user.role === "supplier") {
+      startChatNotificationPolling(user);
     } else if (user.role === "admin") {
       document.querySelectorAll("[data-admin-name-display]").forEach((element) => {
         element.textContent = displayName;
