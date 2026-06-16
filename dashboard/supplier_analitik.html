@@ -480,6 +480,8 @@
       let analyticsRevenueChart = null;
       let analyticsStatusChart = null;
       let analyticsRealtimeTimer = null;
+      let currentStats = null;
+      let currentOrders = null;
 
       const analyticsColors = {
         emerald: "#34d399",
@@ -491,12 +493,16 @@
         gray: "#64748b",
       }
 
+      function isDarkMode() {
+        return document.documentElement.classList.contains('dark');
+      }
+
       function analyticsTextColor() {
-        return "#c7d2fe";
+        return isDarkMode() ? "#c7d2fe" : "#475569";
       }
 
       function analyticsGridColor() {
-        return "rgba(129, 140, 248, 0.18)";
+        return isDarkMode() ? "rgba(129, 140, 248, 0.18)" : "rgba(71, 85, 105, 0.08)";
       }
 
       function analyticsCompactRupiah(value) {
@@ -720,7 +726,7 @@
               {
                 data: values,
                 backgroundColor: colors,
-                borderColor: "#ffffff",
+                borderColor: isDarkMode() ? "#201c3f" : "#f8fafc",
                 borderWidth: 4,
               },
             ],
@@ -800,6 +806,8 @@
             SupplierDashboard.getStats(),
             SupplierDashboard.getOrders(),
           ]);
+          currentStats = stats;
+          currentOrders = orders;
           renderAnalytics(stats, orders);
         } catch (error) {
           console.error("Gagal memuat analitik toko", error);
@@ -817,6 +825,12 @@
           ]);
         }
       }
+
+      window.addEventListener("themechanged", () => {
+        if (currentStats && currentOrders) {
+          renderAnalytics(currentStats, currentOrders);
+        }
+      });
 
       window.addEventListener("DOMContentLoaded", () => {
         SupplierDashboard.initPage({

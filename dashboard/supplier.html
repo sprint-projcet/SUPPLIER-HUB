@@ -758,12 +758,16 @@
         gray: "#64748b",
       }
 
+      function isDarkMode() {
+        return document.documentElement.classList.contains('dark');
+      }
+
       function supplierChartTextColor() {
-        return "#c7d2fe";
+        return isDarkMode() ? "#c7d2fe" : "#475569";
       }
 
       function supplierChartGridColor() {
-        return "rgba(129, 140, 248, 0.18)";
+        return isDarkMode() ? "rgba(129, 140, 248, 0.18)" : "rgba(71, 85, 105, 0.08)";
       }
 
       function supplierCompactRupiah(value) {
@@ -912,11 +916,18 @@
           card.dataset.active = String(card.dataset.supplierChartCard === mode);
         });
 
+        const isDark = isDarkMode();
         document.querySelectorAll("[data-supplier-chart-tab]").forEach((button) => {
           const isActive = button.dataset.supplierChartTab === mode;
-          button.className = isActive
-            ? "rounded-lg bg-indigo-400/20 px-4 py-2 text-xs font-black text-white ring-1 ring-indigo-300/40 shadow-sm transition-all"
-            : "rounded-lg bg-white/5 px-4 py-2 text-xs font-black text-indigo-200 hover:bg-white/10 hover:text-white transition-all";
+          if (isActive) {
+            button.className = isDark
+              ? "rounded-lg bg-indigo-400/20 px-4 py-2 text-xs font-black text-white ring-1 ring-indigo-300/40 shadow-sm transition-all"
+              : "rounded-lg bg-emerald-600 px-4 py-2 text-xs font-black text-white shadow-sm transition-all";
+          } else {
+            button.className = isDark
+              ? "rounded-lg bg-white/5 px-4 py-2 text-xs font-black text-indigo-200 hover:bg-white/10 hover:text-white transition-all"
+              : "rounded-lg bg-slate-100 px-4 py-2 text-xs font-black text-slate-600 hover:bg-slate-200 hover:text-slate-800 transition-all";
+          }
         });
       }
 
@@ -1008,7 +1019,7 @@
             : {
                 data,
                 backgroundColor: colors,
-                borderColor: "#ffffff",
+                borderColor: type === "doughnut" ? (isDarkMode() ? "#201c3f" : "#ffffff") : "#ffffff",
                 borderWidth: type === "doughnut" ? 4 : 0,
                 borderRadius: type === "bar" ? 10 : 0,
               };
@@ -1704,6 +1715,10 @@
         const query = sourceID ? `?q=${encodeURIComponent(sourceID)}` : "";
         window.location.href = `supplier_produk_saya.html${query}`;
       }
+
+      window.addEventListener("themechanged", () => {
+        renderSupplierChart();
+      });
 
       window.addEventListener("DOMContentLoaded", () => {
         SupplierDashboard.initPage({

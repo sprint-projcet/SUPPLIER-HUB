@@ -41,6 +41,7 @@ const DarkModeToggle = (() => {
     const current = getTheme();
     const newTheme = current === THEME_DARK ? THEME_LIGHT : THEME_DARK;
     applyTheme(newTheme);
+    window.dispatchEvent(new CustomEvent('themechanged', { detail: { theme: newTheme } }));
     return newTheme;
   };
 

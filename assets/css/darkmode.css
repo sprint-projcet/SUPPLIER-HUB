@@ -474,8 +474,62 @@
 :root:not(.dark) #app-content,
 :root:not(.dark) main {
   background-color: #f1f5f9 !important; /* Soft Slate-100 */
-  color: #334155 !important;            /* Soft Slate-700 text */
 }
+
+:root:not(.dark) body {
+  color: #334155;            /* Soft Slate-700 text default */
+}
+
+/* Style the analytics board to be light-themed in light mode */
+:root:not(.dark) .analytics-board {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  box-shadow: 0 10px 30px rgba(148, 163, 184, 0.08) !important;
+  color: #334155 !important;
+}
+
+:root:not(.dark) .analytics-board .board-header {
+  border-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+}
+
+:root:not(.dark) .analytics-board .chart-frame,
+:root:not(.dark) .analytics-board .board-tile {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: none !important;
+}
+
+:root:not(.dark) .board-metric-tile {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02) !important;
+}
+
+:root:not(.dark) .analytics-board .text-slate-900,
+:root:not(.dark) .analytics-board .text-slate-800,
+:root:not(.dark) .analytics-board .text-slate-700,
+:root:not(.dark) .analytics-board h3,
+:root:not(.dark) .analytics-board .text-white,
+:root:not(.dark) .analytics-board p.text-white,
+:root:not(.dark) .analytics-board span.text-white {
+  color: #1e293b !important;
+}
+
+:root:not(.dark) .analytics-board .text-slate-600,
+:root:not(.dark) .analytics-board .text-slate-500,
+:root:not(.dark) .analytics-board .text-slate-400,
+:root:not(.dark) .analytics-board p.text-slate-400,
+:root:not(.dark) .analytics-board p.text-slate-500 {
+  color: #64748b !important;
+}
+
+:root:not(.dark) .analytics-board .text-indigo-200,
+:root:not(.dark) .analytics-board .text-indigo-200\/70,
+:root:not(.dark) .analytics-board p.text-indigo-200\/70 {
+  color: #475569 !important;
+}
+
 
 /* Tone down stark white background panels to soft slate-50 */
 :root:not(.dark) .bg-white {
