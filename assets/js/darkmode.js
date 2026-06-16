@@ -19,6 +19,17 @@ const DarkModeToggle = (() => {
     return getSystemTheme();
   };
 
+  const updateToggleIcons = (theme) => {
+    const icons = document.querySelectorAll('.theme-toggle-btn i');
+    icons.forEach(icon => {
+      if (theme === THEME_DARK) {
+        icon.className = 'fas fa-sun';
+      } else {
+        icon.className = 'fas fa-moon';
+      }
+    });
+  };
+
   // Apply theme to document
   const applyTheme = (theme) => {
     const html = document.documentElement;
@@ -28,12 +39,20 @@ const DarkModeToggle = (() => {
       html.classList.remove('dark');
     }
     localStorage.setItem(STORAGE_KEY, theme);
+    updateToggleIcons(theme);
   };
 
   // Initialize theme
   const init = () => {
     const theme = getTheme();
     applyTheme(theme);
+    
+    // Ensure icons are updated once the DOM is loaded
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', () => updateToggleIcons(theme));
+    } else {
+      updateToggleIcons(theme);
+    }
   };
 
   // Toggle theme

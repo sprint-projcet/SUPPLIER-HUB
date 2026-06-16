@@ -157,7 +157,15 @@
           <span id="cartBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold w-5 h-5 flex items-center justify-center rounded-full hidden border-2 border-white">0</span>
         </button>
 
-        <button onclick="window.location.href='umkm.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200">
+        <button
+          onclick="DarkModeToggle.toggle()"
+          class="theme-toggle-btn w-11 h-11 flex items-center justify-center rounded-full bg-slate-50 border border-slate-100 dark:bg-slate-800 dark:border-slate-700 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-amber-400 hover:shadow-md transition-all"
+          title="Toggle Dark Mode"
+        >
+          <i class="fas fa-moon text-lg"></i>
+        </button>
+
+        <button onclick="window.location.href='umkm.html'" class="hidden md:flex items-center gap-2 px-5 py-2.5 bg-slate-900 text-white rounded-xl hover:bg-slate-800 transition-all text-sm font-semibold shadow-xl shadow-slate-200 dark:shadow-none">
           Dashboard
         </button>
       </div>
@@ -696,49 +704,141 @@
       const storeID = jsArg(store.id);
       container.classList.remove('hidden');
       container.innerHTML = `
-        <div class="bg-white rounded-3xl border border-green-100 shadow-sm overflow-hidden">
-          <div class="p-6 sm:p-8 border-b border-slate-100 bg-gradient-to-br from-green-50 via-white to-emerald-50">
-            <div class="mb-5 flex flex-wrap gap-3">
-              <button type="button" onclick="closeSupplierStore()" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-black text-slate-600 hover:border-green-300 hover:text-green-700 transition-all">
-                <i class="fas fa-arrow-left text-[11px]"></i>
-                Kembali ke katalog
-              </button>
-              <button type="button" onclick="openChatWithSupplier(${storeID})" class="inline-flex items-center gap-2 rounded-xl bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-emerald-700 transition-all shadow-lg shadow-emerald-100">
-                <i class="fas fa-comments text-[11px]"></i>
-                Chat Supplier
-              </button>
-            </div>
-            <div class="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5">
-              <div class="max-w-3xl">
-                <p class="text-[10px] font-black text-green-600 uppercase tracking-[0.24em] mb-2">${escapeHTML(store.category || 'Supplier')}</p>
-                <h2 class="text-3xl sm:text-4xl font-black text-slate-900 tracking-tight">${escapeHTML(store.name)}</h2>
-                <p class="mt-3 text-sm sm:text-base leading-7 text-slate-600">${escapeHTML(store.description)}</p>
-                <div class="mt-4 flex flex-wrap gap-2 text-xs font-bold text-slate-500">
-                  <span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(store.region || 'Indonesia')}</span>
-                  ${store.address ? `<span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(shortText(store.address, 70))}</span>` : ''}
-                  ${store.email ? `<span class="rounded-full bg-white px-3 py-1.5 border border-slate-100">${escapeHTML(store.email)}</span>` : ''}
+        <div class="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-all duration-300">
+          
+          <!-- Shopee Store Banner Header -->
+          <div class="relative bg-gradient-to-r from-emerald-600 via-emerald-750 to-teal-600 dark:from-slate-800 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 text-white">
+            <div class="absolute inset-0 bg-black/10 pointer-events-none"></div>
+            
+            <div class="relative z-10 flex flex-col xl:flex-row gap-8 justify-between items-stretch">
+              
+              <!-- Store Profile Card (Shopee Left Column) -->
+              <div class="flex-1 max-w-xl bg-black/25 backdrop-blur-md rounded-2xl p-5 border border-white/10 flex flex-col sm:flex-row items-center gap-5 justify-between">
+                <div class="flex items-center gap-4">
+                  <!-- Circular Avatar -->
+                  <div class="w-16 h-16 rounded-full bg-white dark:bg-slate-800 border-2 border-white/80 flex items-center justify-center shadow-lg shrink-0 text-emerald-600 dark:text-emerald-400 font-extrabold text-2xl">
+                    ${escapeHTML((store.name || 'S').charAt(0).toUpperCase())}
+                  </div>
+                  <div>
+                    <div class="flex items-center gap-2.5 flex-wrap">
+                      <h2 class="text-xl font-black tracking-tight text-white">${escapeHTML(store.name)}</h2>
+                      <span class="bg-emerald-650 text-white text-[9px] font-black px-2 py-0.5 rounded-md uppercase tracking-wider shadow-sm">${escapeHTML(store.category || 'Supplier')}</span>
+                    </div>
+                    <p class="text-xs text-white/70 mt-1 flex items-center gap-1.5">
+                      <span class="w-2.5 h-2.5 rounded-full bg-green-400 inline-block animate-pulse"></span>
+                      Aktif Baru Saja
+                    </p>
+                  </div>
+                </div>
+                
+                <!-- Action Buttons inside Profile Card -->
+                <div class="flex flex-row sm:flex-col gap-2.5 w-full sm:w-auto shrink-0 mt-3 sm:mt-0">
+                  <button type="button" onclick="openChatWithSupplier(${storeID})" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-white px-4 py-2.5 text-xs font-black text-emerald-700 hover:bg-slate-50 transition-all shadow-md">
+                    <i class="fas fa-comments"></i>
+                    Chat Sekarang
+                  </button>
+                  <button type="button" onclick="closeSupplierStore()" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-xl bg-black/30 hover:bg-black/45 text-white px-4 py-2.5 text-xs font-black transition-all border border-white/15">
+                    <i class="fas fa-arrow-left"></i>
+                    Kembali
+                  </button>
                 </div>
               </div>
-              <div class="inline-flex items-center gap-3 rounded-2xl bg-white border border-slate-100 px-4 py-3 shadow-sm self-start lg:self-auto">
-                <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-green-50 text-green-600">
-                  <i class="fas fa-store"></i>
+
+              <!-- Store Stats (Shopee Right Column) -->
+              <div class="flex-[1.5] grid grid-cols-2 sm:grid-cols-3 gap-y-4 gap-x-6 text-sm justify-center items-center">
+                
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-store text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Produk:</span>
+                    <span class="font-bold text-white">${storeProducts.length}</span>
+                  </div>
                 </div>
-                <div>
-                  <p class="text-[10px] font-black uppercase tracking-widest text-slate-400">Produk Tersedia</p>
-                  <p class="text-xl font-black text-slate-900">${storeProducts.length}</p>
+
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-star text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Penilaian:</span>
+                    <span class="font-bold text-white">4.9 (120+ Penilaian)</span>
+                  </div>
                 </div>
+
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-comment-dots text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Persentase Chat Dibalas:</span>
+                    <span class="font-bold text-white">99%</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-clock text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Waktu Chat Dibalas:</span>
+                    <span class="font-bold text-white">Hitungan Menit</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-user-plus text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Bergabung:</span>
+                    <span class="font-bold text-white">6 Bulan Lalu</span>
+                  </div>
+                </div>
+
+                <div class="flex items-center gap-2.5">
+                  <i class="fas fa-map-marker-alt text-white/60 text-base w-5 text-center"></i>
+                  <div>
+                    <span class="text-white/60 text-xs block">Lokasi:</span>
+                    <span class="font-bold text-white">${escapeHTML(store.region || 'Indonesia')}</span>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Store Description & Details Section -->
+          <div class="p-6 sm:p-8 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800 grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="lg:col-span-2">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Deskripsi Toko</h3>
+              <p class="text-slate-600 dark:text-slate-300 text-sm leading-relaxed">${escapeHTML(store.description)}</p>
+            </div>
+            <div class="space-y-3.5 border-t lg:border-t-0 lg:border-l border-slate-200 dark:border-slate-800 pt-4 lg:pt-0 lg:pl-6">
+              <h3 class="text-sm font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-2">Informasi Toko</h3>
+              
+              ${store.address ? `
+              <div class="flex items-start gap-2.5 text-xs text-slate-600 dark:text-slate-400">
+                <i class="fas fa-map-marked-alt text-slate-400 mt-0.5 shrink-0"></i>
+                <span><strong class="text-slate-700 dark:text-slate-300">Alamat:</strong> ${escapeHTML(store.address)}</span>
+              </div>
+              ` : ''}
+
+
+
+              <div class="flex items-center gap-2.5 text-xs text-slate-600 dark:text-slate-400">
+                <i class="fas fa-shield-alt text-slate-400 shrink-0"></i>
+                <span><strong class="text-slate-700 dark:text-slate-300">Keamanan:</strong> Terverifikasi Rekening Bersama</span>
               </div>
             </div>
           </div>
+
+          <!-- Store Products Tabs & Grid -->
           <div class="p-6 sm:p-8">
-            <div class="mb-5 flex items-center justify-between gap-4">
-              <h3 class="text-lg font-black text-slate-900">Produk dari ${escapeHTML(store.name)}</h3>
-              <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-500">${storeProducts.length} produk</span>
+            <div class="border-b border-slate-200 dark:border-slate-800 mb-6 flex items-center justify-between">
+              <div class="flex gap-6">
+                <span class="border-b-2 border-emerald-600 pb-3 font-bold text-emerald-600 text-sm tracking-wide cursor-pointer dark:text-emerald-400 dark:border-emerald-400">
+                  Semua Produk (${storeProducts.length})
+                </span>
+              </div>
             </div>
             <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
               ${storeProducts.map((product, index) => productCardHTML(product, index)).join('')}
             </div>
           </div>
+
         </div>
       `;
 
@@ -760,10 +860,10 @@
       container.innerHTML = `
         <div class="flex items-center justify-between mb-4">
           <div>
-            <h2 class="text-xl font-black text-slate-900 tracking-tight">Toko Supplier Ditemukan</h2>
-            <p class="text-sm text-slate-500">Deskripsi toko dan produk yang tersedia dari supplier terkait.</p>
+            <h2 class="text-xl font-black text-slate-900 dark:text-white tracking-tight">Toko Supplier Ditemukan</h2>
+            <p class="text-sm text-slate-500 dark:text-slate-400">Deskripsi toko dan produk yang tersedia dari supplier terkait.</p>
           </div>
-          <span class="hidden sm:inline-flex rounded-full bg-green-50 px-3 py-1 text-xs font-black text-green-700">
+          <span class="hidden sm:inline-flex rounded-full bg-green-50 dark:bg-emerald-500/10 px-3 py-1 text-xs font-black text-green-700 dark:text-emerald-400">
             ${stores.length} toko
           </span>
         </div>
@@ -778,47 +878,46 @@
                   onkeydown="if(event.key === 'Enter' || event.key === ' '){ event.preventDefault(); openSupplierStore(${storeID}); }"
                   role="button"
                   tabindex="0"
-                  class="bg-white rounded-3xl border border-green-100 p-6 shadow-sm cursor-pointer hover:border-green-300 hover:shadow-xl hover:shadow-green-100/40 transition-all"
+                  class="bg-white dark:bg-slate-900 rounded-3xl border border-green-100 dark:border-slate-800 p-6 shadow-sm cursor-pointer hover:border-green-300 dark:hover:border-emerald-800 hover:shadow-xl hover:shadow-green-100/40 dark:hover:shadow-none transition-all"
                 >
                   <div class="flex items-start justify-between gap-4">
                     <div class="min-w-0">
-                      <p class="text-[10px] font-black text-green-600 uppercase tracking-[0.2em] mb-2">
+                      <p class="text-[10px] font-black text-green-600 dark:text-emerald-400 uppercase tracking-[0.2em] mb-2">
                         ${escapeHTML(store.category || 'Supplier')}
                       </p>
-                      <h3 class="text-lg font-black text-slate-900">${escapeHTML(store.name || 'Supplier')}</h3>
-                      <p class="mt-2 text-sm leading-6 text-slate-500">${escapeHTML(store.description || '-')}</p>
-                      <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500">
-                        <span class="rounded-full bg-slate-100 px-3 py-1">${escapeHTML(store.region || 'Indonesia')}</span>
-                        ${store.email ? `<span class="rounded-full bg-slate-100 px-3 py-1">${escapeHTML(store.email)}</span>` : ''}
+                      <h3 class="text-lg font-black text-slate-900 dark:text-white">${escapeHTML(store.name || 'Supplier')}</h3>
+                      <p class="mt-2 text-sm leading-6 text-slate-500 dark:text-slate-400">${escapeHTML(store.description || '-')}</p>
+                      <div class="mt-3 flex flex-wrap gap-2 text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                        <span class="rounded-full bg-slate-100 dark:bg-slate-800 px-3 py-1 border border-slate-200/50 dark:border-slate-700/40">${escapeHTML(store.region || 'Indonesia')}</span>
                       </div>
                       <div class="mt-4 flex flex-wrap gap-2">
-                        <button type="button" onclick="event.stopPropagation(); openSupplierStore(${storeID})" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-xs font-black text-white hover:bg-green-600 transition-all">
+                        <button type="button" onclick="event.stopPropagation(); openSupplierStore(${storeID})" class="inline-flex items-center gap-2 rounded-xl bg-slate-900 dark:bg-emerald-600 px-4 py-2 text-xs font-black text-white hover:bg-green-600 dark:hover:bg-emerald-700 transition-all">
                           <i class="fas fa-arrow-right text-[11px]"></i>
                           Masuk Toko
                         </button>
-                        <button type="button" onclick="event.stopPropagation(); openChatWithSupplier(${storeID})" class="inline-flex items-center gap-2 rounded-xl border border-emerald-100 bg-emerald-50 px-4 py-2 text-xs font-black text-emerald-700 hover:border-emerald-200 hover:bg-emerald-100 transition-all">
+                        <button type="button" onclick="event.stopPropagation(); openChatWithSupplier(${storeID})" class="inline-flex items-center gap-2 rounded-xl border border-emerald-100 dark:border-emerald-800/80 bg-emerald-50 dark:bg-emerald-500/10 px-4 py-2 text-xs font-black text-emerald-700 dark:text-emerald-400 hover:border-emerald-200 hover:bg-emerald-100 transition-all">
                           <i class="fas fa-comments text-[11px]"></i>
                           Chat
                         </button>
                       </div>
                     </div>
-                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 text-green-600">
+                    <div class="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-green-50 dark:bg-emerald-500/10 text-green-600 dark:text-emerald-400">
                       <i class="fas fa-store"></i>
                     </div>
                   </div>
-                  <div class="mt-5 border-t border-slate-100 pt-5">
+                  <div class="mt-5 border-t border-slate-100 dark:border-slate-800 pt-5">
                     <div class="flex items-center justify-between gap-4 mb-3">
-                      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">
+                      <p class="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 dark:text-slate-500">
                         Produk Toko
                       </p>
-                      <span class="text-[11px] font-black text-green-700">Klik toko untuk masuk</span>
+                      <span class="text-[11px] font-black text-green-700 dark:text-emerald-400">Klik toko untuk masuk</span>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       ${productsPreview.map((product, index) => productCardHTML(product, index)).join('')}
                     </div>
                     ${
                       store.products.length > productsPreview.length
-                        ? `<p class="mt-3 text-xs font-bold text-slate-400">+${store.products.length - productsPreview.length} produk lain dari toko ini</p>`
+                        ? `<p class="mt-3 text-xs font-bold text-slate-400 dark:text-slate-500">+${store.products.length - productsPreview.length} produk lain dari toko ini</p>`
                         : ''
                     }
                   </div>

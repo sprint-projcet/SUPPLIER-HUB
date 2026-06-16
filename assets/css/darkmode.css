@@ -536,6 +536,13 @@
   background-color: #f8fafc !important; /* Slate-50 */
 }
 
+/* Ensure active category chips remain green with white text in light mode */
+:root:not(.dark) .category-chip.active {
+  background-color: #16a34a !important;
+  border-color: #16a34a !important;
+  color: #ffffff !important;
+}
+
 /* Tone down slate-50 / gray-50 backgrounds to soft slate-100 (escaped slashes) */
 :root:not(.dark) .bg-slate-50,
 :root:not(.dark) .bg-gray-50,
@@ -644,4 +651,17 @@
 :root:not(.dark) .border-gray-200 {
   border-color: #e2e8f0 !important;
 }
+
+/* Global Sidebar Height & Scroll Layout Fix */
+#sidebar {
+  height: 100vh !important;
+  max-height: 100vh !important;
+  overflow: hidden !important;
+}
+
+/* Fix annoying white shadow/glow in dark mode */
+:root.dark .shadow-slate-200 {
+  box-shadow: none !important;
+}
+
 
