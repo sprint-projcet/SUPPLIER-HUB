@@ -620,3 +620,115 @@ func isValidSupplierStatusTransition(current, next models.OrderStatus) bool {
 		return false
 	}
 }
+
+type PublicSupplierResponse struct {
+	ID            string  `json:"id"`
+	BusinessName  string  `json:"business_name"`
+	Category      string  `json:"category"`
+	Region        string  `json:"region"`
+	RatingAverage float64 `json:"rating_average"`
+	ReviewCount   int64   `json:"review_count"`
+	ProductCount  int64   `json:"product_count"`
+}
+
+type SupplierDetailResponse struct {
+	ID            string  `json:"id"`
+	BusinessName  string  `json:"business_name"`
+	Email         string  `json:"email"`
+	Address       string  `json:"address"`
+	Category      string  `json:"category"`
+	Region        string  `json:"region"`
+	PICName       string  `json:"pic_name"`
+	Phone         string  `json:"phone"`
+	Status        string  `json:"status"`
+	RatingAverage float64 `json:"rating_average"`
+	ReviewCount   int64   `json:"review_count"`
+	ProductCount  int64   `json:"product_count"`
+}
+
+// GetPublicSuppliers mengambil semua supplier terverifikasi/aktif
+func GetPublicSuppliers(c *gin.Context) {
+	var suppliers []models.User
+	if err := config.DB.Where("role = ? AND status = ?", models.RoleSupplier, "active").Order("created_at DESC").Find(&suppliers).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil daftar supplier"})
+		return
+	}
+
+	response := make([]PublicSupplierResponse, 0, len(suppliers))
+	for _, supplier := range suppliers {
+		var productCount int64
+		config.DB.Model(&models.Product{}).Where("supplier_id = ?", supplier.ID).Count(&productCount)
+
+		var stats struct {
+			Average float64
+			Count   int64
+		}
+		config.DB.Model(&models.Review{}).
+			Joins("JOIN products ON reviews.product_id = products.id").
+			Where("products.supplier_id = ?", supplier.ID).
+			Select("COALESCE(AVG(reviews.rating), 0) as average, COUNT(reviews.id) as count").
+			Scan(&stats)
+
+		response = append(response, PublicSupplierResponse{
+			ID:            supplier.ID,
+			BusinessName:  supplier.BusinessName,
+			Category:      supplier.Category,
+			Region:        supplier.Region,
+			RatingAverage: stats.Average,
+			ReviewCount:   stats.Count,
+			ProductCount:  productCount,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   response,
+	})
+}
+
+// GetSupplierDetail mengambil data detail lengkap supplier (wajib login)
+func GetSupplierDetail(c *gin.Context) {
+	supplierID := c.Param("id")
+	var supplier models.User
+	if err := config.DB.Where("id = ? AND role = ?", supplierID, models.RoleSupplier).First(&supplier).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "Supplier tidak ditemukan"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal mengambil data supplier"})
+		return
+	}
+
+	var productCount int64
+	config.DB.Model(&models.Product{}).Where("supplier_id = ?", supplier.ID).Count(&productCount)
+
+	var stats struct {
+		Average float64
+		Count   int64
+	}
+	config.DB.Model(&models.Review{}).
+		Joins("JOIN products ON reviews.product_id = products.id").
+		Where("products.supplier_id = ?", supplier.ID).
+		Select("COALESCE(AVG(reviews.rating), 0) as average, COUNT(reviews.id) as count").
+		Scan(&stats)
+
+	response := SupplierDetailResponse{
+		ID:            supplier.ID,
+		BusinessName:  supplier.BusinessName,
+		Email:         supplier.Email,
+		Address:       supplier.Address,
+		Category:      supplier.Category,
+		Region:        supplier.Region,
+		PICName:       supplier.PICName,
+		Phone:         supplier.Phone,
+		Status:        supplier.Status,
+		RatingAverage: stats.Average,
+		ReviewCount:   stats.Count,
+		ProductCount:  productCount,
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"status": "success",
+		"data":   response,
+	})
+}

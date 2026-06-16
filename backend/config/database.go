@@ -79,6 +79,7 @@ func ConnectDatabase() {
 
 	// SEEDER: Membuat akun Admin default jika belum ada
 	seedAdmin()
+	seedSuppliers()
 }
 
 func pingDatabase(sqlDB *sql.DB) error {
@@ -111,6 +112,133 @@ func seedAdmin() {
 			log.Println("✅ Akun Admin default berhasil dibuat (admin@supplierhub.com / admin123)")
 		} else {
 			log.Printf("⚠️ Gagal membuat akun Admin default: %v\n", err)
+		}
+	}
+}
+
+func seedSuppliers() {
+	var count int64
+	DB.Model(&models.User{}).Where("role = ?", models.RoleSupplier).Count(&count)
+	if count > 0 {
+		return
+	}
+
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("supplier123"), bcrypt.DefaultCost)
+
+	suppliers := []models.User{
+		{
+			ID:           "supplier-uuid-1",
+			BusinessName: "PT. Tekstil Maju Bersama",
+			Email:        "supplier.tekstil@supplierhub.com",
+			PasswordHash: string(hashedPassword),
+			Role:         models.RoleSupplier,
+			Address:      "Jl. Raya Soreang No. 123, Bandung, Jawa Barat",
+			Category:     "Tekstil & Pakaian",
+			Region:       "Bandung",
+			PICName:      "Budi Santoso",
+			Phone:        "081234567890",
+			Status:       "active",
+		},
+		{
+			ID:           "supplier-uuid-2",
+			BusinessName: "Elektronik Jaya Abadi",
+			Email:        "supplier.elektronik@supplierhub.com",
+			PasswordHash: string(hashedPassword),
+			Role:         models.RoleSupplier,
+			Address:      "Ruko Mangga Dua Blok A No. 15, Jakarta Pusat",
+			Category:     "Elektronik & Gadget",
+			Region:       "Jakarta",
+			PICName:      "Hendra Wijaya",
+			Phone:        "081876543210",
+			Status:       "active",
+		},
+		{
+			ID:           "supplier-uuid-3",
+			BusinessName: "CV. Packindo Creative",
+			Email:        "supplier.packindo@supplierhub.com",
+			PasswordHash: string(hashedPassword),
+			Role:         models.RoleSupplier,
+			Address:      "Kawasan Industri Rungkut Blok F No. 8, Surabaya, Jawa Timur",
+			Category:     "Kemasan & Packaging",
+			Region:       "Surabaya",
+			PICName:      "Siti Aminah",
+			Phone:        "081399887766",
+			Status:       "active",
+		},
+	}
+
+	for _, supplier := range suppliers {
+		if err := DB.Create(&supplier).Error; err == nil {
+			log.Printf("✅ Akun Supplier default berhasil dibuat: %s (%s / supplier123)", supplier.BusinessName, supplier.Email)
+			seedProductsForSupplier(supplier)
+		}
+	}
+}
+
+func seedProductsForSupplier(supplier models.User) {
+	var products []models.Product
+	if supplier.ID == "supplier-uuid-1" {
+		products = []models.Product{
+			{
+				ID:          "prod-tekstil-1",
+				SupplierID:  supplier.ID,
+				Name:        "Kain Katun Premium 100%",
+				Category:    "Tekstil",
+				Price:       45000,
+				Stock:       1500,
+				Description: "Kain katun premium sangat lembut dan cocok untuk pakaian.",
+				Location:    supplier.Region,
+			},
+			{
+				ID:          "prod-tekstil-2",
+				SupplierID:  supplier.ID,
+				Name:        "Kain Linen Serat Alami",
+				Category:    "Tekstil",
+				Price:       55000,
+				Stock:       800,
+				Description: "Kain linen berkualitas tinggi terbuat dari serat alami.",
+				Location:    supplier.Region,
+			},
+		}
+	} else if supplier.ID == "supplier-uuid-2" {
+		products = []models.Product{
+			{
+				ID:          "prod-elek-1",
+				SupplierID:  supplier.ID,
+				Name:        "Kabel USB Type-C Fast Charge",
+				Category:    "Elektronik",
+				Price:       15000,
+				Stock:       2000,
+				Description: "Kabel USB Type-C mendukung pengisian daya cepat.",
+				Location:    supplier.Region,
+			},
+		}
+	} else if supplier.ID == "supplier-uuid-3" {
+		products = []models.Product{
+			{
+				ID:          "prod-pack-1",
+				SupplierID:  supplier.ID,
+				Name:        "Kardus Box Polos 20x20x10",
+				Category:    "Kemasan",
+				Price:       2500,
+				Stock:       5000,
+				Description: "Kardus box tebal multifungsi untuk pengemasan barang.",
+				Location:    supplier.Region,
+			},
+		}
+	}
+
+	for _, product := range products {
+		if err := DB.Create(&product).Error; err == nil {
+			review := models.Review{
+				ID:        "rev-" + product.ID,
+				OrderID:   "mock-order-id-" + product.ID,
+				ProductID: product.ID,
+				UmkmID:    "mock-umkm-id",
+				Rating:    5,
+				Comment:   "Bahan sangat bagus dan pengiriman cepat!",
+			}
+			DB.Create(&review)
 		}
 	}
 }

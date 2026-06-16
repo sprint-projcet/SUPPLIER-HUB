@@ -23,6 +23,7 @@ func SetupRoutes(router *gin.Engine) {
 	// Public Catalog
 	api.GET("/catalog", controllers.GetPublicCatalog)
 	api.GET("/catalog/products/:id/reviews", controllers.GetProductReviews)
+	api.GET("/public/suppliers", controllers.GetPublicSuppliers)
 	api.POST("/webhook/payment", controllers.HandleSmartBankCallback)
 
 	// Mock services for local integration testing.
@@ -87,6 +88,9 @@ func SetupRoutes(router *gin.Engine) {
 
 	// Semua rute di bawah ini wajib melampirkan JWT token
 	api.Use(middlewares.RequireAuth())
+
+	// Supplier Details (Authenticated)
+	api.GET("/suppliers/:id", controllers.GetSupplierDetail)
 
 	// UMKM (User) Routes
 	userGroup := api.Group("/user")
