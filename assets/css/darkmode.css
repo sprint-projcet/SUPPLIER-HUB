@@ -482,12 +482,34 @@
   background-color: #f8fafc !important; /* Slate-50 */
 }
 
-/* Tone down slate-50 / gray-50 backgrounds to soft slate-100 */
+/* Tone down slate-50 / gray-50 backgrounds to soft slate-100 (escaped slashes) */
 :root:not(.dark) .bg-slate-50,
 :root:not(.dark) .bg-gray-50,
-:root:not(.dark) .bg-slate-100/30,
-:root:not(.dark) .bg-slate-100/60 {
+:root:not(.dark) .bg-slate-100\/30,
+:root:not(.dark) .bg-slate-100\/60 {
   background-color: #f1f5f9 !important;
+}
+
+/* Ensure supplier card pills in light mode are soft slate with dark readable text */
+:root:not(.dark) .supplier-card .bg-slate-50 {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+/* Ensure supplier card badges in light mode have soft pastel backgrounds and high-contrast text */
+:root:not(.dark) .supplier-card .bg-amber-100 {
+  background-color: rgba(245, 158, 11, 0.1) !important;
+  color: #b45309 !important;
+}
+
+:root:not(.dark) .supplier-card .bg-blue-100 {
+  background-color: rgba(59, 130, 246, 0.1) !important;
+  color: #1d4ed8 !important;
+}
+
+:root:not(.dark) .supplier-card .bg-green-100 {
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: #047857 !important;
 }
 
 /* Soften light green/emerald tint backgrounds */
