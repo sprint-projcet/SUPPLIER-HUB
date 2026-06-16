@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 	"sort"
+	"strconv"
 	"strings"
 
 	"supplierhub-backend/config"
@@ -216,6 +217,25 @@ func UpdateUserProfile(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal memuat ulang profil UMKM"})
 		return
 	}
+
+	description := "Profil UMKM " + user.BusinessName + " diperbarui"
+	_ = services.CreateActivityLog(nil, user.ID, "UPDATE_UMKM_PROFILE", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     user.ID,
+		Role:       string(models.RoleUser),
+		Title:      "Profil UMKM Diperbarui",
+		Message:    description,
+		Type:       "umkm_profile_updated",
+		SourceType: "user",
+		SourceID:   user.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Profil UMKM Diperbarui",
+		Message:    description,
+		Type:       "umkm_profile_updated",
+		SourceType: "user",
+		SourceID:   user.ID,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
@@ -462,6 +482,34 @@ func CreateOrder(c *gin.Context) {
 		return
 	}
 
+	description := "UMKM membuat pesanan produk " + product.Name + " sebanyak " + strconv.Itoa(order.Quantity) + " unit"
+	_ = services.CreateActivityLog(nil, umkmID, "CREATE_ORDER", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     umkmID,
+		Role:       string(models.RoleUser),
+		Title:      "Pesanan Dibuat",
+		Message:    description,
+		Type:       "order_created",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     product.SupplierID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Pesanan Baru Masuk",
+		Message:    description,
+		Type:       "order_created",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Pesanan Baru Dibuat",
+		Message:    description,
+		Type:       "order_created",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+
 	c.JSON(http.StatusCreated, gin.H{
 		"status":  "success",
 		"message": "Pesanan berhasil dibuat",
@@ -477,7 +525,7 @@ func CancelOrder(c *gin.Context) {
 
 	orderID := c.Param("id")
 	var order models.Order
-	if err := config.DB.Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
+	if err := config.DB.Preload("Product").Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Pesanan tidak ditemukan"})
 		return
 	}
@@ -501,6 +549,34 @@ func CancelOrder(c *gin.Context) {
 		return
 	}
 
+	description := "UMKM membatalkan pesanan produk " + order.Product.Name
+	_ = services.CreateActivityLog(nil, umkmID, "CANCEL_ORDER", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     umkmID,
+		Role:       string(models.RoleUser),
+		Title:      "Pesanan Dibatalkan",
+		Message:    description,
+		Type:       "order_cancelled",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     order.SupplierID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Pesanan Dibatalkan UMKM",
+		Message:    description,
+		Type:       "order_cancelled",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Pesanan Dibatalkan",
+		Message:    description,
+		Type:       "order_cancelled",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Pesanan berhasil dibatalkan",
@@ -515,7 +591,7 @@ func CompleteOrder(c *gin.Context) {
 
 	orderID := c.Param("id")
 	var order models.Order
-	if err := config.DB.Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
+	if err := config.DB.Preload("Product").Where("id = ? AND umkm_id = ?", orderID, umkmID).First(&order).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Pesanan tidak ditemukan"})
 		return
 	}
@@ -529,6 +605,34 @@ func CompleteOrder(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyelesaikan pesanan"})
 		return
 	}
+
+	description := "UMKM mengonfirmasi pesanan produk " + order.Product.Name + " sebagai selesai"
+	_ = services.CreateActivityLog(nil, umkmID, "COMPLETE_ORDER", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     umkmID,
+		Role:       string(models.RoleUser),
+		Title:      "Pesanan Selesai",
+		Message:    description,
+		Type:       "order_completed",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     order.SupplierID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Pesanan Dikonfirmasi Selesai",
+		Message:    description,
+		Type:       "order_completed",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Pesanan Selesai",
+		Message:    description,
+		Type:       "order_completed",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
 
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",

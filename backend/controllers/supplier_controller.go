@@ -114,6 +114,25 @@ func UpdateSupplierProfile(c *gin.Context) {
 		return
 	}
 
+	description := "Profil toko " + supplier.BusinessName + " diperbarui"
+	_ = services.CreateActivityLog(nil, supplier.ID, "UPDATE_SUPPLIER_PROFILE", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Profil Toko Diperbarui",
+		Message:    description,
+		Type:       "supplier_profile_updated",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Profil Supplier Diperbarui",
+		Message:    description,
+		Type:       "supplier_profile_updated",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Profil toko berhasil diperbarui",
@@ -282,6 +301,25 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
+	activityDescription := "Supplier " + supplier.BusinessName + " menambahkan produk " + input.Name + " dengan stok " + strconv.Itoa(input.Stock) + " unit"
+	_ = services.CreateActivityLog(nil, supplier.ID, "CREATE_PRODUCT", activityDescription)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Produk Ditambahkan",
+		Message:    activityDescription,
+		Type:       "product_created",
+		SourceType: "product",
+		SourceID:   input.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Produk Supplier Ditambahkan",
+		Message:    activityDescription,
+		Type:       "product_created",
+		SourceType: "product",
+		SourceID:   input.ID,
+	})
+
 	c.JSON(http.StatusCreated, gin.H{
 		"message": "Produk berhasil ditambahkan",
 		"data":    input,
@@ -313,6 +351,7 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 	oldStock := product.Stock
+	oldName := product.Name
 
 	name := c.PostForm("name")
 	category := c.PostForm("category")
@@ -361,35 +400,44 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
+	activityDescription := "Supplier " + supplier.BusinessName + " memperbarui produk " + oldName + " menjadi " + product.Name
 	if stockChanged {
-		message := "Supplier " + supplier.BusinessName + " memperbarui stok produk " + product.Name + " dari " + strconv.Itoa(oldStock) + " menjadi " + strconv.Itoa(product.Stock) + " unit."
-		_, _ = services.CreateRoleNotifications(nil, models.RoleAdmin, models.Notification{
-			Title:      "Stok Supplier Diperbarui",
-			Message:    message,
-			Type:       "stock_updated",
-			SourceType: "product",
-			SourceID:   product.ID,
-		})
-		_ = config.DB.Create(&models.Log{
-			UserID:      supplier.ID,
-			Action:      "SUPPLIER_UPDATE_STOCK",
-			Description: message,
-		}).Error
+		activityDescription += ". Stok berubah dari " + strconv.Itoa(oldStock) + " menjadi " + strconv.Itoa(product.Stock) + " unit"
 	}
+	activityType := "product_updated"
+	if stockChanged {
+		activityType = "stock_updated"
+	}
+	_ = services.CreateActivityLog(nil, supplier.ID, strings.ToUpper(activityType), activityDescription)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Produk Diperbarui",
+		Message:    activityDescription,
+		Type:       activityType,
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Produk Supplier Diperbarui",
+		Message:    activityDescription,
+		Type:       activityType,
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
 
 	c.JSON(http.StatusOK, gin.H{"message": "Produk berhasil diupdate", "data": product})
 }
 
 func DeleteProduct(c *gin.Context) {
-	supplierID, exists := c.Get("user_id")
-	if !exists {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+	supplier, ok := getCurrentSupplier(c)
+	if !ok {
 		return
 	}
 
 	productID := c.Param("id")
 	var product models.Product
-	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplierID).First(&product).Error; err != nil {
+	if err := config.DB.Where("id = ? AND supplier_id = ?", productID, supplier.ID).First(&product).Error; err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Produk tidak ditemukan atau Anda tidak berwenang"})
 		return
 	}
@@ -399,6 +447,25 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 
+	description := "Supplier " + supplier.BusinessName + " menghapus produk " + product.Name
+	_ = services.CreateActivityLog(nil, supplier.ID, "DELETE_PRODUCT", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Produk Dihapus",
+		Message:    description,
+		Type:       "product_deleted",
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Produk Supplier Dihapus",
+		Message:    description,
+		Type:       "product_deleted",
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Produk berhasil dihapus",
 	})
@@ -407,11 +474,6 @@ func DeleteProduct(c *gin.Context) {
 func GetSupplierNotifications(c *gin.Context) {
 	supplierID, ok := getAuthenticatedUserID(c)
 	if !ok {
-		return
-	}
-
-	if err := config.DB.AutoMigrate(&models.Notification{}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyiapkan tabel notifikasi"})
 		return
 	}
 
@@ -538,7 +600,7 @@ func UpdateOrderStatus(c *gin.Context) {
 	}
 
 	var order models.Order
-	if err := config.DB.Where("id = ? AND supplier_id = ?", orderID, supplierID).First(&order).Error; err != nil {
+	if err := config.DB.Preload("Product").Where("id = ? AND supplier_id = ?", orderID, supplierID).First(&order).Error; err != nil {
 		if err == gorm.ErrRecordNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "Pesanan tidak ditemukan"})
 			return
@@ -561,7 +623,41 @@ func UpdateOrderStatus(c *gin.Context) {
 		return
 	}
 
+	previousStatus := order.Status
 	order.Status = nextStatus
+	shortOrderID := order.ID
+	if len(shortOrderID) > 8 {
+		shortOrderID = shortOrderID[:8]
+	}
+	orderLabel := "ORD-" + strings.ToUpper(shortOrderID)
+	description := "Status pesanan " + orderLabel + " untuk produk " + order.Product.Name + " diubah dari " + string(previousStatus) + " menjadi " + string(nextStatus)
+	_ = services.CreateActivityLog(nil, supplierID, "UPDATE_ORDER_STATUS", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplierID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Status Pesanan Diperbarui",
+		Message:    description,
+		Type:       "order_status_updated",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     order.UmkmID,
+		Role:       string(models.RoleUser),
+		Title:      "Status Pesanan Diperbarui",
+		Message:    description,
+		Type:       "order_status_updated",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Status Pesanan Supplier Diperbarui",
+		Message:    description,
+		Type:       "order_status_updated",
+		SourceType: "order",
+		SourceID:   order.ID,
+	})
+
 	c.JSON(http.StatusOK, gin.H{
 		"status":  "success",
 		"message": "Status pesanan berhasil diperbarui",

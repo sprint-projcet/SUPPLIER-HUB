@@ -92,6 +92,16 @@ func SetupRoutes(router *gin.Engine) {
 	// Supplier Details (Authenticated)
 	api.GET("/suppliers/:id", controllers.GetSupplierDetail)
 
+	chatGroup := api.Group("/chat")
+	chatGroup.Use(middlewares.RequireRole("user", "supplier"))
+	{
+		chatGroup.GET("/conversations", controllers.GetChatConversations)
+		chatGroup.POST("/conversations", controllers.CreateChatConversation)
+		chatGroup.GET("/conversations/:id/messages", controllers.GetChatMessages)
+		chatGroup.POST("/conversations/:id/messages", controllers.SendChatMessage)
+		chatGroup.PUT("/conversations/:id/read", controllers.MarkChatConversationRead)
+	}
+
 	// UMKM (User) Routes
 	userGroup := api.Group("/user")
 	userGroup.Use(middlewares.RequireRole("user"))

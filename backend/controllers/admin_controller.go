@@ -227,11 +227,24 @@ func VerifySupplier(c *gin.Context) {
 	}
 
 	adminID, _ := c.Get("user_id")
-	_ = config.DB.Create(&models.Log{
-		UserID:      toString(adminID),
-		Action:      "VERIFY_SUPPLIER",
-		Description: "Supplier " + supplier.BusinessName + " diverifikasi oleh admin",
-	}).Error
+	description := "Supplier " + supplier.BusinessName + " diverifikasi oleh admin"
+	_ = services.CreateActivityLog(nil, toString(adminID), "VERIFY_SUPPLIER", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Akun Supplier Diverifikasi",
+		Message:    "Akun toko " + supplier.BusinessName + " sudah diverifikasi dan dapat mengelola produk.",
+		Type:       "supplier_verified",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Supplier Diverifikasi",
+		Message:    description,
+		Type:       "supplier_verified",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
 
 	supplier.Status = "active"
 	c.JSON(http.StatusOK, gin.H{
@@ -277,11 +290,24 @@ func UpdateSupplierStatus(c *gin.Context) {
 	}
 
 	adminID, _ := c.Get("user_id")
-	_ = config.DB.Create(&models.Log{
-		UserID:      toString(adminID),
-		Action:      "UPDATE_SUPPLIER_STATUS",
-		Description: "Status supplier " + supplier.BusinessName + " diubah menjadi " + status,
-	}).Error
+	description := "Status supplier " + supplier.BusinessName + " diubah menjadi " + status
+	_ = services.CreateActivityLog(nil, toString(adminID), "UPDATE_SUPPLIER_STATUS", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     supplier.ID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Status Supplier Diperbarui",
+		Message:    description,
+		Type:       "supplier_status_updated",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Status Supplier Diperbarui",
+		Message:    description,
+		Type:       "supplier_status_updated",
+		SourceType: "supplier",
+		SourceID:   supplier.ID,
+	})
 
 	supplier.Status = status
 	c.JSON(http.StatusOK, gin.H{
@@ -381,11 +407,17 @@ func UpdateAdminProfile(c *gin.Context) {
 		return
 	}
 
-	_ = config.DB.Create(&models.Log{
-		UserID:      admin.ID,
-		Action:      "UPDATE_ADMIN_PROFILE",
-		Description: "Profil admin diperbarui",
-	}).Error
+	description := "Profil admin " + businessName + " diperbarui"
+	_ = services.CreateActivityLog(nil, admin.ID, "UPDATE_ADMIN_PROFILE", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     admin.ID,
+		Role:       string(models.RoleAdmin),
+		Title:      "Profil Admin Diperbarui",
+		Message:    description,
+		Type:       "admin_profile_updated",
+		SourceType: "admin",
+		SourceID:   admin.ID,
+	})
 
 	admin.BusinessName = businessName
 	admin.Email = email
@@ -643,11 +675,6 @@ func GetAdminNotifications(c *gin.Context) {
 		return
 	}
 
-	if err := config.DB.AutoMigrate(&models.Notification{}); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Gagal menyiapkan tabel notifikasi"})
-		return
-	}
-
 	query := config.DB.Where("user_id = ? AND role = ?", adminID, string(models.RoleAdmin))
 	if c.Query("unread_only") == "true" {
 		query = query.Where("is_read = ?", false)
@@ -723,13 +750,26 @@ func UpdateAdminProductStock(c *gin.Context) {
 	if note == "" {
 		note = "Penyesuaian stok oleh admin"
 	}
-	_ = config.DB.Create(&models.Log{
-		UserID: toString(adminID),
-		Action: "UPDATE_PRODUCT_STOCK",
-		Description: "Produk " + product.Name + " diubah stoknya dari " +
-			strconv.Itoa(oldStock) + " menjadi " + strconv.Itoa(input.Stock) +
-			" oleh admin " + toString(adminID) + ". " + note,
-	}).Error
+	description := "Produk " + product.Name + " diubah stoknya dari " +
+		strconv.Itoa(oldStock) + " menjadi " + strconv.Itoa(input.Stock) +
+		" oleh admin " + toString(adminID) + ". " + note
+	_ = services.CreateActivityLog(nil, toString(adminID), "UPDATE_PRODUCT_STOCK", description)
+	_, _ = services.CreateActivityNotification(nil, models.Notification{
+		UserID:     product.SupplierID,
+		Role:       string(models.RoleSupplier),
+		Title:      "Stok Produk Disesuaikan Admin",
+		Message:    description,
+		Type:       "stock_adjusted_by_admin",
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
+	_, _ = services.CreateRoleActivityNotifications(nil, models.RoleAdmin, models.Notification{
+		Title:      "Stok Produk Diperbarui",
+		Message:    description,
+		Type:       "stock_adjusted_by_admin",
+		SourceType: "product",
+		SourceID:   product.ID,
+	})
 
 	product.Stock = input.Stock
 	c.JSON(http.StatusOK, gin.H{
@@ -780,7 +820,7 @@ func SendLowStockAlert(c *gin.Context) {
 		}
 	}
 
-	notification, err := services.CreateNotification(nil, models.Notification{
+	notification, err := services.CreateActivityNotification(nil, models.Notification{
 		UserID:     product.SupplierID,
 		Role:       string(models.RoleSupplier),
 		Title:      title,
@@ -801,11 +841,7 @@ func SendLowStockAlert(c *gin.Context) {
 		action = "RESEND_LOW_STOCK_ALERT"
 		description = "Admin mengirim ulang peringatan stok untuk produk " + product.Name + " kepada supplier " + product.Supplier.BusinessName
 	}
-	_ = config.DB.Create(&models.Log{
-		UserID:      toString(adminID),
-		Action:      action,
-		Description: description,
-	}).Error
+	_ = services.CreateActivityLog(nil, toString(adminID), action, description)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"status":      "success",

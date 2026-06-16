@@ -80,17 +80,17 @@ const (
 // Order merepresentasikan tagihan pembelian antara UMKM dan Supplier
 type Order struct {
 	ID             string      `gorm:"type:varchar(36);primaryKey" json:"id"`
-	UmkmID         string      `gorm:"type:varchar(36);not null;index" json:"umkm_id"`
-	SupplierID     string      `gorm:"type:varchar(36);not null;index" json:"supplier_id"`
+	UmkmID         string      `gorm:"type:varchar(36);not null;index;index:idx_orders_umkm_created,priority:1" json:"umkm_id"`
+	SupplierID     string      `gorm:"type:varchar(36);not null;index;index:idx_orders_supplier_created,priority:1" json:"supplier_id"`
 	ProductID      string      `gorm:"type:varchar(36);not null;index" json:"product_id"`
 	Quantity       int         `gorm:"not null" json:"quantity"`
 	TotalBasePrice float64     `gorm:"type:numeric(15,2);not null" json:"total_base_price"`
 	SystemFee      float64     `gorm:"type:numeric(15,2);default:0" json:"system_fee"`
 	GrandTotal     float64     `gorm:"type:numeric(15,2);not null" json:"grand_total"`
-	Status         OrderStatus `gorm:"type:varchar(40);default:'pending_supplier_confirmation'" json:"status"`
+	Status         OrderStatus `gorm:"type:varchar(40);default:'pending_supplier_confirmation';index" json:"status"`
 	StockDeducted  bool        `gorm:"default:false" json:"stock_deducted"`
 	IsReviewed     bool        `gorm:"-" json:"is_reviewed"`
-	CreatedAt      time.Time   `json:"created_at"`
+	CreatedAt      time.Time   `gorm:"index:idx_orders_supplier_created,priority:2;index:idx_orders_umkm_created,priority:2" json:"created_at"`
 	UpdatedAt      time.Time   `json:"updated_at"`
 
 	// Relations
@@ -189,8 +189,8 @@ type ShipmentLog struct {
 // Notification menyimpan pesan sistem untuk user tertentu.
 type Notification struct {
 	ID         string     `gorm:"type:varchar(36);primaryKey" json:"id"`
-	UserID     string     `gorm:"type:varchar(36);not null;index" json:"user_id"`
-	Role       string     `gorm:"type:varchar(30);index" json:"role"`
+	UserID     string     `gorm:"type:varchar(36);not null;index;index:idx_notifications_user_role_created,priority:1" json:"user_id"`
+	Role       string     `gorm:"type:varchar(30);index;index:idx_notifications_user_role_created,priority:2" json:"role"`
 	Title      string     `gorm:"type:varchar(150);not null" json:"title"`
 	Message    string     `gorm:"type:text;not null" json:"message"`
 	Type       string     `gorm:"type:varchar(50);index" json:"type"`
@@ -198,10 +198,43 @@ type Notification struct {
 	SourceID   string     `gorm:"type:varchar(36);index" json:"source_id"`
 	IsRead     bool       `gorm:"default:false;index" json:"is_read"`
 	ReadAt     *time.Time `json:"read_at,omitempty"`
-	CreatedAt  time.Time  `json:"created_at"`
+	CreatedAt  time.Time  `gorm:"index:idx_notifications_user_role_created,priority:3" json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
 
 	User User `gorm:"foreignKey:UserID" json:"user,omitempty"`
+}
+
+// ChatConversation menyimpan kanal percakapan satu UMKM dengan satu supplier.
+type ChatConversation struct {
+	ID            string     `gorm:"type:varchar(36);primaryKey" json:"id"`
+	UmkmID        string     `gorm:"type:varchar(36);not null;index;uniqueIndex:idx_chat_conversation_pair" json:"umkm_id"`
+	SupplierID    string     `gorm:"type:varchar(36);not null;index;uniqueIndex:idx_chat_conversation_pair" json:"supplier_id"`
+	LastMessage   string     `gorm:"type:text" json:"last_message"`
+	LastSenderID  string     `gorm:"type:varchar(36);index" json:"last_sender_id"`
+	LastMessageAt *time.Time `gorm:"index" json:"last_message_at,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+
+	Umkm     User          `gorm:"foreignKey:UmkmID;references:ID" json:"umkm,omitempty"`
+	Supplier User          `gorm:"foreignKey:SupplierID;references:ID" json:"supplier,omitempty"`
+	Messages []ChatMessage `gorm:"foreignKey:ConversationID" json:"messages,omitempty"`
+}
+
+// ChatMessage menyimpan isi pesan antar UMKM dan supplier.
+type ChatMessage struct {
+	ID             string     `gorm:"type:varchar(36);primaryKey" json:"id"`
+	ConversationID string     `gorm:"type:varchar(36);not null;index" json:"conversation_id"`
+	SenderID       string     `gorm:"type:varchar(36);not null;index" json:"sender_id"`
+	ReceiverID     string     `gorm:"type:varchar(36);not null;index" json:"receiver_id"`
+	Message        string     `gorm:"type:text;not null" json:"message"`
+	IsRead         bool       `gorm:"default:false;index" json:"is_read"`
+	ReadAt         *time.Time `json:"read_at,omitempty"`
+	CreatedAt      time.Time  `gorm:"index" json:"created_at"`
+	UpdatedAt      time.Time  `json:"updated_at"`
+
+	Conversation ChatConversation `gorm:"foreignKey:ConversationID;references:ID" json:"conversation,omitempty"`
+	Sender       User             `gorm:"foreignKey:SenderID;references:ID" json:"sender,omitempty"`
+	Receiver     User             `gorm:"foreignKey:ReceiverID;references:ID" json:"receiver,omitempty"`
 }
 
 // Wishlist menyimpan produk bahan baku favorit milik UMKM di database.
@@ -277,6 +310,20 @@ func (s *ShipmentLog) BeforeCreate(tx *gorm.DB) (err error) {
 func (n *Notification) BeforeCreate(tx *gorm.DB) (err error) {
 	if n.ID == "" {
 		n.ID = uuid.New().String()
+	}
+	return
+}
+
+func (c *ChatConversation) BeforeCreate(tx *gorm.DB) (err error) {
+	if c.ID == "" {
+		c.ID = uuid.New().String()
+	}
+	return
+}
+
+func (m *ChatMessage) BeforeCreate(tx *gorm.DB) (err error) {
+	if m.ID == "" {
+		m.ID = uuid.New().String()
 	}
 	return
 }
