@@ -441,11 +441,19 @@
       showToast("Pertanyaan Anda telah terkirim! Tim support akan merespon dalam 24 jam.");
     }
 
+    let supportToastTimer = null;
     function showToast(message) {
+      if (typeof window.showGlobalToast === "function") {
+        window.showGlobalToast("success", message);
+        return;
+      }
+
       const toast = document.getElementById("toast");
+      if (!toast) return;
+      clearTimeout(supportToastTimer);
       document.getElementById("toast-message").innerText = message;
       toast.classList.add("show");
-      setTimeout(() => toast.classList.remove("show"), 4000);
+      supportToastTimer = setTimeout(() => toast.classList.remove("show"), 4000);
     }
 
     function toggleDarkMode() {

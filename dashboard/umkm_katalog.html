@@ -55,6 +55,19 @@
       box-shadow: 0 4px 10px rgba(22, 163, 74, 0.2);
     }
 
+    .sort-chip {
+      transition: all 0.2s ease;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+
+    .sort-chip.active {
+      background-color: #0f172a;
+      color: white;
+      border-color: #0f172a;
+      box-shadow: 0 4px 10px rgba(15, 23, 42, 0.18);
+    }
+
     .cart-scroll::-webkit-scrollbar { width: 4px; }
     .cart-scroll::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
     
@@ -227,6 +240,13 @@
       </div>
       <div class="flex gap-3 overflow-x-auto pb-4 no-scrollbar" id="categoryContainer">
         <button onclick="setCategory('All')" id="cat-All" class="category-chip active px-6 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm">Semua</button>
+      </div>
+      <div class="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h3 class="text-sm font-bold text-slate-400 uppercase tracking-widest">Urutkan Harga</h3>
+        <div class="flex gap-3 overflow-x-auto pb-1 no-scrollbar" id="sortContainer">
+          <button onclick="setSort('price_asc')" id="sort-price_asc" class="sort-chip active px-5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-sm">Termurah</button>
+          <button onclick="setSort('price_desc')" id="sort-price_desc" class="sort-chip px-5 py-2.5 rounded-xl border border-slate-200 bg-white font-bold text-sm hover:border-slate-400">Termahal</button>
+        </div>
       </div>
     </div>
 
@@ -421,7 +441,10 @@
     let wishlistIds = [];
     let currentCategory = 'All';
     let searchQuery = '';
+    let activeSort = 'price_asc';
     let activeSupplierStoreID = '';
+    let searchDebounceTimer = null;
+    const catalogSorts = ['price_asc', 'price_desc'];
     const catalogPagination = SupplierHubPagination.create({
       pageSize: 12,
       itemLabel: 'produk',
@@ -441,9 +464,13 @@
     }
 
     function applyCatalogQueryFromUrl() {
-      const initialQuery = new URLSearchParams(window.location.search).get('q') || '';
+      const params = new URLSearchParams(window.location.search);
+      const initialQuery = params.get('q') || params.get('search') || '';
+      const initialSort = params.get('sort_by') || '';
       searchQuery = initialQuery.trim();
+      if (catalogSorts.includes(initialSort)) activeSort = initialSort;
       document.getElementById('searchInput').value = searchQuery;
+      updateSortButtons();
     }
 
     function shortText(value, maxLength = 120) {
@@ -477,9 +504,19 @@
       ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
     }
 
-    async function fetchCatalog() {
+    function buildCatalogRequestPath() {
+      const params = new URLSearchParams();
+      const query = searchQuery.trim();
+      if (query) params.set('search', query);
+      if (catalogSorts.includes(activeSort)) params.set('sort_by', activeSort);
+
+      const queryString = params.toString();
+      return `/api/catalog${queryString ? `?${queryString}` : ''}`;
+    }
+
+    async function fetchCatalog(options = {}) {
       try {
-        const res = await fetch(buildApiUrl('/api/catalog'));
+        const res = await fetch(buildApiUrl(buildCatalogRequestPath()));
         if (res.ok) {
           const payload = await res.json();
           const data = Array.isArray(payload) ? payload : payload.data || [];
@@ -516,7 +553,7 @@
             };
           });
           initCategories();
-          renderProducts();
+          renderProducts(options);
         } else {
           showToast("Gagal mengambil data dari server");
         }
@@ -530,6 +567,9 @@
       const container = document.getElementById('categoryContainer');
       container.innerHTML = `<button onclick="setCategory('All')" id="cat-All" class="category-chip active px-6 py-3 rounded-xl border border-slate-200 bg-white font-bold text-sm">Semua</button>`;
       const uniqueCategories = [...new Set(products.map(p => p.category))];
+      if (currentCategory !== 'All' && !uniqueCategories.includes(currentCategory)) {
+        currentCategory = 'All';
+      }
       uniqueCategories.forEach(cat => {
         if (!cat) return;
         const btn = document.createElement('button');
@@ -539,15 +579,28 @@
         btn.onclick = () => setCategory(cat);
         container.appendChild(btn);
       });
+      activateCategoryChip(currentCategory);
     }
 
     function setCategory(cat) {
       activeSupplierStoreID = '';
       currentCategory = cat;
-      document.querySelectorAll('.category-chip').forEach(btn => btn.classList.remove('active'));
-      const activeBtn = document.getElementById(`cat-${cat}`);
-      if(activeBtn) activeBtn.classList.add('active');
+      activateCategoryChip(cat);
       renderProducts();
+    }
+
+    function updateSortButtons() {
+      document.querySelectorAll('.sort-chip').forEach((btn) => btn.classList.remove('active'));
+      const activeBtn = document.getElementById(`sort-${activeSort}`);
+      if (activeBtn) activeBtn.classList.add('active');
+    }
+
+    function setSort(sortBy) {
+      if (!catalogSorts.includes(sortBy) || activeSort === sortBy) return;
+      activeSupplierStoreID = '';
+      activeSort = sortBy;
+      updateSortButtons();
+      fetchCatalog();
     }
 
     function supplierKey(product) {
@@ -951,28 +1004,16 @@
         return;
       }
 
-      const normalizedQuery = searchQuery.toLowerCase().trim();
-      
+      const supplierResults = document.getElementById('supplierStoreResults');
+      if (supplierResults) {
+        supplierResults.classList.add('hidden');
+        supplierResults.innerHTML = '';
+      }
+
       const filtered = products.filter(p => {
         const matchesCat = currentCategory === 'All' || p.category === currentCategory;
-        const matchesSearch = [
-          p.title,
-          p.supplier,
-          p.category,
-          p.origin,
-          p.desc,
-          p.supplierDescription,
-        ].some((value) => String(value || '').toLowerCase().includes(normalizedQuery));
-        return matchesCat && matchesSearch;
+        return matchesCat;
       });
-      const storeCount = renderSupplierStoreResults(filtered, normalizedQuery);
-      if (normalizedQuery && storeCount > 0) {
-        grid.classList.add('hidden');
-        noResults.classList.add('hidden');
-        if (paginationContainer) paginationContainer.innerHTML = '';
-        productCountLabel.innerText = `${storeCount} Toko Supplier`;
-        return;
-      }
 
       if (!options.preservePage) SupplierHubPagination.reset(catalogPagination);
       const pageData = SupplierHubPagination.getPage(filtered, catalogPagination);
@@ -1089,14 +1130,19 @@
     function resetAll() {
       activeSupplierStoreID = '';
       searchQuery = '';
+      activeSort = 'price_asc';
       document.getElementById('searchInput').value = '';
-      setCategory('All');
+      currentCategory = 'All';
+      activateCategoryChip('All');
+      updateSortButtons();
+      fetchCatalog();
     }
 
     document.getElementById('searchInput').addEventListener('input', (e) => {
       activeSupplierStoreID = '';
       searchQuery = e.target.value;
-      renderProducts();
+      if (searchDebounceTimer) clearTimeout(searchDebounceTimer);
+      searchDebounceTimer = setTimeout(() => fetchCatalog(), 250);
     });
 
     function toggleCart() { 

@@ -1,4 +1,6 @@
 const AdminDashboard = (() => {
+  const UNREAD_NOTICE_KEY_PREFIX = "supplierhub_admin_unread_notice";
+
   function getSession() {
     return typeof getStoredUserSession === "function"
       ? getStoredUserSession()
@@ -169,71 +171,118 @@ const AdminDashboard = (() => {
     });
   }
 
+  function unreadNoticeKey() {
+    const session = getSession() || {};
+    return `${UNREAD_NOTICE_KEY_PREFIX}_${session.id || session.email || "guest"}`;
+  }
+
+  function unreadNoticeSignature(notifications) {
+    return `${notifications.length}:${notifications
+      .slice(0, 5)
+      .map((notification) =>
+        [
+          notification.id,
+          notification.source_id,
+          notification.created_at,
+          notification.title,
+        ]
+          .filter(Boolean)
+          .join(":"),
+      )
+      .join("|")}`;
+  }
+
+  function shouldShowUnreadNotice(notifications) {
+    if (!Array.isArray(notifications) || notifications.length === 0) return false;
+
+    const signature = unreadNoticeSignature(notifications);
+    try {
+      const key = unreadNoticeKey();
+      if (sessionStorage.getItem(key) === signature) return false;
+      sessionStorage.setItem(key, signature);
+    } catch (error) {
+      return true;
+    }
+
+    return true;
+  }
+
   function renderNotificationPanel(notifications) {
     document.getElementById("admin-notification-panel")?.remove();
     if (!Array.isArray(notifications) || notifications.length === 0) return;
 
+    const primary = notifications[0];
+    const remainingCount = Math.max(0, notifications.length - 1);
+    const title =
+      notifications.length > 1
+        ? `${notifications.length} notifikasi admin belum dibaca`
+        : primary.title || "Notifikasi Admin";
+    const message =
+      notifications.length > 1
+        ? `Terbaru: ${primary.message || "-"}`
+        : primary.message || "-";
+    const createdAt = formatNotificationTime(primary.created_at);
+
     const panel = document.createElement("div");
     panel.id = "admin-notification-panel";
     panel.className =
-      "fixed left-1/2 transform -translate-x-1/2 top-24 z-[120] w-[calc(100%-2rem)] max-w-sm space-y-2";
-
-    notifications.slice(0, 5).forEach((notification, index) => {
-      const card = document.createElement("div");
-      card.className =
-        "notification-toast flex items-center gap-3 px-4 py-3 rounded-lg bg-white border border-slate-200 shadow-md backdrop-blur-sm animate-slide-in";
-      card.style.animationDelay = `${index * 100}ms`;
-
-      const title = escapeHTML(notification.title || "Notifikasi Admin");
-      const message = escapeHTML(notification.message || "-");
-      const createdAt = escapeHTML(formatNotificationTime(notification.created_at));
-      card.innerHTML = `
-        <div class="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
-          <i data-lucide="check-circle" class="h-4 w-4"></i>
-        </div>
-        <div class="min-w-0 flex-1">
-          <p class="text-sm font-semibold text-slate-900">${title}</p>
-          <p class="text-xs text-slate-500 leading-relaxed line-clamp-2">${message}</p>
-          <p class="mt-1 text-[10px] font-bold uppercase tracking-widest text-slate-400">${createdAt}</p>
-        </div>
-        <button type="button" data-action="close" class="shrink-0 text-slate-400 hover:text-slate-600 transition-colors">
-          <i data-lucide="x" class="h-4 w-4"></i>
+      "fixed left-1/2 top-24 z-[120] w-[calc(100%-2rem)] max-w-sm -translate-x-1/2";
+    panel.innerHTML = `
+      <div class="notification-toast animate-slide-in overflow-hidden rounded-xl border border-slate-200 bg-white shadow-xl shadow-slate-900/10 backdrop-blur-md">
+        <button type="button" class="flex w-full items-start gap-3 px-4 py-3 text-left" data-action="open">
+          <div class="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
+            <i data-lucide="check-circle" class="h-4 w-4"></i>
+          </div>
+          <div class="min-w-0 flex-1">
+            <div class="flex items-start justify-between gap-3">
+              <p class="text-sm font-bold leading-5 text-slate-900">${escapeHTML(title)}</p>
+              ${
+                remainingCount > 0
+                  ? `<span class="shrink-0 rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-black text-slate-500">+${remainingCount}</span>`
+                  : ""
+              }
+            </div>
+            <p class="mt-1 line-clamp-2 text-xs leading-5 text-slate-500">${escapeHTML(message)}</p>
+            <p class="mt-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">${escapeHTML(createdAt)}</p>
+          </div>
         </button>
-      `;
+        <div class="flex items-center justify-between gap-2 border-t border-slate-100 px-4 py-2">
+          <span class="text-[10px] font-black uppercase tracking-widest text-slate-400">${notifications.length > 1 ? "Ringkasan admin" : "Notifikasi baru"}</span>
+          <div class="flex items-center gap-2">
+            <button type="button" data-action="close" class="rounded-lg px-2 py-1 text-xs font-bold text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-700">Tutup</button>
+            <button type="button" data-action="open" class="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-bold text-white transition-colors hover:bg-emerald-700">Buka</button>
+          </div>
+        </div>
+      </div>
+    `;
 
-      card.querySelector('[data-action="close"]').addEventListener("click", async () => {
-        card.classList.add("animate-slide-out");
-        setTimeout(() => {
-          card.remove();
-          if (!panel.children.length) panel.remove();
-        }, 300);
-        try {
-          await markNotificationRead(notification.id);
-        } catch (error) {
-          console.error("Gagal menandai notifikasi", error);
-        }
-      });
-
-      card.addEventListener("click", (e) => {
-        if (e.target.closest('[data-action="close"]')) return;
-        const query = notification.source_id
-          ? `?q=${encodeURIComponent(notification.source_id)}`
+    const card = panel.querySelector(".notification-toast");
+    let autoHideTimer = null;
+    const dismissPanel = () => {
+      if (card.dataset.removing === "true") return;
+      card.dataset.removing = "true";
+      clearTimeout(autoHideTimer);
+      card.classList.add("animate-slide-out");
+      setTimeout(() => panel.remove(), 300);
+    };
+    const openPrimaryNotification = () => {
+      const query =
+        notifications.length === 1 && primary.source_id
+          ? `?q=${encodeURIComponent(primary.source_id)}`
           : "";
-        window.location.href = `admin_kontrol_stok.html${query}`;
-      });
+      window.location.href = `admin_kontrol_stok.html${query}`;
+    };
 
-      const autoHideTimer = setTimeout(() => {
-        card.classList.add("animate-slide-out");
-        setTimeout(() => {
-          card.remove();
-          if (!panel.children.length) panel.remove();
-        }, 300);
-      }, 5000);
-
-      card.addEventListener("mouseenter", () => clearTimeout(autoHideTimer));
-
-      panel.appendChild(card);
+    panel.querySelectorAll('[data-action="open"]').forEach((button) => {
+      button.addEventListener("click", openPrimaryNotification);
     });
+    panel.querySelector('[data-action="close"]')?.addEventListener("click", (event) => {
+      event.stopPropagation();
+      dismissPanel();
+    });
+
+    autoHideTimer = setTimeout(dismissPanel, 5500);
+    card.addEventListener("mouseenter", () => clearTimeout(autoHideTimer));
 
     document.body.appendChild(panel);
     if (window.lucide) lucide.createIcons();
@@ -242,9 +291,8 @@ const AdminDashboard = (() => {
   async function showUnreadNotifications() {
     try {
       const notifications = await getNotifications({ unreadOnly: true });
-      renderNotificationPanel(notifications);
-      if (notifications.length > 0) {
-        notify("info", `${notifications.length} notifikasi admin belum dibaca.`);
+      if (shouldShowUnreadNotice(notifications)) {
+        renderNotificationPanel(notifications);
       }
     } catch (error) {
       console.warn("Gagal mengambil notifikasi admin", error);

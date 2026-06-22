@@ -12,6 +12,7 @@ function buildApiUrl(path) {
 
 const SUPPLIER_HUB_TOAST_DURATION = 2500;
 const SUPPLIER_HUB_TOAST_QUEUE_KEY = "supplierhub_pending_toast";
+let activeToastState = null;
 
 const toastMessages = {
   loginSuccess: "Selamat Datang! Anda berhasil masuk ke dashboard admin.",
@@ -57,11 +58,11 @@ function ensureToastContainer() {
   let container = document.getElementById("toast-container");
   if (container) return container;
 
-  // Wadah induk global untuk stacking toast di tengah atas agar konsisten di semua halaman.
+  // Satu wadah toast global agar semua halaman punya posisi notifikasi yang konsisten.
   container = document.createElement("div");
   container.id = "toast-container";
   container.className =
-    "fixed left-1/2 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col items-stretch gap-3 pointer-events-none sm:top-6";
+    "fixed left-1/2 top-4 z-[9999] flex w-[calc(100%-2rem)] max-w-sm -translate-x-1/2 flex-col items-stretch pointer-events-none sm:top-6";
   document.body.appendChild(container);
   return container;
 }
@@ -79,19 +80,51 @@ function normalizeToast(type, message) {
 
 function removeToast(toast) {
   if (!toast || toast.dataset.removing === "true") return;
+  if (activeToastState?.toast === toast) {
+    clearTimeout(activeToastState.dismissTimer);
+    clearTimeout(activeToastState.outsideListenerTimer);
+    document.removeEventListener(
+      "pointerdown",
+      activeToastState.handleOutsideClick,
+      true,
+    );
+    activeToastState = null;
+  }
   toast.dataset.removing = "true";
   toast.classList.add("translate-y-3", "opacity-0", "scale-95");
   toast.classList.remove("translate-y-0", "opacity-100", "scale-100");
   setTimeout(() => toast.remove(), 320);
 }
 
+function clearActiveToast(options = {}) {
+  if (!activeToastState) return;
+
+  clearTimeout(activeToastState.dismissTimer);
+  clearTimeout(activeToastState.outsideListenerTimer);
+  document.removeEventListener(
+    "pointerdown",
+    activeToastState.handleOutsideClick,
+    true,
+  );
+
+  if (options.removeNode) {
+    activeToastState.toast.remove();
+  }
+  activeToastState = null;
+}
+
 function showToast(type, message) {
   const toastData = normalizeToast(type, message);
   const config = toastConfig[toastData.type] || toastConfig.info;
   const container = ensureToastContainer();
+  clearActiveToast({ removeNode: true });
+  container.replaceChildren();
 
-  // Kartu toast dibuat dinamis agar fungsi reusable dan bisa dipanggil berkali-kali.
+  // Kartu toast tunggal. Panggilan baru menggantikan toast lama supaya pop-up tidak menumpuk.
   const toast = document.createElement("div");
+  toast.dataset.supplierHubToast = "true";
+  toast.setAttribute("role", toastData.type === "danger" ? "alert" : "status");
+  toast.setAttribute("aria-live", toastData.type === "danger" ? "assertive" : "polite");
   toast.className = [
     "pointer-events-auto relative overflow-hidden rounded-xl border",
     "bg-white/80 p-4 pr-10 shadow-xl shadow-slate-900/10 backdrop-blur-md",
@@ -141,6 +174,14 @@ function showToast(type, message) {
   toast.append(content, closeButton, progress);
   container.appendChild(toast);
 
+  const toastState = {
+    toast,
+    dismissTimer: null,
+    outsideListenerTimer: null,
+    handleOutsideClick: null,
+  };
+  activeToastState = toastState;
+
   // Animasi masuk: toast turun halus dari atas lalu menjadi solid.
   requestAnimationFrame(() => {
     toast.classList.remove("translate-y-3", "opacity-0", "scale-95");
@@ -150,22 +191,24 @@ function showToast(type, message) {
 
   let dismissTimer;
   const dismiss = () => {
-    clearTimeout(dismissTimer);
-    document.removeEventListener("pointerdown", handleOutsideClick, true);
     removeToast(toast);
   };
   const handleOutsideClick = (event) => {
     if (!toast.contains(event.target)) dismiss();
   };
 
+  toastState.handleOutsideClick = handleOutsideClick;
   dismissTimer = setTimeout(dismiss, SUPPLIER_HUB_TOAST_DURATION);
+  toastState.dismissTimer = dismissTimer;
   closeButton.addEventListener("click", (event) => {
     event.stopPropagation();
     dismiss();
   });
   toast.addEventListener("pointerdown", (event) => event.stopPropagation());
-  setTimeout(() => {
-    document.addEventListener("pointerdown", handleOutsideClick, true);
+  toastState.outsideListenerTimer = setTimeout(() => {
+    if (activeToastState === toastState) {
+      document.addEventListener("pointerdown", handleOutsideClick, true);
+    }
   }, 0);
 
   return toast;
