@@ -91,7 +91,7 @@ graph TD
             API_Order[Order Service]
             API_Finance[Finance/Fee Service]
         end
-        DB[(Database SQL<br>PostgreSQL/MySQL)]
+        DB[(Database SQL<br>MySQL)]
     end
 
     subgraph "External Ecosystem (Mocked/Real)"
@@ -129,7 +129,7 @@ graph TD
 
 - **Frontend**: HTML5, TailwindCSS, Vanilla JavaScript (Fetch API untuk integrasi Backend).
 - **Backend**: Golang (Gin/Fiber/Standar HTTP) dengan arsitektur Clean Code.
-- **Database**: Relational Database menggunakan SQL (PostgreSQL atau MySQL).
+- **Database**: MySQL Relational Database.
 - **Mock Server**: Node.js/Python/Go sederhana untuk simulasi SmartBank, LogistiKita, dan API Gateway.
 
 ---
